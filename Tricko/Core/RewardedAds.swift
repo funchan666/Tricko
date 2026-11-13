@@ -164,7 +164,7 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
             guard ConsentInformation.shared.canRequestAds else { throw TrickoError.service("Ads are unavailable with your current privacy choices.") }
         } else {
             // Google's demo app has no Tricko-owned UMP message configuration.
-            // This branch is restricted to the exact official demo App ID and ad unit returned by getV2.
+            // This branch uses the packaged Google demo App ID and its official test units.
             privacyOptionsRequired = false
         }
         try Task.checkCancellation()
@@ -235,7 +235,7 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
 
     func didEnterBackground() {
         // An ad or SDK consent browser returning to the app must not recursively trigger an ad.
-        returnedFromBackground = !isPresenting && !busy && !appOpenConsentPresented
+        returnedFromBackground = startupFinished && !isPresenting && !busy && !appOpenConsentPresented
         if isPreparingAppOpen, !appOpenConsentPresented { finishAppOpen(reason: "background", preservePreparation: true) }
     }
 
@@ -256,37 +256,49 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
         isPreparingAppOpen = true
         // Bound only this presentation opportunity. A slow network must not keep
         // the home screen locked or discard inventory for the next foreground.
-        let waitingBudget = coldStart ? 2.0 : 1.0
+        let testMode = commerce.api.configuration.adsTestMode
+        let waitingBudget: Double
+        if coldStart { waitingBudget = testMode ? 5 : 2 }
+        else { waitingBudget = 1 }
         appOpenStage = "authentication"
         appOpenLog.info("App-open opportunity started; coldStart=\(coldStart), budget=\(waitingBudget)")
         scheduleAppOpenDeadline(attempt: attempt, seconds: waitingBudget)
         appOpenTask = Task { [weak self] in
             guard let self else { return }
             let packagedAppID = Bundle.main.object(forInfoDictionaryKey: "GADApplicationIdentifier") as? String
+            let demoPlacement = testMode ? GoogleDemoInventory.placement(for: 1, packagedAppID: packagedAppID) : nil
+            // Demo inventory is known locally and can load alongside guest login.
+            // Presentation still requires the current account's verified rights.
+            if let demoPlacement {
+                self.startSDKIfNeeded()
+                Task { try? await self.preloadAppOpen(unitID: demoPlacement.unitID) }
+            }
             do {
                 try await commerce.api.prepareVisitor()
                 try Task.checkCancellation()
                 guard let owner = commerce.api.session?.userId.value else {
                     self.finishAppOpen(attempt: attempt); return
                 }
-                if self.appOpenAttempt == attempt { self.appOpenStage = "rights-and-configuration" }
+                if self.appOpenAttempt == attempt {
+                    self.appOpenStage = demoPlacement == nil ? "rights-and-configuration" : "rights"
+                }
                 self.appOpenLog.info("App-open guest authentication ready")
-                await commerce.refresh()
+                await commerce.refresh(waitForConfiguration: demoPlacement == nil)
                 try Task.checkCancellation()
                 guard commerce.api.session?.userId.value == owner,
                       commerce.rightsVerified, !commerce.premium else {
                     self.finishAppOpen(attempt: attempt, reason: commerce.premium ? "membership" : "rights-unavailable"); return
                 }
-                let unit = commerce.release?.adList?.first {
-                    $0.adType == 1 && $0.advertiser?.lowercased() == "google"
-                }
-                guard let placement = commerce.release?.googlePlacement(for: 1, packagedAppID: packagedAppID,
-                                                                       testMode: commerce.api.configuration.adsTestMode) else {
+                let placement = testMode ? demoPlacement : commerce.release?.googlePlacement(
+                    for: 1, packagedAppID: packagedAppID, testMode: false)
+                guard let placement else {
                     self.appOpenLog.error("App-open configuration missing, invalid or inconsistent with the packaged App ID")
                     self.finishAppOpen(attempt: attempt, reason: "ad-configuration-unavailable"); return
                 }
-                // Test inventory: the backend interval when present, otherwise 0 minutes.
-                let interval = unit?.displayInterval ?? (placement.isOfficialDemo ? 0 : nil)
+                let serverInterval = commerce.release?.adList?.first {
+                    $0.adType == 1 && $0.advertiser?.lowercased() == "google"
+                }?.displayInterval
+                let interval = placement.isOfficialDemo ? 0 : serverInterval
                 let unitID = placement.unitID
                 let key = "tricko.app-open.last-impression.\(commerce.api.configuration.servicePackageName).\(commerce.api.configuration.apiBaseURL?.host ?? "none").\(placement.isOfficialDemo ? "demo" : "production")"
                 self.appOpenLog.info("App-open rights/configuration ready; intervalMinutes=\(interval ?? -1)")
@@ -311,12 +323,12 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
                 let ad = try await self.preloadAppOpen(unitID: unitID)
                 try Task.checkCancellation()
                 guard self.appOpenAttempt == attempt, commerce.api.session?.userId.value == owner,
-                      !commerce.premium, UIApplication.shared.applicationState == .active,
+                      commerce.rightsVerified, !commerce.premium, UIApplication.shared.applicationState == .active,
                       !self.busy, !self.isPresenting, !commerce.busy, !commerce.preparingPurchase,
                       !accountAccess.isBusy,
                       AppOpenTiming.isDue(intervalMinutes: interval,
                         lastShown: UserDefaults.standard.object(forKey: key) as? Date) else {
-                    self.finishAppOpen(attempt: attempt); return
+                    self.finishAppOpen(attempt: attempt, reason: "presentation-no-longer-eligible"); return
                 }
                 do { try ad.canPresent(from: nil) }
                 catch {
@@ -399,7 +411,15 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
         else if error == nil { message = "No reward was received. Finish the ad to receive your reward." }
     }
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        if let current = appOpenAd, ad === current { finishAppOpen(); return }
+        if let current = appOpenAd, ad === current {
+            let failure = error as NSError
+            appOpenLog.error("App-open presentation failed; domain=\(failure.domain, privacy: .public), code=\(failure.code)")
+            let unitID = presentedUnitID
+            presentedUnitID = nil
+            finishAppOpen(reason: "presentation-failed")
+            if let unitID { Task { try? await self.preloadAppOpen(unitID: unitID) } }
+            return
+        }
         guard let current = rewarded, ad === current else { return }
         rewarded = nil
         isPresenting = false

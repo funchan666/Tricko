@@ -566,3 +566,8 @@
 "Live audience" = "관객 앞";
 "Open a magic lesson" = "마술 레슨 열기";
 "Review your practice" = "연습 다시 보기";
+"Couldn’t load lessons" = "레슨을 불러오지 못했습니다";
+"No matching lessons" = "일치하는 레슨이 없습니다";
+"No lessons yet" = "아직 레슨이 없습니다";
+"Open a lesson link or short code from Home." = "홈에서 레슨 링크나 짧은 코드를 열어 보세요.";
+"Search the web with your original input." = "입력한 내용으로 웹에서 검색해 보세요.";

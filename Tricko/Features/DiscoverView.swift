@@ -124,29 +124,19 @@ struct DiscoverView: View {
     var body: some View {
         ZStack(alignment: .top) {
             if api.session == nil || feed.clips.isEmpty {
-                VStack(spacing: 0) {
-                    feedHeader
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            if !isFullScreen {
-                                LocalizedText("Discover").font(.stage(.largeTitle, weight: .bold, display: true))
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .accessibilityAddTraits(.isHeader)
-                            }
-                            StageArtwork(kind: .cards, height: 208)
-                            if api.session == nil {
-                                LocalizedText("Connecting your lesson feed…")
-                                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                                ConnectionPanel()
-                            } else {
-                                MessagePanel(title: feed.loading ? "Finding your next lesson…" : "Your next session starts here.",
-                                             message: feed.error ?? (feed.loading ? "Loading your lesson feed." : feed.emptySearch != nil ? "No matching lessons. Search the web with your original input." : "No lessons are available here yet. Try another search or open a shared lesson link on Home."),
-                                             actionTitle: feed.loading ? nil : feed.emptySearch != nil ? "Search in browser" : "Try again") {
-                                    if let request = feed.emptySearch { openBrowserSearch(request) }
-                                    else { Task { await feed.load(api: api, search: search) } }
-                                }
-                            }
-                        }.trickoPage()
+                if isFullScreen {
+                    VStack(spacing: 0) {
+                        feedHeader
+                        ScrollView { feedStatus.trickoPage() }
+                    }
+                } else {
+                    StagePage(asset: "DiscoverBackdrop", minHeight: 256, topAligned: true) { _ in
+                        LocalizedText("Discover").font(.stage(.largeTitle, weight: .bold))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityAddTraits(.isHeader)
+                    } content: {
+                        feedStatus
                     }
                 }
             } else {
@@ -186,7 +176,7 @@ struct DiscoverView: View {
                 }
                 feedHeader
             }
-        }.trickoScreenBackground(.black)
+        }.trickoScreenBackground(isFullScreen ? .black : TrickoStyle.background)
             .modifier(PlayerPagingAccess(entries: displayEntries, selectedID: $activeID, tailID: morePageID, players: players))
             .overlay(alignment: .top) { DownloadCompletionNotice().padding(.top, isFullScreen ? 56 : 8) }
             .onChange(of: library.downloadsRequest) { _, request in
@@ -226,6 +216,47 @@ struct DiscoverView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in players.trimMemory() }
     }
+    private var feedStatus: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if api.session == nil {
+                LocalizedText("Connecting your lesson feed…")
+                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+                ConnectionPanel()
+            } else {
+                feedStatusCopy
+                if !feed.loading {
+                    ActionButton(title: feed.emptySearch == nil ? "Try again" : "Search in browser",
+                                 primary: feed.emptySearch != nil) {
+                        if let request = feed.emptySearch { openBrowserSearch(request) }
+                        else { Task { await feed.load(api: api, search: search) } }
+                    }
+                }
+            }
+        }
+    }
+
+    private var feedStatusCopy: some View {
+        let title =
+            if feed.loading { "Finding your next lesson…" }
+            else if feed.error != nil { "Couldn’t load lessons" }
+            else if feed.emptySearch != nil { "No matching lessons" }
+            else { "No lessons yet" }
+        let detail = feed.error ?? (feed.emptySearch == nil
+                                   ? "Open a lesson link or short code from Home."
+                                   : "Search the web with your original input.")
+        return VStack(alignment: .leading, spacing: 6) {
+            LocalizedText(title)
+                .font(.stage(.title2, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+            if !feed.loading {
+                LocalizedText(detail)
+                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func openPendingBrowserSearch() {
         guard visible, scenePhase == .active, let request = feed.emptySearch,
               openedBrowserSearchID != request.id else { return }

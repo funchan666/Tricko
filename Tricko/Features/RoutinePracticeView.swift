@@ -4,19 +4,22 @@ struct RoutinePracticeEntry: View {
     let openJournal: () -> Void
     var body: some View {
         Button(action: openJournal) {
-            VStack(alignment: .leading, spacing: 6) {
-                LocalizedText("Practice log").font(.stage(.title2, display: true))
-                LocalizedText("Run a routine. Record every run. Review your notes.").font(.stage(.subheadline))
-                    .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 12) {
+                Glyph(symbol: .edit, size: 22, tint: TrickoStyle.ink)
+                    .frame(width: 42, height: 42)
+                    .background(TrickoStyle.ink.opacity(0.09), in: Circle())
+                VStack(alignment: .leading, spacing: 4) {
+                    LocalizedText("Practice log").font(.stage(.title3, display: true))
+                    LocalizedText("Run a routine. Record every run. Review your notes.")
+                        .font(.stage(.caption)).foregroundStyle(TrickoStyle.paperSecondary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 12, tint: TrickoStyle.ink).rotationEffect(.degrees(180))
             }
-            .foregroundStyle(TrickoStyle.paper)
-            .padding(20).frame(maxWidth: .infinity, minHeight: 172, alignment: .bottomLeading)
-            .background {
-                Image("RoutinePracticeHero").resizable().scaledToFill()
-                    .overlay(TrickoStyle.background.opacity(0.35))
-            }
-            .background(TrickoStyle.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .foregroundStyle(TrickoStyle.ink)
+            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background { StageSurface(tone: .ivory, radius: 16) }
             .contentShape(Rectangle())
         }.buttonStyle(PressStyle()).accessibilityIdentifier("practice.openJournal")
     }
@@ -39,22 +42,19 @@ struct RoutinePracticeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: "Practice log") { saveNotes(); dismiss() }
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Image("RoutinePracticeHero").resizable().scaledToFit()
-                        .frame(maxHeight: 220).frame(maxWidth: .infinity)
-                        .accessibilityHidden(true)
-                    StageFilter(values: ["Practice", "Sessions"], selected: showingHistory ? "Sessions" : "Practice") {
-                        saveNotes()
-                        showingHistory = $0 == "Sessions"
-                    }
-                    if let message = journal.storageMessage { ErrorNote(message: message) }
-                    if showingHistory { history } else { practice }
-                }.trickoPage()
-            }.scrollDismissesKeyboard(.interactively)
-        }.foregroundStyle(TrickoStyle.paper).trickoScreenBackground()
+        StagePage(asset: "RoutinePracticeHero", minHeight: 220, maxHeight: 276, topAligned: true) { _ in
+            StageSheetHeader(title: "Practice log") { saveNotes(); dismiss() }
+        } content: {
+            VStack(alignment: .leading, spacing: 20) {
+                StageFilter(values: ["Practice", "Sessions"], selected: showingHistory ? "Sessions" : "Practice") {
+                    saveNotes()
+                    showingHistory = $0 == "Sessions"
+                }
+                if let message = journal.storageMessage { ErrorNote(message: message) }
+                if showingHistory { history } else { practice }
+            }
+        }
+            .scrollDismissesKeyboard(.interactively)
             .onAppear { notesDraft = journal.activeSession?.notes ?? "" }
             .onChange(of: editingNotes) { _, editing in if !editing { saveNotes() } }
             .onDisappear { saveNotes() }

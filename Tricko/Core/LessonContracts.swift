@@ -269,6 +269,10 @@ enum GoogleDemoInventory {
     static func unitID(for type: Int) -> String? {
         switch type { case 1: appOpenUnitID; case 5: rewardedUnitID; default: nil }
     }
+    static func placement(for type: Int, packagedAppID: String?) -> GoogleAdPlacement? {
+        guard packagedAppID == appID, let unitID = unitID(for: type) else { return nil }
+        return GoogleAdPlacement(appID: appID, unitID: unitID, isOfficialDemo: true)
+    }
 }
 extension ReleaseConfiguration {
     // Test builds (TRICKO_ADS_TEST_MODE = YES) use only Google's official sample
@@ -277,9 +281,7 @@ extension ReleaseConfiguration {
     // Never substitute a sample ad unit for a missing or invalid server value.
     func googlePlacement(for type: Int, packagedAppID: String?, testMode: Bool) -> GoogleAdPlacement? {
         if testMode {
-            guard packagedAppID == GoogleDemoInventory.appID,
-                  let unitID = GoogleDemoInventory.unitID(for: type) else { return nil }
-            return GoogleAdPlacement(appID: GoogleDemoInventory.appID, unitID: unitID, isOfficialDemo: true)
+            return GoogleDemoInventory.placement(for: type, packagedAppID: packagedAppID)
         }
         let matches = (adList ?? []).filter {
             $0.adType == type && $0.advertiser?.lowercased() == "google"

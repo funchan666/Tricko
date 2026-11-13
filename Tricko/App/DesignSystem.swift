@@ -22,79 +22,115 @@ enum TrickoStyle {
 
 // MARK: - Original raster illustrations
 
-/// Square spot illustrations on transparent backgrounds.
-struct StageArtwork: View {
-    enum Kind { case hat, cards, props, notebook }
-    let kind: Kind
-    var height: CGFloat = 160
-    private var asset: String {
-        switch kind {
-        case .hat: "ArtTopHat"
-        case .cards: "ArtCardFan"
-        case .props: "ArtPropCase"
-        case .notebook: "ArtPracticeBook"
-        }
-    }
+struct StagePhoto: View {
+    let asset: String
+
     var body: some View {
-        Image(asset).renderingMode(.original).resizable().interpolation(.high).scaledToFit()
-            .frame(width: height, height: height)
-            .frame(maxWidth: .infinity)
+        TrickoStyle.surface.overlay {
+            Image(asset).resizable().interpolation(.high).scaledToFill()
+        }.clipped()
             .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
-/// Home banner: illustration behind native, resizable text.
-struct StageBanner: View {
+struct StagePage<Header: View, Content: View>: View {
+    @Environment(\.verticalSizeClass) private var heightClass
     @Environment(\.dynamicTypeSize) private var typeSize
+    private let asset: String
+    private let minHeight: CGFloat
+    private let maxHeight: CGFloat
+    private let topAligned: Bool
+    private let header: (CGFloat) -> Header
+    private let content: Content
+
+    init(asset: String, minHeight: CGFloat, maxHeight: CGFloat = 372, topAligned: Bool = false,
+         @ViewBuilder header: @escaping (CGFloat) -> Header, @ViewBuilder content: () -> Content) {
+        self.asset = asset
+        self.minHeight = minHeight
+        self.maxHeight = maxHeight
+        self.topAligned = topAligned
+        self.header = header
+        self.content = content()
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            LocalizedText("CLOSE-UP · ONE MOVE AT A TIME")
-                .font(.stage(.caption2, weight: .bold)).tracking(2)
-                .foregroundStyle(TrickoStyle.accent)
-            LocalizedText("Learn the move.\nPerform the moment.")
-                .font(.stage(.largeTitle, display: true))
-                .foregroundStyle(TrickoStyle.paper)
-                .fixedSize(horizontal: false, vertical: true)
-            LocalizedText("Watch it slow. Practise it clean. Perform it live.")
-                .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.9))
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(24).frame(maxWidth: .infinity, minHeight: 240, alignment: .bottomLeading)
-        .background {
-            Image("StageHero").resizable().scaledToFill()
-                .overlay(alignment: .bottom) {
-                    // Legibility wash over the artwork; text stays native.
-                    TrickoStyle.background.opacity(typeSize.isAccessibilitySize ? 0.7 : 0.35)
+        GeometryReader { viewport in
+            let availableHeight = viewport.size.height
+            let portraitHeight = max(minHeight, min(availableHeight * 0.46, maxHeight))
+            let height = min(heightClass == .compact ? minHeight : portraitHeight,
+                             availableHeight * (typeSize.isAccessibilitySize ? 0.45 : 0.68))
+            ScrollView {
+                VStack(spacing: 0) {
+                    header(height).trickoPage().foregroundStyle(TrickoStyle.paper)
+                        .frame(minHeight: height, alignment: topAligned ? .top : .bottom)
+                    content.trickoPage().foregroundStyle(TrickoStyle.paper)
+                        .background { TrickoStyle.background }
                 }
+            }
+            .frame(width: viewport.size.width, height: viewport.size.height)
+            .clipped()
+            .background(alignment: .top) {
+                backdrop
+                    .frame(height: height + viewport.safeAreaInsets.top)
+                    .padding(.top, -viewport.safeAreaInsets.top)
+                    .ignoresSafeArea(.container, edges: .horizontal)
+            }
+        }.trickoScreenBackground()
+    }
+
+    private var backdrop: some View {
+        StagePhoto(asset: asset)
+            .overlay {
+                LinearGradient(stops: [
+                    .init(color: TrickoStyle.background.opacity(0.74), location: 0),
+                    .init(color: .clear, location: 0.32),
+                    .init(color: .clear, location: 0.50),
+                    .init(color: TrickoStyle.background.opacity(0.86), location: 0.88),
+                    .init(color: TrickoStyle.background, location: 1)
+                ], startPoint: .top, endPoint: .bottom)
+            }
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+struct StageSheetHeader: View {
+    let title: String
+    let close: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            LocalizedText(title).font(.stage(.largeTitle, weight: .bold))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+            Button(action: close) {
+                Glyph(symbol: .close, size: 16, tint: TrickoStyle.paper)
+                    .frame(width: 44, height: 44)
+                    .trickoGlass(in: Circle())
+                    .contentShape(Circle())
+            }.buttonStyle(PressStyle()).accessibilityLabel(LocalizedStringKey("Close"))
         }
-        .background(TrickoStyle.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .accessibilityElement(children: .combine)
     }
 }
 
 /// Editorial plates for the guide and tools (square, full-bleed).
 struct ScenePlate: View {
-    enum Subject { case handling, misdirection, patter, practice, ethics, review, speed, frame, audio }
-    let subject: Subject
-    private var asset: String {
-        switch subject {
-        case .handling: "PlateHandling"
-        case .misdirection: "PlateMisdirection"
-        case .patter: "PlatePatter"
-        case .practice: "PlatePractice"
-        case .ethics: "PlateEthics"
-        case .review: "PlateReview"
-        case .speed: "PlateSpeed"
-        case .frame: "PlateFrame"
-        case .audio: "PlateAudio"
-        }
+    enum Subject: String {
+        case handling = "PlateHandling"
+        case misdirection = "PlateMisdirection"
+        case patter = "PlatePatter"
+        case practice = "PlatePractice"
+        case ethics = "PlateEthics"
+        case review = "PlateReview"
+        case speed = "PlateSpeed"
+        case frame = "PlateFrame"
+        case audio = "PlateAudio"
+
+        var asset: String { rawValue }
     }
+    let subject: Subject
     var body: some View {
-        TrickoStyle.raised.overlay {
-            Image(asset).resizable().interpolation(.high).scaledToFill()
-        }.clipped()
-            .allowsHitTesting(false).accessibilityHidden(true)
+        StagePhoto(asset: subject.asset)
     }
 }
 
@@ -146,6 +182,7 @@ struct StageSurface: View {
     enum Tone { case gold, velvet, ivory, smoke, ink, mist }
     let tone: Tone
     var radius: CGFloat = TrickoStyle.radius
+    var border: Color? = nil
     private var fill: Color {
         switch tone {
         case .gold: TrickoStyle.accent
@@ -159,9 +196,9 @@ struct StageSurface: View {
     var body: some View {
         RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill)
             .overlay {
-                if tone == .velvet || tone == .smoke {
+                if let stroke = border ?? (tone == .velvet || tone == .smoke ? TrickoStyle.line : nil) {
                     RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .strokeBorder(TrickoStyle.line, lineWidth: 1)
+                        .strokeBorder(stroke, lineWidth: 1)
                 }
             }
             .allowsHitTesting(false).accessibilityHidden(true)
@@ -197,12 +234,12 @@ struct ActionButton: View {
     var action: () -> Void
     var body: some View {
         Button(action: action) {
-            LocalizedText(busy ? "Please wait…" : title).font(.stage(.title3, weight: .semibold, display: true))
+            LocalizedText(busy ? "Please wait…" : title).font(.stage(.subheadline, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center).padding(.horizontal, 16).padding(.vertical, 12)
                 .foregroundStyle(primary ? TrickoStyle.ink : TrickoStyle.paper)
                 .frame(maxWidth: .infinity, minHeight: 48)
-                .background { StageSurface(tone: primary ? .gold : .velvet, radius: 8) }
+                .background { StageSurface(tone: primary ? .gold : .velvet, radius: 12) }
                 .contentShape(.interaction, Rectangle())
         }.buttonStyle(PressStyle()).disabled(busy)
     }
@@ -279,19 +316,41 @@ extension View {
         modifier(OutsideInputTap(focus: focus, scope: scope))
     }
     func trickoField() -> some View { modifier(FieldStyle()) }
-    // Extend visual surfaces to every container edge, while preserving keyboard avoidance
-    // and the foreground's safe area for interactive controls.
-    func trickoScreenBackground(_ color: Color = TrickoStyle.background) -> some View {
-        background { color.ignoresSafeArea(.container, edges: .all) }
+
+    @ViewBuilder
+    func trickoGlass(in shape: some InsettableShape) -> some View {
+        if #available(iOS 26.0, *) {
+            glassEffect(.regular.interactive(), in: shape)
+        } else {
+            background(.regularMaterial, in: shape)
+                .overlay { shape.strokeBorder(TrickoStyle.line).allowsHitTesting(false).accessibilityHidden(true) }
+        }
     }
+
+    // Only the backdrop extends past the container insets. Foreground controls
+    // retain the camera, bar and keyboard layout supplied by their host.
+    func trickoScreenBackground(_ color: Color = TrickoStyle.background) -> some View {
+        background { color.ignoresSafeArea(.container) }
+            .trickoImmersiveChrome()
+    }
+
+    @ViewBuilder
+    func trickoImmersiveChrome() -> some View {
+        if #available(iOS 27.0, *) {
+            toolbarVisibility(.hidden, for: .statusBar).persistentSystemOverlays(.hidden)
+        } else {
+            statusBarHidden(true).persistentSystemOverlays(.hidden)
+        }
+    }
+
     // A readable column follows the available container (outer or inner display,
     // split view) without resetting page state.
     func trickoPage() -> some View {
-        pageHorizontalMargins().padding(.top, 16).padding(.bottom, 24)
+        pageHorizontalMargins().padding(.top, 12).padding(.bottom, 20)
             .frame(maxWidth: 680).frame(maxWidth: .infinity, alignment: .top)
     }
     @ViewBuilder
-    fileprivate func pageHorizontalMargins() -> some View {
+    func pageHorizontalMargins() -> some View {
         if #available(iOS 27.1, *) {
             contentMargins(for: .container, edges: .horizontal)
         } else {

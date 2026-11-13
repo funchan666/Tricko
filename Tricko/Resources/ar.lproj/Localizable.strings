@@ -566,3 +566,8 @@
 "Live audience" = "أمام جمهور";
 "Open a magic lesson" = "فتح درس سحر";
 "Review your practice" = "مراجعة التدريب";
+"Couldn’t load lessons" = "تعذّر تحميل الدروس";
+"No matching lessons" = "لا توجد دروس مطابقة";
+"No lessons yet" = "لا توجد دروس بعد";
+"Open a lesson link or short code from Home." = "افتح رابط الدرس أو رمزه المختصر من الصفحة الرئيسية.";
+"Search the web with your original input." = "ابحث على الويب باستخدام النص الذي أدخلته.";

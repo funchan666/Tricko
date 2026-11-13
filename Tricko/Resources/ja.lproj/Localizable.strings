@@ -566,3 +566,8 @@
 "Live audience" = "観客の前";
 "Open a magic lesson" = "マジックレッスンを開く";
 "Review your practice" = "練習を見返す";
+"Couldn’t load lessons" = "レッスンを読み込めませんでした";
+"No matching lessons" = "一致するレッスンがありません";
+"No lessons yet" = "レッスンはまだありません";
+"Open a lesson link or short code from Home." = "ホームからレッスンのリンクまたは短縮コードを開いてください。";
+"Search the web with your original input." = "入力した内容でウェブを検索してください。";

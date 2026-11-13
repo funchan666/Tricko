@@ -52,6 +52,7 @@ final class CommerceStore: NSObject, ObservableObject {
     private var ownerID: String?
     private var refreshID = UUID()
     private var refreshTask: Task<Void, Never>?
+    private var rightsRefreshTask: Task<Void, Never>?
     private var refreshingOwner: String?
     var premium: Bool { expiration.map { $0 > Date() } ?? false }
     var canExportMedia: Bool {
@@ -77,53 +78,70 @@ final class CommerceStore: NSObject, ObservableObject {
         }
         SKPaymentQueue.default().add(self)
     }
-    func refresh() async {
+    func refresh(waitForConfiguration: Bool = true) async {
         let owner = api.session?.userId.value
         if let refreshTask, refreshingOwner == owner {
-            await refreshTask.value
+            if waitForConfiguration { await refreshTask.value }
+            else { await rightsRefreshTask?.value }
             return
         }
         refreshTask?.cancel()
-        refreshingOwner = owner
+        rightsRefreshTask?.cancel()
         let id = UUID()
         refreshID = id
-        let task = Task { await self.refreshRightsAndConfiguration(id: id) }
-        refreshTask = task
-        await task.value
-        if refreshID == id { refreshTask = nil; refreshingOwner = nil }
-    }
-    private func refreshRightsAndConfiguration(id: UUID) async {
-        guard refreshID == id, !Task.isCancelled else { return }
         rightsVerified = false
-        let userID = api.session?.userId.value
-        if ownerID != userID { expiration = nil; release = nil; releaseConfigurationError = nil; ownerID = userID }
-        quota.configure(userID: userID, policy: policy, remote: release?.quotaConfig)
-        guard userID != nil else { return }
+        if ownerID != owner { expiration = nil; release = nil; releaseConfigurationError = nil; ownerID = owner }
+        quota.configure(userID: owner, policy: policy, remote: release?.quotaConfig)
+        guard let owner else {
+            refreshTask = nil
+            rightsRefreshTask = nil
+            refreshingOwner = nil
+            return
+        }
         error = nil
-        // Independent requests share the authenticated session, not each other's latency.
-        async let configurationRequest = api.releaseConfiguration()
-        async let rightsRequest = api.rights()
+        refreshingOwner = owner
+        let rights = Task { await self.refreshRights(id: id, owner: owner) }
+        rightsRefreshTask = rights
+        let configuration = Task {
+            await self.refreshConfiguration(id: id, owner: owner)
+            await rights.value
+            guard self.refreshID == id else { return }
+            self.refreshTask = nil
+            self.rightsRefreshTask = nil
+            self.refreshingOwner = nil
+            if self.api.session?.userId.value == owner { self.retryPending() }
+        }
+        refreshTask = configuration
+        // The test ad uses packaged inventory, so it needs only the verified rights.
+        if waitForConfiguration { await configuration.value }
+        else { await rights.value }
+    }
+
+    private func refreshConfiguration(id: UUID, owner: String) async {
         do {
-            let configuration = try await configurationRequest
-            guard refreshID == id, api.session?.userId.value == userID else { return }
+            let configuration = try await api.releaseConfiguration()
+            guard refreshID == id, api.session?.userId.value == owner else { return }
             release = configuration
             releaseConfigurationError = nil
-            quota.configure(userID: userID, policy: policy, remote: configuration.quotaConfig)
+            quota.configure(userID: owner, policy: policy, remote: configuration.quotaConfig)
         } catch {
-            if refreshID == id, api.session?.userId.value == userID {
-                releaseConfigurationError = error.localizedDescription
+            guard refreshID == id, api.session?.userId.value == owner else { return }
+            releaseConfigurationError = error.localizedDescription
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func refreshRights(id: UUID, owner: String) async {
+        do {
+            let rights = try await api.rights()
+            guard refreshID == id, api.session?.userId.value == owner else { return }
+            expiration = rights.expiration
+            rightsVerified = true
+        } catch {
+            if refreshID == id, api.session?.userId.value == owner, self.error == nil {
                 self.error = error.localizedDescription
             }
         }
-        guard refreshID == id, api.session?.userId.value == userID else { return }
-        // Account rights remain independently refreshable if package configuration fails.
-        do {
-            let rights = try await rightsRequest
-            guard refreshID == id, api.session?.userId.value == userID else { return }
-            expiration = rights.expiration
-            rightsVerified = true
-        } catch { if refreshID == id, self.error == nil { self.error = error.localizedDescription } }
-        retryPending()
     }
     // Fetch metadata when the paywall opens; this never creates an order or payment.
     func loadPlans() async {

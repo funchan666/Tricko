@@ -88,6 +88,7 @@ struct AccountDecisionDialog: View {
                     .padding(24).frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
         }.background(Color.black.opacity(0.68).ignoresSafeArea())
+            .trickoImmersiveChrome()
             .accessibilityAddTraits(.isModal)
             .interactiveDismissDisabled()
             .onAppear { titleFocused = true }

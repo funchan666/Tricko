@@ -5,6 +5,7 @@ struct LibraryView: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var offline: OfflineStore
     @EnvironmentObject private var commerce: CommerceStore
+    @State private var showingMembership = false
     @State private var showingExportMembership = false
     var edit: (PracticeRecording) -> Void
     @Binding var filter: String
@@ -45,13 +46,16 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                libraryHeader
+        StagePage(asset: "LibraryBackdrop", minHeight: 254, topAligned: true) { _ in
+            libraryHeader
+        } content: {
+            VStack(alignment: .leading, spacing: 18) {
                 folioIndex
                 librarySection
-            }.trickoPage()
-        }.trickoScreenBackground().sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
+            }
+        }
+            .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
+            .sheet(isPresented: $showingMembership) { MembershipView() }
             .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
             .sheet(item: $removingDownload) { video in
@@ -82,44 +86,57 @@ struct LibraryView: View {
     }
 
     private var libraryHeader: some View {
-        HStack(alignment: .center, spacing: 16) {
-            libraryTitle.frame(maxWidth: .infinity, alignment: .leading)
-            StageArtwork(kind: .notebook, height: 64).frame(width: 64)
-                .clipShape(.rect(cornerRadius: 6))
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 8) {
+                libraryTitle.fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 4)
+                libraryMembership(inline: true)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                libraryTitle
+                libraryMembership(inline: false).frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
     }
 
     private var libraryTitle: some View {
-        LocalizedText("Magic library").font(.stage(.largeTitle, weight: .bold, display: true))
+        LocalizedText("Magic library").font(.stage(.largeTitle, weight: .bold))
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
     }
 
+    private func libraryMembership(inline: Bool) -> some View {
+        PlusEntryButton(active: commerce.premium, compact: true, inline: inline) { showingMembership = true }
+            .accessibilityIdentifier("library.membership")
+    }
+
     private var folioIndex: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 4) {
             ForEach(Category.allCases) { entry in
                 let selected = category == entry
                 Button { filter = entry.rawValue } label: {
                     HStack(alignment: .center, spacing: 12) {
-                        Glyph(symbol: entry.glyph, size: 19, tint: selected ? TrickoStyle.accent : TrickoStyle.ink)
-                            .frame(width: 22)
-                        LocalizedText(entry.title).font(.stage(.title3, display: true))
+                        Glyph(symbol: entry.glyph, size: 18, tint: selected ? TrickoStyle.accent : TrickoStyle.secondary)
+                            .frame(width: 28, height: 28)
+                        LocalizedText(entry.title).font(.stage(.subheadline, weight: selected ? .semibold : .medium))
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text(count(in: entry), format: .number.locale(locale)).font(.stage(.subheadline, weight: .semibold))
                             .monospacedDigit()
-                    }.padding(.horizontal, 14).padding(.vertical, 8)
+                            .foregroundStyle(selected ? TrickoStyle.accent : TrickoStyle.secondary)
+                    }.padding(.horizontal, 8).padding(.vertical, 8)
                         .frame(minHeight: 44)
-                        .foregroundStyle(selected ? TrickoStyle.paper : TrickoStyle.ink)
-                        .background(selected ? TrickoStyle.raised : Color.clear)
+                        .foregroundStyle(TrickoStyle.paper)
+                        .background {
+                            if selected { StageSurface(tone: .velvet, radius: 10, border: TrickoStyle.accent.opacity(0.32)) }
+                        }
                         .contentShape(Rectangle())
                 }.buttonStyle(PressStyle()).accessibilityAddTraits(selected ? .isSelected : [])
                     .accessibilityLabel(LocalizedStringKey(entry.title))
                     .accessibilityValue(Text(count(in: entry), format: .number.locale(locale)))
-                if entry != .exports { Divider().overlay(TrickoStyle.ink.opacity(0.14)) }
             }
-        }.background(TrickoStyle.paper)
-            .clipShape(.rect(cornerRadius: 16))
+        }.padding(6)
+            .background { StageSurface(tone: .smoke, radius: 16) }
     }
 
     private var librarySection: some View {
@@ -657,11 +674,11 @@ private struct LibraryEmptyState: View {
     let title: String
     let message: String
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             LocalizedText(title).font(.stage(.headline))
             LocalizedText(message).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                .lineSpacing(3).fixedSize(horizontal: false, vertical: true)
-        }.multilineTextAlignment(.center).padding(.horizontal, 12).padding(.vertical, 24)
-            .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: false, vertical: true)
+        }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+            .background { StageSurface(tone: .smoke, radius: 16) }
     }
 }

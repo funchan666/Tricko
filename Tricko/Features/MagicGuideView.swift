@@ -93,25 +93,24 @@ private struct MagicNote: Identifiable {
 
 // Shared entry point for Home and the practice tab.
 struct MagicGuideEntry: View {
-    var compact = false
     let open: () -> Void
     var body: some View {
         Button(action: open) {
-            HStack(spacing: 18) {
-                ScenePlate(subject: .handling)
-                    .frame(width: compact ? 72 : 94, height: compact ? 88 : 116)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                VStack(alignment: .leading, spacing: 8) {
-                    LocalizedText("Magic field notes").font(.stage(.title3, display: true))
+            HStack(spacing: 14) {
+                Glyph(symbol: .library, size: 20, tint: TrickoStyle.accent)
+                    .frame(width: 40, height: 40)
+                    .background(TrickoStyle.accent.opacity(0.12), in: Circle())
+                VStack(alignment: .leading, spacing: 4) {
+                    LocalizedText("Magic field notes").font(.stage(.headline))
                         .foregroundStyle(TrickoStyle.paper)
                     LocalizedText("\(MagicNote.all.count) short reads · Available offline")
                         .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
                 }.fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Glyph(symbol: .back, size: 14, tint: TrickoStyle.accent)
                     .rotationEffect(.degrees(180)).frame(width: 20)
-            }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                .background { StageSurface(tone: .smoke, radius: 20) }
+            }.padding(.vertical, 12).frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(alignment: .top) { Divider().overlay(TrickoStyle.line).allowsHitTesting(false) }
                 .contentShape(Rectangle())
         }.buttonStyle(PressStyle()).accessibilityIdentifier("magicGuide.open")
     }
@@ -127,58 +126,30 @@ struct MagicGuideView: View {
     }
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                SheetHeading(title: "Magic field notes") { dismiss() }
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        StageFilter(values: categories, selected: category) { category = $0 }
-                        if let first = notes.first {
-                            NavigationLink(value: first.id) {
-                                ViewThatFits(in: .horizontal) {
-                                    HStack(spacing: 20) {
-                                        ScenePlate(subject: first.cover).frame(width: 148, height: 148)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        VStack(alignment: .leading, spacing: 10) {
-                                            LocalizedText(first.category).textCase(.uppercase)
-                                                .font(.stage(.caption2, weight: .bold)).tracking(1.5)
-                                                .foregroundStyle(TrickoStyle.cardRed)
-                                            LocalizedText(first.shortTitle).font(.stage(.title2, display: true))
-                                                .fixedSize(horizontal: false, vertical: true)
-                                            Glyph(symbol: .back, size: 16, tint: TrickoStyle.ink)
-                                                .rotationEffect(.degrees(180))
-                                        }.frame(minWidth: 112, maxWidth: .infinity, alignment: .leading)
+            StagePage(asset: ScenePlate.Subject.handling.asset, minHeight: 228, maxHeight: 296, topAligned: true) { _ in
+                StageSheetHeader(title: "Magic field notes") { dismiss() }
+            } content: {
+                VStack(alignment: .leading, spacing: 20) {
+                    StageFilter(values: categories, selected: category) { category = $0 }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 260 : 140), spacing: 16)], alignment: .leading, spacing: 20) {
+                        ForEach(notes) { note in
+                            NavigationLink(value: note.id) {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    ScenePlate(subject: note.cover).aspectRatio(1.55, contentMode: .fit)
+                                        .clipShape(.rect(cornerRadius: 10))
+                                    HStack(alignment: .top, spacing: 8) {
+                                        LocalizedText(note.shortTitle).font(.stage(.headline))
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Glyph(symbol: .back, size: 12, tint: TrickoStyle.accent)
+                                            .rotationEffect(.degrees(180)).padding(.top, 3)
                                     }
-                                    VStack(alignment: .leading, spacing: 14) {
-                                        ScenePlate(subject: first.cover).aspectRatio(1.4, contentMode: .fit)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        LocalizedText(first.shortTitle).font(.stage(.title2, display: true))
-                                    }
-                                }.padding(14).foregroundStyle(TrickoStyle.ink)
-                                    .background { StageSurface(tone: .ivory, radius: 22) }
-                                    .contentShape(Rectangle())
-                            }.buttonStyle(PressStyle()).accessibilityIdentifier("magicGuide.\(first.id)")
+                                }.foregroundStyle(TrickoStyle.paper).contentShape(Rectangle())
+                            }.buttonStyle(PressStyle()).accessibilityIdentifier("magicGuide.\(note.id)")
                         }
-                        // Even column counts split cleanly across an active fold.
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 260 : 140), spacing: 16)], alignment: .leading, spacing: 22) {
-                            ForEach(Array(notes.dropFirst())) { note in
-                                NavigationLink(value: note.id) {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        ScenePlate(subject: note.cover).aspectRatio(1, contentMode: .fit)
-                                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                        HStack(alignment: .top, spacing: 8) {
-                                            LocalizedText(note.shortTitle).font(.stage(.headline))
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                            Glyph(symbol: .back, size: 12, tint: TrickoStyle.accent)
-                                                .rotationEffect(.degrees(180)).padding(.top, 3)
-                                        }
-                                    }.foregroundStyle(TrickoStyle.paper).contentShape(Rectangle())
-                                }.buttonStyle(PressStyle()).accessibilityIdentifier("magicGuide.\(note.id)")
-                            }
-                        }
-                    }.trickoPage()
+                    }
                 }
-            }.trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+            }
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: String.self) { id in
                     if let note = MagicNote.all.first(where: { $0.id == id }) {
@@ -194,59 +165,63 @@ private struct MagicNoteReader: View {
     @Environment(\.dismiss) private var dismiss
     @State private var source: PolicyDocument?
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                IconButton(symbol: .back, label: "Back to field notes") { dismiss() }
-                LocalizedText(note.category).font(.stage(.subheadline, weight: .semibold))
-                    .foregroundStyle(TrickoStyle.secondary)
-                Spacer(minLength: 0)
-            }.padding(.horizontal, 16).padding(.top, 8)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    ScenePlate(subject: note.cover).aspectRatio(1, contentMode: .fit).frame(maxWidth: 360)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        StagePage(asset: note.cover.asset, minHeight: 256, topAligned: true) { height in
+            VStack(alignment: .leading, spacing: 12) {
+                Button { dismiss() } label: {
+                    Glyph(symbol: .back, size: 17, tint: TrickoStyle.paper)
+                        .frame(width: 44, height: 44)
+                        .trickoGlass(in: Circle())
+                        .contentShape(Circle())
+                }.buttonStyle(PressStyle()).accessibilityLabel(LocalizedStringKey("Back to field notes"))
+                Spacer(minLength: 40)
+                VStack(alignment: .leading, spacing: 6) {
+                    LocalizedText(note.category).font(.stage(.subheadline, weight: .semibold))
+                        .foregroundStyle(TrickoStyle.accent)
                     LocalizedText(note.title)
-                        .font(.stage(.title, display: true))
-                        .foregroundStyle(TrickoStyle.paper).accessibilityAddTraits(.isHeader)
+                        .font(.stage(.title, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
                         .fixedSize(horizontal: false, vertical: true)
-                    ForEach(note.sections.indices, id: \.self) { index in
-                        VStack(alignment: .leading, spacing: 10) {
-                            LocalizedText(note.sections[index].title).font(.stage(.headline))
-                                .accessibilityAddTraits(.isHeader)
-                            LocalizedText(note.sections[index].body).font(.stage(.body)).lineSpacing(5)
-                                .foregroundStyle(TrickoStyle.paper.opacity(0.9))
-                                .textSelection(.enabled)
-                        }.fixedSize(horizontal: false, vertical: true)
-                    }
+                }
+            }.frame(minHeight: max(0, height - 32))
+        } content: {
+            VStack(alignment: .leading, spacing: 28) {
+                ForEach(note.sections.indices, id: \.self) { index in
                     VStack(alignment: .leading, spacing: 10) {
-                        LocalizedText("TRY THIS AT YOUR NEXT PRACTICE").font(.stage(.caption2, weight: .bold)).tracking(1.5)
-                            .foregroundStyle(TrickoStyle.cardRed)
-                        LocalizedText(note.takeaway).font(.stage(.body, weight: .medium)).lineSpacing(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }.foregroundStyle(TrickoStyle.ink)
-                        .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-                        .background { StageSurface(tone: .ivory, radius: 22) }
-                    if !note.sources.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
-                            LocalizedText("Further reading").font(.stage(.headline))
-                            LocalizedText("Opens online").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                            ForEach(note.sources, id: \.address) { reference in
-                                if let url = URL(string: reference.address) {
-                                    Button {
-                                        source = PolicyDocument(title: reference.title, url: url)
-                                    } label: {
-                                        Text(verbatim: reference.title).font(.stage(.subheadline, weight: .medium))
-                                            .multilineTextAlignment(.leading)
-                                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                            .contentShape(Rectangle())
-                                    }.foregroundStyle(TrickoStyle.accent).buttonStyle(PressStyle())
-                                }
+                        LocalizedText(note.sections[index].title).font(.stage(.headline))
+                            .accessibilityAddTraits(.isHeader)
+                        LocalizedText(note.sections[index].body).font(.stage(.body)).lineSpacing(5)
+                            .foregroundStyle(TrickoStyle.paper.opacity(0.9))
+                            .textSelection(.enabled)
+                    }.fixedSize(horizontal: false, vertical: true)
+                }
+                VStack(alignment: .leading, spacing: 10) {
+                    LocalizedText("TRY THIS AT YOUR NEXT PRACTICE").font(.stage(.caption2, weight: .bold)).tracking(1.5)
+                        .foregroundStyle(TrickoStyle.cardRed)
+                    LocalizedText(note.takeaway).font(.stage(.body, weight: .medium)).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }.foregroundStyle(TrickoStyle.ink)
+                    .padding(22).frame(maxWidth: .infinity, alignment: .leading)
+                    .background { StageSurface(tone: .ivory, radius: 22) }
+                if !note.sources.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        LocalizedText("Further reading").font(.stage(.headline))
+                        LocalizedText("Opens online").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                        ForEach(note.sources, id: \.address) { reference in
+                            if let url = URL(string: reference.address) {
+                                Button {
+                                    source = PolicyDocument(title: reference.title, url: url)
+                                } label: {
+                                    Text(verbatim: reference.title).font(.stage(.subheadline, weight: .medium))
+                                        .multilineTextAlignment(.leading)
+                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                }.foregroundStyle(TrickoStyle.accent).buttonStyle(PressStyle())
                             }
                         }
                     }
-                }.trickoPage()
+                }
             }
-        }.trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+        }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $source) { PolicyBrowser(document: $0) }
     }

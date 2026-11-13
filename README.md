@@ -13,6 +13,8 @@ Open `Tricko.xcodeproj` and select the shared `Tricko` scheme. The minimum deplo
 
 For playback integration, enter the Clipo test short code from the Toolkit on Home. Verify that the search result opens in the full-screen player. Use a new or authorized test account when verifying Apple purchases and restores.
 
+The demo app-open ad preloads during guest login. Its five-second cold-start window waits for verified non-Plus rights while package configuration loads independently. The `AppOpen` log category records inventory loading, skips, presentation failures and impressions.
+
 ## Production transition
 
 After test acceptance, update the Bundle ID, API domain, AdMob configuration, official links and registered membership mapping for this app. The release configuration name stays `Tricko`. Check backend registration, receipt routing and signing against the effective build settings.

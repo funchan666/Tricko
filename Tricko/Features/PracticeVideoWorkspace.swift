@@ -45,71 +45,62 @@ struct ToolsView: View {
     @State private var showingRoutinePractice = false
     private let tools: [VideoTool] = [.speed, .frame, .audio]
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                LocalizedText("Practice").font(.stage(.largeTitle, weight: .bold, display: true))
+        StagePage(asset: "PracticeBackdrop", minHeight: 292) { height in
+            VStack(alignment: .leading, spacing: 12) {
+                LocalizedText("Practice").font(.stage(.largeTitle, weight: .bold))
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                // Plate and primary action: side by side when there is room
-                // (inner display), stacked on the compact width.
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .bottom, spacing: 20) {
-                        ScenePlate(subject: .review).frame(width: 260, height: 192)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        reviewCall.frame(minWidth: 260)
-                    }
-                    VStack(alignment: .leading, spacing: 16) {
-                        ScenePlate(subject: .review).aspectRatio(1.65, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        reviewCall
-                    }
-                }
-                VStack(spacing: 0) {
-                    ForEach(tools) { tool in
-                        Button { selectedTool = tool } label: {
-                            HStack(spacing: 14) {
-                                ScenePlate(subject: subject(tool)).frame(width: 62, height: 54)
-                                    .clipShape(.rect(cornerRadius: 8))
-                                VStack(alignment: .leading, spacing: 4) {
-                                    LocalizedText(tool.title).font(.stage(.title3, display: true))
-                                    LocalizedText(tool.detail).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                                }.fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Glyph(symbol: .back, size: 12, tint: TrickoStyle.accent).rotationEffect(.degrees(180))
-                            }.padding(.vertical, 8)
-                                .foregroundStyle(TrickoStyle.paper).contentShape(Rectangle())
-                        }.buttonStyle(PressStyle())
-                            .accessibilityIdentifier("tools.\(tool.rawValue)")
-                        if tool != .audio { Divider().overlay(TrickoStyle.line) }
-                    }
-                }
+                Spacer(minLength: 24)
+                reviewButton
+            }
+            .frame(minHeight: max(0, height - 32))
+        } content: {
+            VStack(alignment: .leading, spacing: 16) {
+                videoTools
                 RoutinePracticeEntry { showingRoutinePractice = true }
                 MagicGuideEntry { showingGuide = true }
-            }.trickoPage()
-        }.trickoScreenBackground()
+            }
+        }
             .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
             .sheet(isPresented: $showingGuide) { MagicGuideView() }
             .sheet(isPresented: $showingRoutinePractice) { RoutinePracticeView() }
     }
-    private var reviewCall: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            LocalizedText("Import a practice video, slow it down, reframe your hands and check every angle.")
-                .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Button { selectedTool = .studio } label: {
+
+    private var reviewButton: some View {
+        Button { selectedTool = .studio } label: {
+            HStack(spacing: 10) {
+                Glyph(symbol: .edit, size: 16, tint: TrickoStyle.ink)
                 LocalizedText("Review practice").font(.stage(.subheadline, weight: .semibold))
-                    .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 18).padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .foregroundStyle(TrickoStyle.ink)
-                    .background { StageSurface(tone: .gold, radius: 12) }
-                    .contentShape(Rectangle())
-            }.buttonStyle(PressStyle()).accessibilityIdentifier("tools.studio")
-        }
+            }
+            .padding(.horizontal, 18).padding(.vertical, 12).frame(minHeight: 48)
+            .foregroundStyle(TrickoStyle.ink)
+            .background(TrickoStyle.accent, in: Capsule())
+            .contentShape(Capsule())
+        }.buttonStyle(PressStyle()).accessibilityIdentifier("tools.studio")
     }
-    private func subject(_ tool: VideoTool) -> ScenePlate.Subject {
-        switch tool { case .speed: .speed; case .frame: .frame; case .audio: .audio; case .studio: .review }
+
+    private var videoTools: some View {
+        VStack(spacing: 0) {
+            ForEach(tools) { tool in
+                Button { selectedTool = tool } label: {
+                    HStack(spacing: 14) {
+                        Glyph(symbol: tool.glyph, size: 20, tint: TrickoStyle.accent)
+                            .frame(width: 40, height: 40)
+                            .background(TrickoStyle.accent.opacity(0.12), in: Circle())
+                        VStack(alignment: .leading, spacing: 4) {
+                            LocalizedText(tool.title).font(.stage(.subheadline, weight: .semibold))
+                            LocalizedText(tool.detail).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                        }.fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Glyph(symbol: .back, size: 12, tint: TrickoStyle.accent).rotationEffect(.degrees(180))
+                    }.padding(.vertical, 10)
+                        .foregroundStyle(TrickoStyle.paper).contentShape(Rectangle())
+                }.buttonStyle(PressStyle())
+                    .accessibilityIdentifier("tools.\(tool.rawValue)")
+                if tool != .audio { Divider().overlay(TrickoStyle.line) }
+            }
+        }
     }
 }
 
@@ -209,7 +200,8 @@ struct EditorWorkspace: View {
                     LocalizedText("Your original stays untouched. Exports are saved to your local library.").font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
                 } else {
                     VStack(alignment: .leading, spacing: 18) {
-                        StageArtwork(kind: .cards, height: 144)
+                        StagePhoto(asset: "ArtCardFan").frame(width: 104, height: 76)
+                            .clipShape(.rect(cornerRadius: 12)).frame(maxWidth: .infinity)
                         VStack(alignment: .leading, spacing: 10) {
                             LocalizedText("Start with a video.").font(.stage(.headline))
                             LocalizedText("Choose a clip from your device. We’ll keep your original untouched.")
@@ -232,7 +224,8 @@ struct EditorWorkspace: View {
                             SectionLabel(title: "From raw to ready")
                             FeatureRow(symbol: .edit, title: "Keep the best part", detail: "Trim the timing, crop the frame, change the pace.")
                             HStack(spacing: 16) {
-                                StageArtwork(kind: .props, height: 72).frame(width: 108)
+                                StagePhoto(asset: "ArtPropCase").frame(width: 72, height: 60)
+                                    .clipShape(.rect(cornerRadius: 10))
                                 VStack(alignment: .leading, spacing: 6) {
                                     LocalizedText("Export your way").font(.stage(.subheadline, weight: .semibold))
                                     LocalizedText("Save a video or extract an audio track.").font(.stage(.caption))

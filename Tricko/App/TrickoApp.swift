@@ -59,7 +59,6 @@ struct TrickoStartupHost: View {
 
     var body: some View {
         ZStack {
-            Color("LaunchBackground").ignoresSafeArea()
             // Mount once so local content and authentication prepare while the
             // bounded app-open opportunity runs, without rebuilding navigation.
             TrickoRootView(startupFinished: finished)
@@ -68,7 +67,7 @@ struct TrickoStartupHost: View {
             if !finished {
                 TrickoStartupView().transition(.opacity)
             }
-        }
+        }.trickoScreenBackground()
         .task(id: scenePhase) {
             guard scenePhase == .active, !finished else { return }
             ads.beginStartup(commerce: commerce, accountAccess: accountAccess)
@@ -114,7 +113,7 @@ struct TrickoStartupView: View {
     }
 }
 
-private enum TrickoTab: Int, Hashable {
+private enum TrickoTab: Int, CaseIterable, Hashable {
     case home, discover, practice, library
 
     var title: String { ["Home", "Discover", "Practice", "Library"][rawValue] }
@@ -194,32 +193,38 @@ struct TrickoRootView: View {
 
     @ViewBuilder private var navigation: some View {
         if #available(iOS 26.0, *) {
-            tabs.tabBarMinimizeBehavior(.never)
+            glassTabs.tabBarMinimizeBehavior(.never)
         } else {
-            tabs
+            labeledTabs
         }
     }
 
-    private var tabs: some View {
+    @available(iOS 26.0, *)
+    private var glassTabs: some View {
+        TabView(selection: tab) {
+            ForEach(TrickoTab.allCases, id: \.self) { item in
+                Tab(value: item) {
+                    tabPage(item)
+                } label: {
+                    Image(item.artwork).renderingMode(.template)
+                }
+                .accessibilityLabel(tabTitle(item))
+                .accessibilityIdentifier("tab.\(item.title.lowercased())")
+            }
+        }
+        .trickoScreenBackground()
+    }
+
+    private var labeledTabs: some View {
         TabView(selection: tab) {
             Group {
-                HomeView(openPractice: { tab.wrappedValue = .practice }, openAccount: { showingAccount = true },
-                         link: $linkDraft, channel: $channel, searchRequest: $searchRequest)
-                    .tabItem { tabLabel(.home) }.tag(TrickoTab.home)
-
-                ZStack {
-                    // Playback and view counting belong to the visible feed.
-                    if startupFinished, tab.wrappedValue == .discover { DiscoverView() }
-                    else { TrickoStyle.background }
+                ForEach(TrickoTab.allCases, id: \.self) { item in
+                    tabPage(item).tabItem {
+                        Label { tabTitle(item) } icon: {
+                            Image(item.artwork).renderingMode(.template)
+                        }.accessibilityIdentifier("tab.\(item.title.lowercased())")
+                    }.tag(item)
                 }
-                .tabItem { tabLabel(.discover) }.tag(TrickoTab.discover)
-
-                ToolsView()
-                    .tabItem { tabLabel(.practice) }.tag(TrickoTab.practice)
-
-                LibraryView(edit: { editing = $0 }, filter: $libraryFilter)
-                    .sheet(item: $editing) { EditorSheet(initialMovie: $0) }
-                    .tabItem { tabLabel(.library) }.tag(TrickoTab.library)
             }
             .toolbarBackground(TrickoStyle.surface, for: .tabBar)
             .toolbarBackground(.visible, for: .tabBar)
@@ -228,13 +233,27 @@ struct TrickoRootView: View {
         .trickoScreenBackground()
     }
 
-    private func tabLabel(_ item: TrickoTab) -> some View {
-        Label {
-            Text(verbatim: L10n.text(item.title, language: AppLanguage.from(locale)))
-        } icon: {
-            Image(item.artwork).renderingMode(.template)
+    @ViewBuilder private func tabPage(_ item: TrickoTab) -> some View {
+        switch item {
+        case .home:
+            HomeView(openPractice: { tab.wrappedValue = .practice }, openAccount: { showingAccount = true },
+                     link: $linkDraft, channel: $channel, searchRequest: $searchRequest)
+        case .discover:
+            ZStack {
+                // Playback and view counting belong to the visible feed.
+                if startupFinished, tab.wrappedValue == .discover { DiscoverView() }
+                else { TrickoStyle.background }
+            }
+        case .practice:
+            ToolsView()
+        case .library:
+            LibraryView(edit: { editing = $0 }, filter: $libraryFilter)
+                .sheet(item: $editing) { EditorSheet(initialMovie: $0) }
         }
-        .accessibilityIdentifier("tab.\(item.title.lowercased())")
+    }
+
+    private func tabTitle(_ item: TrickoTab) -> Text {
+        Text(verbatim: L10n.text(item.title, language: AppLanguage.from(locale)))
     }
 
     private func finishLessonDismissal() {
@@ -258,7 +277,8 @@ struct ConnectionPanel: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            StageArtwork(kind: .hat, height: 170)
+            StagePhoto(asset: "ArtTopHat").frame(width: 112, height: 80)
+                .clipShape(.rect(cornerRadius: 12))
             if let error {
                 MessagePanel(title: "Let’s reconnect.", message: error)
                 ActionButton(title: "Try again", busy: connecting) { attempt += 1 }
