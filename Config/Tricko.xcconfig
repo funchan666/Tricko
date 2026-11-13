@@ -1,0 +1,23 @@
+// Tricko — TEST configuration (toolkit fixed test baseline, Clipo 0d55c2d).
+// Do not replace until the user confirms testing passed and supplies production values.
+// Test builds of every toolkit app share this Bundle ID: installing one replaces another.
+PRODUCT_BUNDLE_IDENTIFIER = im.seex.lobo
+TRICKO_API_HOST = devapi.io-jp.com
+// Login `source` and every business `packageName`.
+TRICKO_SERVICE_PACKAGE_NAME = $(PRODUCT_BUNDLE_IDENTIFIER)
+// getV2 `name`: the app name, original capitalisation.
+TRICKO_RELEASE_NAME = Tricko
+// Empty expansion preserves // in xcconfig URL values. HTTPS placeholders until production.
+TRICKO_WEBSITE_URL = https:/$()/example.com/
+TRICKO_PRIVACY_URL = https:/$()/example.com/
+TRICKO_TERMS_URL = https:/$()/example.com/
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+SWIFT_VERSION = 5.0
+TARGETED_DEVICE_FAMILY = 1
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+// Google official iOS demo configuration (App ID + official app-open/rewarded units).
+// Production: set NO and use the App ID that getV2.adList returns for this app.
+TRICKO_ADS_TEST_MODE = YES
+TRICKO_GOOGLE_ADS_APP_ID = ca-app-pub-3940256099942544~1458002511
+OTHER_LDFLAGS = $(inherited) -ObjC
