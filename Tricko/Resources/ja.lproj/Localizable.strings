@@ -556,3 +556,13 @@
 "The distribution package does not exist" = "アプリの配信設定が見つかりません。";
 "Web search" = "ウェブ検索";
 "Opening page…" = "ページを開いています…";
+
+"Magic library" = "マジックライブラリ";
+"Backstage pass" = "バックステージパス";
+
+"Practice log" = "練習記録";
+"Mirror" = "鏡の前";
+"Camera" = "カメラの前";
+"Live audience" = "観客の前";
+"Open a magic lesson" = "マジックレッスンを開く";
+"Review your practice" = "練習を見返す";

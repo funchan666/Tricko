@@ -27,12 +27,16 @@ struct RoutinePracticeView: View {
     @Environment(\.locale) private var locale
     @StateObject private var journal = RoutineJournal()
     @State private var discipline = MagicDiscipline.cards
-    @State private var setting = PracticeSetting.camera
+    @State private var setting: PracticeSetting
     @State private var routineName = ""
     @State private var notesDraft = ""
     @State private var showingHistory = false
     @State private var selectedSession: RoutineSession?
     @FocusState private var editingNotes: Bool
+
+    init(initialSetting: PracticeSetting = .camera) {
+        _setting = State(initialValue: initialSetting)
+    }
 
     var body: some View {
         VStack(spacing: 0) {

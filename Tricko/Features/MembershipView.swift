@@ -33,15 +33,7 @@ struct MembershipView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                VStack(spacing: 12) {
-                    StageArtwork(kind: .props, height: 136)
-                        .accessibilityHidden(true)
-                    LocalizedText(commerce.premium ? "More time at the table." : "Keep your magic growing.")
-                        .font(.stage(.title, display: true))
-                        .foregroundStyle(TrickoStyle.paper)
-                    LocalizedText("Unlimited views, downloads and media exports.")
-                        .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                membershipIntro
 
                 if exportRequired {
                     LocalizedText("Export is included with Plus.")
@@ -55,24 +47,20 @@ struct MembershipView: View {
                             LocalizedText("Access through \(expiration.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(locale))).")
                                 .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
                         }
-                    }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 22))
+                    }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 8))
+                    renewalDisclosure
                 } else {
                     if api.session == nil { ConnectionPanel() }
-                    VStack(spacing: 12) {
-                        ForEach(plans, id: \.productIdentifier) { plan in
-                            planRow(plan)
-                        }
-                    }
+                    if !plans.isEmpty { planPicker }
                     if let error = commerce.plansError {
                         ErrorNote(message: error)
                         Button("Retry") { Task { await commerce.loadPlans() } }
                             .buttonStyle(CompactActionStyle()).disabled(interactionLocked)
                     }
+                    renewalDisclosure
                     VStack(spacing: 12) {
-                        ActionButton(title: purchaseButtonTitle) { subscribe() }
-                            .disabled(interactionLocked || selectedPlan == nil)
-                            .accessibilityIdentifier("membership.subscribe")
+                        purchaseAction
                         if purchasing {
                             Image("TrickoLoadingMark").resizable().scaledToFit()
                                 .frame(width: 42, height: 6)
@@ -86,6 +74,8 @@ struct MembershipView: View {
                     }
                 }
 
+                restoreLink
+
                 if attemptedPurchaseAction {
                     if let error = commerce.error { ErrorNote(message: error) }
                     if let message = commerce.message {
@@ -93,26 +83,10 @@ struct MembershipView: View {
                     }
                 }
 
+                PolicyLinks(compact: true)
+
                 if !exportRequired, !commerce.premium, api.session != nil { rewardOption }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    LocalizedText("Renews automatically. Cancel in your Apple account at least 24 hours before renewal.")
-                        .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 16) {
-                            restoreLink
-                            PolicyLinks(compact: true)
-                        }
-                        VStack(alignment: .leading, spacing: 0) {
-                            restoreLink
-                            PolicyLinks(compact: true)
-                        }
-                    }
-                }
-
-            }.padding(.horizontal, 20).padding(.top, 4).padding(.bottom, 20)
-                .frame(maxWidth: 560).frame(maxWidth: .infinity)
+            }.trickoPage()
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             SheetHeading(title: "Plus") {
@@ -155,48 +129,125 @@ struct MembershipView: View {
         return "Subscribe"
     }
 
-    private func planRow(_ product: SKProduct) -> some View {
+    private var membershipIntro: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 16) {
+                membershipArtwork(0.67).frame(width: 94)
+                membershipCopy(titleColor: TrickoStyle.ink, detailColor: TrickoStyle.paperSecondary)
+                    .frame(minWidth: 152)
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                membershipArtwork(1.25).frame(maxWidth: 144)
+                membershipCopy(titleColor: TrickoStyle.ink, detailColor: TrickoStyle.paperSecondary)
+            }
+        }.padding(12)
+            .background(TrickoStyle.paper, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func membershipCopy(titleColor: Color, detailColor: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            membershipTitle.foregroundStyle(titleColor)
+            LocalizedText("Unlimited views, downloads and media exports.")
+                .font(.stage(.subheadline)).foregroundStyle(detailColor)
+                .fixedSize(horizontal: false, vertical: true)
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var membershipTitle: some View {
+        LocalizedText("Backstage pass")
+            .font(.stage(.largeTitle, display: true))
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private func membershipArtwork(_ ratio: CGFloat) -> some View {
+        Color.clear.aspectRatio(ratio, contentMode: .fit)
+            .overlay {
+                GeometryReader { frame in
+                    Image("PlusArtwork").resizable().scaledToFill()
+                        .frame(width: frame.size.width, height: frame.size.height)
+                        .clipped()
+                }
+            }.accessibilityHidden(true).allowsHitTesting(false)
+    }
+
+    private var planPicker: some View {
+        VStack(spacing: 0) {
+            ForEach(plans, id: \.productIdentifier) { plan in
+                if plan.productIdentifier != plans.first?.productIdentifier {
+                    Divider().overlay(TrickoStyle.ink.opacity(0.16))
+                }
+                planOption(plan)
+            }
+        }.background(TrickoStyle.paper, in: RoundedRectangle(cornerRadius: 8))
+            .clipShape(.rect(cornerRadius: 8))
+    }
+
+    private func planOption(_ product: SKProduct) -> some View {
         let selected = selectedPlan?.productIdentifier == product.productIdentifier
         let price = commerce.price(product)
         let period = commerce.period(product, locale: locale)
-        let foreground = selected ? TrickoStyle.ink : TrickoStyle.paper
-        let secondary = selected ? TrickoStyle.paperSecondary : TrickoStyle.secondary
+        let ink = TrickoStyle.ink
+        let secondary = TrickoStyle.paperSecondary
         return Button { selectedID = product.productIdentifier } label: {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .center, spacing: 20) {
-                    planName(product, selected: selected, foreground: foreground, secondary: secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 16) {
+                    Text(verbatim: product.localizedTitle).font(.stage(.title3, display: true))
+                        .fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: 0)
-                    planPrice(price, period: period, foreground: foreground, secondary: secondary)
+                    folioPrice(price, period: period, alignment: .trailing, intrinsicWidth: true)
                 }
-                VStack(alignment: .leading, spacing: 12) {
-                    planName(product, selected: selected, foreground: foreground, secondary: secondary)
-                    planPrice(price, period: period, foreground: foreground, secondary: secondary)
-                }
-            }
-            .padding(16).frame(maxWidth: .infinity, alignment: .leading)
-            .background { StageSurface(tone: selected ? .ivory : .velvet) }
-            .contentShape(.interaction, RoundedRectangle(cornerRadius: 22))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(verbatim: product.localizedTitle).font(.stage(.title3, display: true))
+                    folioPrice(price, period: period, alignment: .leading)
+                }.fixedSize(horizontal: false, vertical: true)
+            }.overlay(alignment: .leading) {
+                Rectangle().fill(selected ? TrickoStyle.ink : Color.clear).frame(width: 2)
+                    .allowsHitTesting(false)
+            }.padding(.horizontal, 12)
+                .padding(.vertical, 12)
+                .padding(.leading, 8)
+                .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+                .foregroundStyle(ink)
+                .background(selected ? TrickoStyle.accent : Color.clear)
+                .contentShape(Rectangle())
         }.buttonStyle(PressStyle()).disabled(interactionLocked)
             .accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityIdentifier("membership.plan.\(product.productIdentifier)")
     }
 
-    private func planName(_ product: SKProduct, selected: Bool, foreground: Color, secondary: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: product.localizedTitle).font(.stage(.headline)).foregroundStyle(foreground)
-            if selected {
-                LocalizedText("Selected").font(.stage(.caption)).foregroundStyle(secondary)
-            }
-        }.fixedSize(horizontal: false, vertical: true)
+    private func folioPrice(_ price: String, period: String, alignment: HorizontalAlignment,
+                            intrinsicWidth: Bool = false) -> some View {
+        VStack(alignment: alignment, spacing: 3) {
+            Text(verbatim: price).environment(\.layoutDirection, .leftToRight)
+                .font(.stage(.title2, display: true))
+            LocalizedText("Billed every %@", period).font(.stage(.caption))
+                .foregroundStyle(TrickoStyle.paperSecondary)
+        }.fixedSize(horizontal: intrinsicWidth, vertical: true)
     }
 
-    private func planPrice(_ price: String, period: String, foreground: Color, secondary: Color) -> some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            Text(verbatim: price).environment(\.layoutDirection, .leftToRight)
-                .font(.stage(.title2, weight: .bold)).foregroundStyle(foreground).fixedSize()
-            LocalizedText("Billed every %@", period).font(.stage(.caption)).foregroundStyle(secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
+    private var renewalDisclosure: some View {
+        LocalizedText("Renews automatically. Cancel in your Apple account at least 24 hours before renewal.")
+            .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var purchaseAction: some View {
+        Button(action: subscribe) {
+            LocalizedText(purchaseButtonTitle).font(.stage(.title3, weight: .semibold, display: true))
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 14).padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: 51)
+                .foregroundStyle(TrickoStyle.ink)
+                .background(TrickoStyle.accent, in: RoundedRectangle(cornerRadius: 6))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 4).strokeBorder(TrickoStyle.ink.opacity(0.48))
+                        .padding(4).allowsHitTesting(false)
+                }
+                .contentShape(Rectangle())
+        }.buttonStyle(PressStyle())
+            .disabled(interactionLocked || selectedPlan == nil)
+            .accessibilityIdentifier("membership.subscribe")
     }
 
     private func subscribe() {
@@ -263,17 +314,20 @@ struct MembershipView: View {
             commerce.restore()
         } label: {
             LocalizedText("Restore purchases")
-                .font(.stage(.footnote, weight: .medium))
-                .foregroundStyle(TrickoStyle.accent)
-                .lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                .font(.stage(.subheadline, weight: .semibold, display: true))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 12).padding(.vertical, 8)
                 .frame(minHeight: 44)
+                .foregroundStyle(TrickoStyle.ink)
+                .background(TrickoStyle.paper, in: RoundedRectangle(cornerRadius: 5))
                 .contentShape(Rectangle())
         }.disabled(interactionLocked).buttonStyle(PressStyle())
+            .accessibilityIdentifier("membership.restore")
     }
-
 }
 
 struct AccountView: View {
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
@@ -285,30 +339,31 @@ struct AccountView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                if let session = api.session {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline) {
-                            accountIdentity(session.userId.value)
-                            Spacer(minLength: 16)
-                            accountStatus
+        VStack(spacing: 0) {
+            SheetHeading(title: "Me") { dismiss() }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    if let session = api.session {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(alignment: .firstTextBaseline) {
+                                accountIdentity(session.userId.value)
+                                Spacer(minLength: 16)
+                                accountStatus
+                            }
+                            VStack(alignment: .leading, spacing: 8) {
+                                accountIdentity(session.userId.value)
+                                accountStatus
+                            }
                         }
-                        VStack(alignment: .leading, spacing: 8) {
-                            accountIdentity(session.userId.value)
-                            accountStatus
-                        }
-                    }
-                    membershipCard
-                    allowance
-                } else { ConnectionPanel() }
-                AccountSettingsSection()
-                LocalizedText("Version \(api.configuration.version)")
-                    .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                    .frame(maxWidth: .infinity).padding(.top, 4)
+                        membershipCard
+                        allowance
+                    } else { ConnectionPanel() }
+                    AccountSettingsSection()
+                    LocalizedText("Version \(api.configuration.version)")
+                        .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                        .frame(maxWidth: .infinity).padding(.top, 4)
+                }.trickoPage()
             }
-            .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 24)
-            .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.trickoScreenBackground().foregroundStyle(.white)
             .sheet(isPresented: $paywall) { MembershipView() }
     }

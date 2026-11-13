@@ -169,9 +169,10 @@ struct StageSurface: View {
 }
 
 struct PressStyle: ButtonStyle {
+    var disabledOpacity: Double = 0.55
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.opacity(!isEnabled ? 0.55 : (configuration.isPressed ? 0.7 : 1))
+        configuration.label.opacity(!isEnabled ? disabledOpacity : (configuration.isPressed ? 0.7 : 1))
     }
 }
 // Compact controls retain their full localized label; enclosing layouts can scroll
@@ -223,8 +224,10 @@ struct MessagePanel: View {
 struct ErrorNote: View {
     @Environment(\.locale) private var locale
     let message: String
+    var onPaper = false
     var body: some View {
-        LocalizedText(message).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.danger)
+        LocalizedText(message).font(.stage(.subheadline))
+            .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.danger)
             .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 8)
             .accessibilityLabel(Text(verbatim: L10n.display("Error: \(message)", language: AppLanguage.from(locale))))
     }

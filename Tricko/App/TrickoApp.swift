@@ -62,7 +62,7 @@ struct TrickoStartupHost: View {
             Color("LaunchBackground").ignoresSafeArea()
             // Mount once so local content and authentication prepare while the
             // bounded app-open opportunity runs, without rebuilding navigation.
-            TrickoRootView()
+            TrickoRootView(startupFinished: finished)
                 .allowsHitTesting(finished)
                 .accessibilityHidden(!finished)
             if !finished {
@@ -114,15 +114,15 @@ struct TrickoStartupView: View {
     }
 }
 
-enum TrickoTab: Int, CaseIterable, Hashable {
-    case home, discover, tools, library, me
-    var name: String { ["Home", "Discover", "Practice", "Library", "Me"][rawValue] }
-    // Original single-colour template artwork; the system tab bar tints it and,
-    // on iPhone Duo, lays the bar out vertically with title + image.
-    var artwork: String { ["TabHome", "TabDiscover", "TabPractice", "TabLibrary", "TabMe"][rawValue] }
+private enum TrickoTab: Int, Hashable {
+    case home, discover, practice, library
+
+    var title: String { ["Home", "Discover", "Practice", "Library"][rawValue] }
+    var artwork: String { ["TabHome", "TabDiscover", "TabPractice", "TabLibrary"][rawValue] }
 }
 
 struct TrickoRootView: View {
+    let startupFinished: Bool
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var commerce: CommerceStore
@@ -130,87 +130,122 @@ struct TrickoRootView: View {
     @EnvironmentObject private var offline: OfflineStore
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.locale) private var locale
-    // Scene-level state survives fold/unfold and display changes.
     @SceneStorage("root.tab") private var tabRaw = TrickoTab.home.rawValue
     @SceneStorage("home.linkDraft") private var linkDraft = ""
+    @State private var showingAccount = false
     @State private var editing: PracticeRecording?
     @State private var libraryFilter = "Saved"
+    @State private var channel: ChannelRoute?
+    @State private var searchRequest: LessonSearch?
+    @State private var downloadsAfterLesson = false
+
+    init(startupFinished: Bool) {
+        self.startupFinished = startupFinished
+    }
+
     private var tab: Binding<TrickoTab> {
         Binding(get: { TrickoTab(rawValue: tabRaw) ?? .home }, set: { tabRaw = $0.rawValue })
     }
+
     var body: some View {
-        TabView(selection: tab) {
-            NavigationStack {
-                HomeView(openAccount: { tab.wrappedValue = .me }, discover: { tab.wrappedValue = .discover },
-                         openTools: { tab.wrappedValue = .tools }, link: $linkDraft)
-                    .toolbar(.hidden, for: .navigationBar)
-            }
-            .tabItem { tabLabel(.home) }.tag(TrickoTab.home)
-
-            NavigationStack {
-                Group {
-                    // Mount the feed only while selected so playback, preloading and
-                    // view counting never run on a hidden tab.
-                    if tab.wrappedValue == .discover {
-                        DiscoverView(onExit: { tab.wrappedValue = .home })
-                    } else { TrickoStyle.background.ignoresSafeArea() }
+        navigation
+            .foregroundStyle(TrickoStyle.paper)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if let message = library.error {
+                    HStack {
+                        LocalizedText(message).font(.stage(.subheadline))
+                        IconButton(symbol: .close, label: "Dismiss message") { library.error = nil }
+                    }.padding(14).background { StageSurface(tone: .velvet) }.padding()
+                } else if tab.wrappedValue != .discover, offline.completedDownloadID != nil {
+                    DownloadCompletionNotice().padding(.top, 8)
                 }
-                .toolbar(.hidden, for: .navigationBar)
             }
-            .toolbarBackground(.visible, for: .tabBar)
-            .toolbarBackground(Color.black, for: .tabBar)
-            .tabItem { tabLabel(.discover) }.tag(TrickoTab.discover)
-
-            NavigationStack { ToolsView().toolbar(.hidden, for: .navigationBar) }
-                .tabItem { tabLabel(.tools) }.tag(TrickoTab.tools)
-
-            NavigationStack {
-                LibraryView(edit: { editing = $0 }, filter: $libraryFilter).toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showingAccount) {
+                AccountView()
+                    .modifier(AccountBusyModifier())
             }
-            .tabItem { tabLabel(.library) }.tag(TrickoTab.library)
-
-            NavigationStack { AccountView().toolbar(.hidden, for: .navigationBar) }
-                .tabItem { tabLabel(.me) }.tag(TrickoTab.me)
-        }
-        .toolbarBackground(TrickoStyle.background, for: .tabBar)
-        .foregroundStyle(TrickoStyle.paper)
-        .sheet(item: $editing) { EditorSheet(initialMovie: $0) }
-        .overlay(alignment: .top) {
-            if tab.wrappedValue != .discover { DownloadCompletionNotice().padding(.top, 8) }
-        }
-        .task(id: library.downloadsRequest) {
-            guard library.downloadsRequest != nil else { return }
-            // Full-screen players dismiss first; then move the underlying tab.
-            do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
-            editing = nil
-            libraryFilter = "Downloads"
-            tab.wrappedValue = .library
-        }
-        .task(id: api.session?.userId.value) {
-            guard api.session != nil else { return }
-            if !commerce.rightsVerified || commerce.release == nil { await commerce.refresh() }
-            await offline.resumePending()
-        }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active { quota.resetIfNeeded() }
-        }
-        .overlay(alignment: .top) {
-            if let message = library.error {
-                HStack {
-                    LocalizedText(message).font(.stage(.subheadline))
-                    IconButton(symbol: .close, label: "Dismiss message") { library.error = nil }
-                }.padding(14).background(TrickoStyle.raised, in: RoundedRectangle(cornerRadius: 18, style: .continuous)).padding()
+            .sheet(item: $channel, onDismiss: finishLessonDismissal) { ChannelView(route: $0) }
+            .fullScreenCover(item: $searchRequest, onDismiss: finishLessonDismissal) { request in
+                DiscoverView(initialSearch: request.query, onExit: { searchRequest = nil }) { query, clip in
+                    guard query.nilIfBlank != nil else { return }
+                    library.record(link: query, title: clip.title)
+                }
             }
-        }
-        .modifier(AccountBusyModifier())
+            .onChange(of: library.downloadsRequest) { _, request in
+                guard request != nil else { return }
+                if channel != nil || searchRequest != nil {
+                    downloadsAfterLesson = true
+                    channel = nil
+                    searchRequest = nil
+                } else if !downloadsAfterLesson {
+                    showDownloads()
+                }
+            }
+            .task(id: api.session?.userId.value) {
+                guard api.session != nil else { return }
+                if !commerce.rightsVerified || commerce.release == nil { await commerce.refresh() }
+                await offline.resumePending()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { quota.resetIfNeeded() }
+            }
+            .modifier(AccountBusyModifier())
     }
+
+    @ViewBuilder private var navigation: some View {
+        if #available(iOS 26.0, *) {
+            tabs.tabBarMinimizeBehavior(.never)
+        } else {
+            tabs
+        }
+    }
+
+    private var tabs: some View {
+        TabView(selection: tab) {
+            Group {
+                HomeView(openPractice: { tab.wrappedValue = .practice }, openAccount: { showingAccount = true },
+                         link: $linkDraft, channel: $channel, searchRequest: $searchRequest)
+                    .tabItem { tabLabel(.home) }.tag(TrickoTab.home)
+
+                ZStack {
+                    // Playback and view counting belong to the visible feed.
+                    if startupFinished, tab.wrappedValue == .discover { DiscoverView() }
+                    else { TrickoStyle.background }
+                }
+                .tabItem { tabLabel(.discover) }.tag(TrickoTab.discover)
+
+                ToolsView()
+                    .tabItem { tabLabel(.practice) }.tag(TrickoTab.practice)
+
+                LibraryView(edit: { editing = $0 }, filter: $libraryFilter)
+                    .sheet(item: $editing) { EditorSheet(initialMovie: $0) }
+                    .tabItem { tabLabel(.library) }.tag(TrickoTab.library)
+            }
+            .toolbarBackground(TrickoStyle.surface, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
+            .toolbarColorScheme(.dark, for: .tabBar)
+        }
+        .trickoScreenBackground()
+    }
+
     private func tabLabel(_ item: TrickoTab) -> some View {
         Label {
-            Text(verbatim: L10n.display(item.name, language: AppLanguage.from(locale)))
+            Text(verbatim: L10n.text(item.title, language: AppLanguage.from(locale)))
         } icon: {
             Image(item.artwork).renderingMode(.template)
         }
-        .accessibilityIdentifier("tab.\(item.name.lowercased())")
+        .accessibilityIdentifier("tab.\(item.title.lowercased())")
+    }
+
+    private func finishLessonDismissal() {
+        guard downloadsAfterLesson else { return }
+        downloadsAfterLesson = false
+        showDownloads()
+    }
+
+    private func showDownloads() {
+        libraryFilter = "Downloads"
+        tab.wrappedValue = .library
     }
 }
 

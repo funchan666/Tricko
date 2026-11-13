@@ -33,20 +33,6 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>TrickoAPIHost</key>
-	<string>$(TRICKO_API_HOST)</string>
-	<key>TrickoAdsTestMode</key>
-	<string>$(TRICKO_ADS_TEST_MODE)</string>
-	<key>TrickoPrivacyURL</key>
-	<string>$(TRICKO_PRIVACY_URL)</string>
-	<key>TrickoReleaseName</key>
-	<string>$(TRICKO_RELEASE_NAME)</string>
-	<key>TrickoServicePackageName</key>
-	<string>$(TRICKO_SERVICE_PACKAGE_NAME)</string>
-	<key>TrickoTermsURL</key>
-	<string>$(TRICKO_TERMS_URL)</string>
-	<key>TrickoWebsiteURL</key>
-	<string>$(TRICKO_WEBSITE_URL)</string>
 	<key>GADApplicationIdentifier</key>
 	<string>$(TRICKO_GOOGLE_ADS_APP_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -62,6 +48,20 @@
 			<string>cstr6suwn9.skadnetwork</string>
 		</dict>
 	</array>
+	<key>TrickoAPIHost</key>
+	<string>$(TRICKO_API_HOST)</string>
+	<key>TrickoAdsTestMode</key>
+	<string>$(TRICKO_ADS_TEST_MODE)</string>
+	<key>TrickoPrivacyURL</key>
+	<string>$(TRICKO_PRIVACY_URL)</string>
+	<key>TrickoReleaseName</key>
+	<string>$(TRICKO_RELEASE_NAME)</string>
+	<key>TrickoServicePackageName</key>
+	<string>$(TRICKO_SERVICE_PACKAGE_NAME)</string>
+	<key>TrickoTermsURL</key>
+	<string>$(TRICKO_TERMS_URL)</string>
+	<key>TrickoWebsiteURL</key>
+	<string>$(TRICKO_WEBSITE_URL)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fonts/CormorantGaramond-SemiBold.ttf</string>

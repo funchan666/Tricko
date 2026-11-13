@@ -97,10 +97,9 @@ final class FeedStore: ObservableObject {
 }
 struct DiscoverView: View {
     @EnvironmentObject private var library: LibraryStore
-    @Environment(\.dismiss) private var dismiss
-    private let canDismiss: Bool
     private let onExit: (() -> Void)?
     private let onSearchResult: ((String, LessonClip) -> Void)?
+    private var isFullScreen: Bool { onExit != nil }
     @EnvironmentObject private var offline: OfflineStore
     private var displayEntries: [PlaybackQueueEntry] {
         feed.entries.map { PlaybackQueueEntry(id: $0.id, clip: offline.playable($0.clip)) }
@@ -116,41 +115,44 @@ struct DiscoverView: View {
     @State private var recordedQuery: String?
     @State private var openedBrowserSearchID: UUID?
     @State private var browserSearch: PolicyDocument?
-    init(initialSearch: String = "", canDismiss: Bool = false, onExit: (() -> Void)? = nil,
+    init(initialSearch: String = "", onExit: (() -> Void)? = nil,
          onSearchResult: ((String, LessonClip) -> Void)? = nil) {
-        self.canDismiss = canDismiss
         self.onExit = onExit
         self.onSearchResult = onSearchResult
         _search = State(initialValue: initialSearch)
     }
     var body: some View {
         ZStack(alignment: .top) {
-            if api.session == nil {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        StageArtwork(kind: .cards, height: 208)
-                        LocalizedText("Connecting your lesson feed…")
-                            .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                        ConnectionPanel()
-                    }.trickoPage()
-                }
-            } else if feed.clips.isEmpty {
+            if api.session == nil || feed.clips.isEmpty {
                 VStack(spacing: 0) {
                     feedHeader
                     ScrollView {
-                        VStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 20) {
+                            if !isFullScreen {
+                                LocalizedText("Discover").font(.stage(.largeTitle, weight: .bold, display: true))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityAddTraits(.isHeader)
+                            }
                             StageArtwork(kind: .cards, height: 208)
-                            MessagePanel(title: feed.loading ? "Finding your next lesson…" : "Your next session starts here.",
-                                         message: feed.error ?? (feed.loading ? "Loading your lesson feed." : feed.emptySearch != nil ? "No matching lessons. Search the web with your original input." : "No lessons are available here yet. Try another search or open a shared lesson link on Home."),
-                                         actionTitle: feed.loading ? nil : feed.emptySearch != nil ? "Search in browser" : "Try again") {
-                                if let request = feed.emptySearch { openBrowserSearch(request) }
-                                else { Task { await feed.load(api: api, search: search) } }
+                            if api.session == nil {
+                                LocalizedText("Connecting your lesson feed…")
+                                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+                                ConnectionPanel()
+                            } else {
+                                MessagePanel(title: feed.loading ? "Finding your next lesson…" : "Your next session starts here.",
+                                             message: feed.error ?? (feed.loading ? "Loading your lesson feed." : feed.emptySearch != nil ? "No matching lessons. Search the web with your original input." : "No lessons are available here yet. Try another search or open a shared lesson link on Home."),
+                                             actionTitle: feed.loading ? nil : feed.emptySearch != nil ? "Search in browser" : "Try again") {
+                                    if let request = feed.emptySearch { openBrowserSearch(request) }
+                                    else { Task { await feed.load(api: api, search: search) } }
+                                }
                             }
                         }.trickoPage()
                     }
                 }
             } else {
                 GeometryReader { container in
+                    // The tab already lays out the feed inside its safe area.
+                    let controlInsets = isFullScreen ? container.safeAreaInsets : EdgeInsets()
                     GeometryReader { geometry in
                         ScrollView(.vertical) {
                             LazyVStack(spacing: 0) {
@@ -159,7 +161,7 @@ struct DiscoverView: View {
                                     Group {
                                         if let playback = players.controllers[entry.id] {
                                             ClipPage(clip: clip, active: activeID == entry.id,
-                                                     controlInsets: container.safeAreaInsets, playback: playback,
+                                                     controlInsets: controlInsets, playback: playback,
                                                      didStartPlaying: { players.prepareNext(after: entry.id) },
                                                      didStopPlaying: { if activeID == entry.id { players.suspend() } },
                                                      onSwipeExit: exitPlayer)
@@ -172,7 +174,7 @@ struct DiscoverView: View {
                                     VStack(spacing: 16) {
                                         LocalizedText(feed.error ?? "Finding more clips…").foregroundStyle(TrickoStyle.secondary)
                                         ActionButton(title: "Load more", primary: false, busy: feed.loading) { Task { await feed.load(api: api) } }
-                                    }.padding(28).padding(container.safeAreaInsets)
+                                    }.padding(28).padding(controlInsets)
                                         .frame(width: geometry.size.width, height: geometry.size.height).id(morePageID)
                                 }
                             }.scrollTargetLayout()
@@ -180,17 +182,15 @@ struct DiscoverView: View {
                             .onChange(of: activeID) { _, id in
                                 players.update(entries: displayEntries, selectedID: id)
                             }
-                    }.ignoresSafeArea(.container, edges: .all)
+                    }.ignoresSafeArea(.container, edges: isFullScreen ? .all : [])
                 }
-            }
-            if api.session != nil, !feed.clips.isEmpty {
                 feedHeader
             }
         }.trickoScreenBackground(.black)
             .modifier(PlayerPagingAccess(entries: displayEntries, selectedID: $activeID, tailID: morePageID, players: players))
-            .overlay(alignment: .top) { DownloadCompletionNotice().padding(.top, 56) }
+            .overlay(alignment: .top) { DownloadCompletionNotice().padding(.top, isFullScreen ? 56 : 8) }
             .onChange(of: library.downloadsRequest) { _, request in
-                if request != nil { players.releaseAll(); if canDismiss { dismiss() } }
+                if request != nil { players.releaseAll() }
             }
             .onAppear { visible = true; players.update(entries: displayEntries, selectedID: activeID) }
             .task(id: api.session?.userId.value) {
@@ -237,19 +237,19 @@ struct DiscoverView: View {
         players.suspend()
         browserSearch = PolicyDocument(title: "Web search", url: url)
     }
-    private var feedHeader: some View {
-        HStack {
-            Spacer(minLength: 0)
-            if canDismiss || onExit != nil {
+    @ViewBuilder private var feedHeader: some View {
+        if isFullScreen {
+            HStack {
+                Spacer(minLength: 0)
                 PlayerExitButton(action: exitPlayer)
-            }
-        }.environment(\.layoutDirection, .leftToRight)
-            .padding(.horizontal, 12).padding(.top, 8)
+            }.environment(\.layoutDirection, .leftToRight)
+                .padding(.horizontal, 12).padding(.top, 8)
+        }
     }
     private func exitPlayer() {
-        guard canDismiss || onExit != nil else { return }
+        guard let onExit else { return }
         players.releaseAll()
-        if let onExit { onExit() } else { dismiss() }
+        onExit()
     }
 
 }

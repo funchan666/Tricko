@@ -47,22 +47,19 @@ struct ToolsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                VStack(alignment: .leading, spacing: 8) {
-                    LocalizedText("PRACTICE ROOM").font(.stage(.caption2, weight: .bold)).tracking(2)
-                        .foregroundStyle(TrickoStyle.accent)
-                    LocalizedText("See it the way your audience will.").font(.stage(.largeTitle, display: true))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                LocalizedText("Practice").font(.stage(.largeTitle, weight: .bold, display: true))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
                 // Plate and primary action: side by side when there is room
                 // (inner display), stacked on the compact width.
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .bottom, spacing: 20) {
-                        ScenePlate(subject: .review).frame(width: 260, height: 260)
+                        ScenePlate(subject: .review).frame(width: 260, height: 192)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         reviewCall.frame(minWidth: 260)
                     }
                     VStack(alignment: .leading, spacing: 16) {
-                        ScenePlate(subject: .review).aspectRatio(1.25, contentMode: .fit)
+                        ScenePlate(subject: .review).aspectRatio(1.65, contentMode: .fit)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         reviewCall
                     }
@@ -101,12 +98,12 @@ struct ToolsView: View {
                 .fixedSize(horizontal: false, vertical: true)
             Button { selectedTool = .studio } label: {
                 LocalizedText("Review practice").font(.stage(.subheadline, weight: .semibold))
-                    .lineLimit(1).minimumScaleFactor(0.8)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 18).padding(.vertical, 12)
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .foregroundStyle(TrickoStyle.ink)
-                    .background { StageSurface(tone: .gold) }
+                    .background { StageSurface(tone: .gold, radius: 12) }
                     .contentShape(Rectangle())
             }.buttonStyle(PressStyle()).accessibilityIdentifier("tools.studio")
         }
