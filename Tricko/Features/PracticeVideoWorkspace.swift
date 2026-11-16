@@ -47,20 +47,49 @@ struct ToolsView: View {
     @State private var showingRoutinePractice = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                studioEntry
-                shortcuts
-                practiceResources
-            }.trickoPage()
+        GeometryReader { viewport in
+            let topInset = viewport.safeAreaInsets.top
+            let photoHeight = (viewport.size.height + topInset) * 0.5
+            ScrollView {
+                VStack(spacing: 0) {
+                    studioEntry(minHeight: max(0, photoHeight - topInset))
+                    VStack(alignment: .leading, spacing: 20) {
+                        shortcuts
+                        practiceResources
+                    }
+                    .trickoPage()
+                    .background(TrickoStyle.background)
+                }
+            }
+            .background {
+                studioPhoto
+                    .frame(height: photoHeight)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .ignoresSafeArea(.container, edges: [.top, .horizontal])
+            }
         }
-            .trickoScreenBackground()
-            .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
-            .sheet(isPresented: $showingGuide) { MagicGuideView() }
-            .sheet(isPresented: $showingRoutinePractice) { RoutinePracticeView() }
+        .trickoScreenBackground()
+        .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
+        .sheet(isPresented: $showingGuide) { MagicGuideView() }
+        .sheet(isPresented: $showingRoutinePractice) { RoutinePracticeView() }
     }
 
-    private var studioEntry: some View {
+    private var studioPhoto: some View {
+        // The dial sits on the right side of the original artwork.
+        StagePhoto(asset: "VideoToolsPhoto", alignment: .trailing)
+            .environment(\.layoutDirection, .leftToRight)
+            .overlay {
+                LinearGradient(stops: [
+                    .init(color: .clear, location: 0.45),
+                    .init(color: TrickoStyle.background.opacity(0.72), location: 0.78),
+                    .init(color: TrickoStyle.background, location: 1)
+                ], startPoint: .top, endPoint: .bottom)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    private func studioEntry(minHeight: CGFloat) -> some View {
         Button { selectedTool = .studio } label: {
             HStack(alignment: .bottom, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -76,17 +105,9 @@ struct ToolsView: View {
                     .trickoGlass(in: Circle())
             }
             .foregroundStyle(TrickoStyle.paper)
-            .padding(20).frame(minHeight: 192, alignment: .bottomLeading)
-            .background {
-                StagePhoto(asset: "VideoToolsPhoto")
-                    .overlay {
-                        LinearGradient(colors: [TrickoStyle.background.opacity(0), TrickoStyle.background.opacity(0.92)],
-                                       startPoint: .top, endPoint: .bottom)
-                    }
-                    .allowsHitTesting(false)
-            }
-            .clipShape(.rect(cornerRadius: 22))
-            .contentShape(.rect(cornerRadius: 22))
+            .trickoPage()
+            .frame(minHeight: minHeight, alignment: .bottom)
+            .contentShape(.interaction, Rectangle())
         }
         .buttonStyle(PressStyle())
         .accessibilityIdentifier("tools.studio")
@@ -174,6 +195,7 @@ struct ToolsView: View {
 }
 
 struct LocalVideoImportButtons: View {
+    var prominent = false
     let onImport: (PracticeRecording) -> Void
     @EnvironmentObject private var library: LibraryStore
     @State private var picker: PhotosPickerItem?
@@ -183,13 +205,14 @@ struct LocalVideoImportButtons: View {
     @State private var error: String?
 
     var body: some View {
+        let buttonSpacing: CGFloat = prominent ? 12 : 8
         VStack(alignment: .leading, spacing: 12) {
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    filesButton.fixedSize(horizontal: true, vertical: false)
-                    photosButton.fixedSize(horizontal: true, vertical: false)
+                HStack(spacing: buttonSpacing) {
+                    filesButton.fixedSize(horizontal: !prominent, vertical: false)
+                    photosButton.fixedSize(horizontal: !prominent, vertical: false)
                 }
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: buttonSpacing) {
                     filesButton
                     photosButton
                 }
@@ -224,17 +247,49 @@ struct LocalVideoImportButtons: View {
     }
 
     private var filesButton: some View {
-        Button { error = nil; showingFiles = true } label: { LocalizedText("Files") }
-            .buttonStyle(EmptyStateActionStyle(symbol: .folder, minHeight: 52))
-            .accessibilityLabel(LocalizedStringKey("Browse Files"))
-            .accessibilityIdentifier("video.importFiles")
+        sourceButton("Files", symbol: .folder, primary: true) {
+            error = nil
+            showingFiles = true
+        }
+        .accessibilityLabel(LocalizedStringKey("Browse Files"))
+        .accessibilityIdentifier("video.importFiles")
     }
 
     private var photosButton: some View {
-        Button { error = nil; showingPhotos = true } label: { LocalizedText("Photos") }
-            .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .feed, minHeight: 52))
-            .accessibilityLabel(LocalizedStringKey("Choose from Photos"))
-            .accessibilityIdentifier("video.importPhotos")
+        sourceButton("Photos", symbol: .feed, primary: false) {
+            error = nil
+            showingPhotos = true
+        }
+        .accessibilityLabel(LocalizedStringKey("Choose from Photos"))
+        .accessibilityIdentifier("video.importPhotos")
+    }
+
+    @ViewBuilder private func sourceButton(
+        _ title: String, symbol: TrickoGlyph, primary: Bool, action: @escaping () -> Void
+    ) -> some View {
+        if prominent {
+            let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+            let foreground = primary ? TrickoStyle.ink : TrickoStyle.paper
+            Button(action: action) {
+                let label = HStack(spacing: 10) {
+                    Glyph(symbol: symbol, size: 23, tint: foreground)
+                    LocalizedText(title).font(.stage(.headline, weight: .semibold))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundStyle(foreground)
+                .padding(.horizontal, 16).padding(.vertical, 12)
+                .frame(maxWidth: .infinity, minHeight: 64)
+
+                Group {
+                    if primary { label.background(TrickoStyle.accent, in: shape) }
+                    else { label.trickoGlass(in: shape) }
+                }
+                .contentShape(.interaction, shape)
+            }.buttonStyle(PressStyle())
+        } else {
+            Button(action: action) { LocalizedText(title) }
+                .buttonStyle(EmptyStateActionStyle(primary: primary, symbol: symbol, minHeight: 52))
+        }
     }
 
     private func importVideo(_ load: @escaping () async throws -> PracticeRecording) {

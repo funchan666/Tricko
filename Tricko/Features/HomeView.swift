@@ -6,6 +6,7 @@ struct HomeView: View {
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
     @Environment(\.locale) private var locale
+    @Environment(\.layoutDirection) private var direction
     @Environment(\.dynamicTypeSize) private var typeSize
     let openAccount: () -> Void
     let openVideo: (PracticeRecording) -> Void
@@ -13,73 +14,82 @@ struct HomeView: View {
     @Binding var link: String
     @Binding var channel: ChannelRoute?
     @Binding var searchRequest: LessonSearch?
-    @Binding var showingLink: Bool
     @State private var error: String?
     @State private var paywall = false
     @State private var channels: [LandingInfo] = []
     @State private var channelRetry = 0
     @State private var showingLinkGuide = false
+    @State private var showingRecentLinks = false
     @State private var showingCollections = false
     @State private var loadingCollections = true
-    @State private var pendingLinkSearch: LessonSearch?
     @State private var composerError: String?
     @FocusState private var focused: Bool
 
     var body: some View {
-        StagePage(asset: "VideoHomePhoto", minHeight: 348, maxHeight: 420, photoOpacity: 1) { height in
-            VStack(alignment: .leading, spacing: 0) {
-                header
-                Spacer(minLength: height > 300 ? 80 : 24)
-                videoImport
-            }
-            .frame(minHeight: max(0, height - 32))
-        } content: {
-            VStack(alignment: .leading, spacing: 24) {
-                recentVideos
-                lessonLinks
-            }
-        }
-            .sheet(isPresented: $showingLink, onDismiss: openPendingLesson) {
-                VStack(spacing: 0) {
-                    SheetHeading(title: "Open a magic lesson") { showingLink = false }
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 12) {
-                            linkComposer
-                            if api.session == nil { ConnectionPanel() }
-                            recentLinks
-                        }.trickoPage()
-                    }.scrollDismissesKeyboard(.interactively)
-                }.trickoScreenBackground()
-                    .dismissKeyboardOnOutsideTap($focused, scope: "home-link-input")
-                    .sheet(isPresented: $showingLinkGuide) { LinkGuideSheet() }
-            }
+        homePage
+            .sheet(isPresented: $showingLinkGuide) { LinkGuideSheet() }
             .sheet(isPresented: $paywall) { MembershipView() }
     }
 
-    private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                wordmark.fixedSize(horizontal: true, vertical: false)
-                Spacer(minLength: 4)
-                PlusEntryButton(active: commerce.premium, compact: true, inline: true) { paywall = true }
-                accountButton
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    wordmark.frame(maxWidth: .infinity, alignment: .leading)
-                    accountButton
+    private var homePage: some View {
+        GeometryReader { viewport in
+            let topInset = viewport.safeAreaInsets.top
+            let photoHeight = (viewport.size.height + topInset) * 0.5
+            ScrollView {
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        headerActions
+                        Spacer(minLength: 0)
+                        videoImport
+                    }
+                    .trickoPage()
+                    .frame(minHeight: max(0, photoHeight - topInset), alignment: .top)
+
+                    VStack(alignment: .leading, spacing: 24) {
+                        lessonAccess
+                        recentVideos
+                        lessonResources
+                    }
+                    .trickoPage()
+                    .background(TrickoStyle.background)
                 }
-                PlusEntryButton(active: commerce.premium, compact: true) { paywall = true }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundStyle(TrickoStyle.paper)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .dismissKeyboardOnOutsideTap($focused, scope: "home-link-input")
+            .background {
+                homePhoto
+                    .frame(height: photoHeight)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .ignoresSafeArea(.container, edges: [.top, .horizontal])
             }
         }
+        .trickoScreenBackground()
     }
 
-    private var wordmark: some View {
-        Text(verbatim: "Tricko")
-            .font(.stage(.title3, weight: .bold))
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityAddTraits(.isHeader)
+    private var homePhoto: some View {
+        // Keep the camera in the crop in both reading directions.
+        StagePhoto(asset: "VideoHomePhoto", alignment: .trailing)
+            .environment(\.layoutDirection, .leftToRight)
+            .overlay {
+                LinearGradient(stops: [
+                    .init(color: TrickoStyle.background.opacity(0.35), location: 0),
+                    .init(color: .clear, location: 0.28),
+                    .init(color: .clear, location: 0.54),
+                    .init(color: TrickoStyle.background.opacity(0.64), location: 0.82),
+                    .init(color: TrickoStyle.background, location: 1)
+                ], startPoint: .top, endPoint: .bottom)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    private var headerActions: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            PlusEntryButton(active: commerce.premium, compact: true) { paywall = true }
+            accountButton
+        }
     }
 
     private var accountButton: some View {
@@ -97,18 +107,13 @@ struct HomeView: View {
     }
 
     private var videoImport: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
-                LocalizedText("Open a video")
-                    .font(.stage(.largeTitle, weight: .bold))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityAddTraits(.isHeader)
-                LocalizedText("Preview, trim or change the speed of a video on your device.")
-                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.84))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .shadow(color: .black.opacity(0.44), radius: 7, y: 2)
-            LocalVideoImportButtons(onImport: openVideo)
+        VStack(alignment: .leading, spacing: 12) {
+            LocalizedText("Import a video")
+                .font(.stage(.largeTitle, weight: .bold))
+                .fixedSize(horizontal: false, vertical: true)
+                .shadow(color: .black.opacity(0.55), radius: 6, y: 2)
+                .accessibilityAddTraits(.isHeader)
+            LocalVideoImportButtons(prominent: true, onImport: openVideo)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -181,58 +186,85 @@ struct HomeView: View {
         }.buttonStyle(PressStyle())
     }
 
-    private var lessonLinks: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 16) {
-                    openLessonLink.fixedSize(horizontal: true, vertical: false)
-                    watchLessonsLink.fixedSize(horizontal: true, vertical: false)
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    openLessonLink
-                    watchLessonsLink
-                }
+    private var lessonAccess: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            linkComposer
+            watchLessonsButton
+        }
+    }
+
+    private var watchLessonsButton: some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        return Button {
+            guard searchRequest == nil else { return }
+            focused = false
+            searchRequest = LessonSearch(query: "")
+        } label: {
+            HStack(spacing: 12) {
+                Glyph(symbol: .play, size: 16, tint: TrickoStyle.ink)
+                    .frame(width: 36, height: 36)
+                    .background(TrickoStyle.coolAccent, in: Circle())
+                LocalizedText("Watch lessons").font(.stage(.headline, weight: .semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent)
+                    .rotationEffect(.degrees(180))
             }
-            if !(commerce.release?.lcList?["us"] ?? []).isEmpty {
-                lessonLink("Lesson collections", symbol: .folder) {
-                    if !showingCollections {
-                        channels = []
-                        error = nil
-                        loadingCollections = true
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .frame(minHeight: 60)
+            .foregroundStyle(TrickoStyle.paper)
+            .trickoGlass(in: shape)
+            .contentShape(.interaction, shape)
+        }
+        .buttonStyle(PressStyle())
+        .disabled(searchRequest != nil)
+        .accessibilityIdentifier("home.watchLessons")
+    }
+
+    @ViewBuilder private var lessonResources: some View {
+        let visits = library.history.filter { $0.link.nilIfBlank != nil }
+        let hasCollections = !(commerce.release?.lcList?["us"] ?? []).isEmpty
+        if !visits.isEmpty || hasCollections {
+            VStack(alignment: .leading, spacing: 4) {
+                if !visits.isEmpty {
+                    lessonDisclosure("Recently opened", symbol: .link, expanded: showingRecentLinks) {
+                        showingRecentLinks.toggle()
                     }
-                    showingCollections.toggle()
+                    if showingRecentLinks { recentLinks(visits) }
                 }
-                    .accessibilityAddTraits(showingCollections ? .isSelected : [])
-                if showingCollections {
-                    collections
+                if hasCollections {
+                    lessonDisclosure("Lesson collections", symbol: .folder, expanded: showingCollections) {
+                        if !showingCollections {
+                            channels = []
+                            error = nil
+                            loadingCollections = true
+                        }
+                        showingCollections.toggle()
+                    }
+                    if showingCollections { collections }
                 }
             }
         }
-        .padding(.top, 12)
-        .overlay(alignment: .top) { Divider().overlay(TrickoStyle.line).allowsHitTesting(false) }
     }
 
-    private var openLessonLink: some View {
-        lessonLink("Open a magic lesson", symbol: .link) { showingLink = true }
-            .accessibilityIdentifier("home.showLink")
-    }
-
-    private var watchLessonsLink: some View {
-        lessonLink("Watch lessons", symbol: .play) { searchRequest = LessonSearch(query: "") }
-            .disabled(searchRequest != nil)
-            .accessibilityIdentifier("home.watchLessons")
-    }
-
-    private func lessonLink(_ title: String, symbol: TrickoGlyph, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func lessonDisclosure(
+        _ title: String, symbol: TrickoGlyph, expanded: Bool, action: @escaping () -> Void
+    ) -> some View {
+        let arrowAngle: Double = expanded ? (direction == .rightToLeft ? 90 : -90) : 180
+        return Button(action: action) {
             HStack(spacing: 10) {
-                Glyph(symbol: symbol, size: 15, tint: TrickoStyle.coolAccent)
-                LocalizedText(title).font(.stage(.subheadline))
+                Glyph(symbol: symbol, size: 16, tint: TrickoStyle.coolAccent)
+                LocalizedText(title).font(.stage(.subheadline, weight: .semibold))
                     .fixedSize(horizontal: false, vertical: true)
-            }.foregroundStyle(TrickoStyle.secondary)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-        }.buttonStyle(PressStyle())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 10, tint: TrickoStyle.secondary)
+                    .rotationEffect(.degrees(arrowAngle))
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+        .accessibilityAddTraits(expanded ? .isSelected : [])
     }
 
     private var collections: some View {
@@ -296,21 +328,10 @@ struct HomeView: View {
         }
     }
 
-    private func openPendingLesson() {
-        focused = false
-        composerError = nil
-        guard let request = pendingLinkSearch else { return }
-        pendingLinkSearch = nil
-        searchRequest = request
-    }
-
     private var linkComposer: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            LocalizedText("Lesson link or short code")
-                .font(.stage(.subheadline, weight: .semibold))
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 8) {
             linkField
-            if let composerError { ErrorNote(message: composerError, onPaper: true) }
+            if let composerError { ErrorNote(message: composerError) }
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
                     pasteButton(inline: true)
@@ -332,45 +353,58 @@ struct HomeView: View {
                     linkHelpButton
                 }
             }
-        }.padding(16)
-            .background { StageSurface(tone: .ivory, radius: 20) }
-            .foregroundStyle(TrickoStyle.ink)
+        }.padding(.horizontal, 12).padding(.top, 12)
+            .background { StageSurface(tone: .smoke, radius: 20) }
             .onChange(of: link) { _, _ in composerError = nil }
     }
 
     private var linkHelpButton: some View {
-        Button { showingLinkGuide = true } label: {
+        Button {
+            focused = false
+            showingLinkGuide = true
+        } label: {
             LocalizedText("How to").font(.stage(.footnote, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 12).padding(.vertical, 8).frame(minHeight: 44)
-                .foregroundStyle(TrickoStyle.paperSecondary)
+                .padding(.horizontal, 4).padding(.vertical, 8).frame(minWidth: 44, minHeight: 44)
+                .foregroundStyle(TrickoStyle.coolAccent)
                 .contentShape(Rectangle())
         }.buttonStyle(PressStyle()).accessibilityIdentifier("home.linkHelp")
     }
 
     private func openLessonButton(inline: Bool) -> some View {
         Button(action: resolve) {
-            LocalizedText("Open lesson").font(.stage(.subheadline, weight: .semibold))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: inline, vertical: true)
-                .padding(.horizontal, 16).padding(.vertical, 10)
-                .frame(maxWidth: .infinity, minHeight: 48)
-                .foregroundStyle(canOpenLink ? TrickoStyle.ink : TrickoStyle.paperSecondary)
-                .background { StageSurface(tone: canOpenLink ? .gold : .mist, radius: 12) }
-                .contentShape(Rectangle())
+            let foreground = canOpenLink ? TrickoStyle.ink : TrickoStyle.secondary
+            HStack(spacing: 8) {
+                Glyph(symbol: .search, size: 14, tint: foreground)
+                LocalizedText("Open lesson").font(.stage(.subheadline, weight: .semibold))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: inline, vertical: true)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .foregroundStyle(foreground)
+            .background(canOpenLink ? TrickoStyle.coolAccent : TrickoStyle.raised, in: .rect(cornerRadius: 12))
+            .contentShape(.rect(cornerRadius: 12))
         }.buttonStyle(PressStyle(disabledOpacity: 1)).disabled(!canOpenLink)
             .accessibilityIdentifier("home.openLesson")
     }
 
     private var linkField: some View {
-        HStack(spacing: 0) {
-            TextField("", text: $link, axis: .vertical)
-                .lineLimit(1...3).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        let prompt = Text(verbatim: L10n.text("Lesson link or short code", language: AppLanguage.from(locale)))
+            .foregroundStyle(TrickoStyle.paperSecondary)
+        return HStack(spacing: 10) {
+            Glyph(symbol: .link, size: 16, tint: TrickoStyle.paperSecondary)
+            TextField("", text: $link, prompt: prompt)
+                .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                .submitLabel(.go).onSubmit { resolve() }
                 .focused($focused).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.ink)
                 .tint(TrickoStyle.ink)
-                .padding(.leading, 14).padding(.vertical, 14)
-                .frame(maxWidth: .infinity, minHeight: 48)
-                .accessibilityLabel(LocalizedStringKey("Tricko link or lesson code"))
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .environment(\.layoutDirection, .leftToRight)
+                .accessibilityLabel(LocalizedStringKey("Lesson link or short code"))
+                .accessibilityIdentifier("home.lessonLinkField")
             if !link.isEmpty {
                 Button {
                     link = ""
@@ -385,13 +419,10 @@ struct HomeView: View {
                     .accessibilityIdentifier("home.clearLink")
             }
         }
-            // Link input and its clear action stay together, including when
-            // the outside-tap handler decides whether to dismiss the keyboard.
-            .padding(.trailing, link.isEmpty ? 14 : 6)
-            .environment(\.layoutDirection, .leftToRight)
-            .background(Color.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 14))
+            .padding(.leading, 14).padding(.trailing, link.isEmpty ? 14 : 4)
+            .background(TrickoStyle.paper, in: shape)
             .overlay {
-                RoundedRectangle(cornerRadius: 14).strokeBorder(TrickoStyle.ink.opacity(focused ? 0.6 : 0.16))
+                shape.strokeBorder(focused ? TrickoStyle.coolAccent : .clear, lineWidth: 2)
                     .allowsHitTesting(false).accessibilityHidden(true)
             }
             .environment(\.colorScheme, .light)
@@ -403,7 +434,7 @@ struct HomeView: View {
         if api.session != nil {
             LocalizedText(commerce.premium ? "Unlimited" : quota.usage == nil ? "Checking your limits…"
                           : quota.unlimited ? "Unlimited views today" : "\(quota.watchesLeft) views left today")
-                .font(.stage(.caption)).foregroundStyle(TrickoStyle.paperSecondary)
+                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -412,64 +443,52 @@ struct HomeView: View {
             LocalizedText("Paste").font(.stage(.subheadline, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: inline, vertical: true)
-                .padding(.horizontal, 16).padding(.vertical, 10)
-                .frame(maxWidth: inline ? nil : .infinity, minHeight: 48)
-                .foregroundStyle(TrickoStyle.ink)
-                .background { StageSurface(tone: .mist, radius: 12) }
-                .contentShape(Rectangle())
+                .padding(.horizontal, 14).padding(.vertical, 10)
+                .frame(minWidth: 44, maxWidth: inline ? nil : .infinity, minHeight: 44)
+                .foregroundStyle(TrickoStyle.paper)
+                .background { StageSurface(tone: .velvet, radius: 12) }
+                .contentShape(.rect(cornerRadius: 12))
         }.buttonStyle(PressStyle())
             .accessibilityIdentifier("home.pasteLink")
     }
     private func pasteCopiedLink() {
         guard let text = UIPasteboard.general.string, text.nilIfBlank != nil else {
-            showLinkFailure("Copy a Tricko link or lesson code first, then tap Paste.")
+            composerError = "Copy a lesson link or code, then tap Paste."
             return
         }
         composerError = nil
         link = text
     }
-    @ViewBuilder private var recentLinks: some View {
-        let visits = library.history.filter { $0.link.nilIfBlank != nil }
-        if !visits.isEmpty {
-            VStack(alignment: .leading, spacing: 16) {
+    private func recentLinks(_ visits: [LessonLinkVisit]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(visits.prefix(5)) { visit in
                 HStack {
-                    LocalizedText("Recently opened").font(.stage(.title3, display: true))
-                    Spacer()
-                    Button { library.clearHistory() } label: { LocalizedText("Clear history") }
-                        .buttonStyle(QuietActionStyle())
-                }
-                ForEach(visits.prefix(5)) { visit in
-                    HStack {
-                        Button { link = visit.link; resolve() } label: {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text(verbatim: visit.title).font(.stage(.headline)).lineLimit(1)
-                                Text(verbatim: visit.link).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary).lineLimit(1)
-                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
-                        }.buttonStyle(PressStyle()).disabled(searchRequest != nil)
-                        IconButton(symbol: .close, label: "Remove history item") { library.removeVisit(visit) }
-                    }
+                    Button {
+                        link = visit.link
+                        resolve()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(verbatim: visit.title).font(.stage(.headline)).lineLimit(1)
+                            Text(verbatim: visit.link).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary).lineLimit(1)
+                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }.buttonStyle(PressStyle()).disabled(searchRequest != nil)
+                    IconButton(symbol: .close, label: "Remove history item") { library.removeVisit(visit) }
                 }
             }
+            Button {
+                library.clearHistory()
+                showingRecentLinks = false
+            } label: { LocalizedText("Clear history") }
+                .buttonStyle(QuietActionStyle())
         }
     }
+
     private func resolve() {
         guard let text = link.nilIfBlank, searchRequest == nil else { return }
         focused = false
-        guard api.session != nil else { showLinkFailure("Your connection is not ready yet. Please try again."); return }
-        // Preserve exactly what was entered. Search owns loading, errors and cursor
-        // pagination; do not fall back to the old landing-page resolver.
-        let request = LessonSearch(query: text)
-        if showingLink {
-            pendingLinkSearch = request
-            showingLink = false
-        } else {
-            searchRequest = request
-        }
-    }
-    private func showLinkFailure(_ message: String) {
-        composerError = message
-        showingLink = true
+        composerError = nil
+        searchRequest = LessonSearch(query: text)
     }
 }
 
@@ -596,8 +615,8 @@ struct LinkGuideSheet: View {
             SheetHeading(title: "Open your next lesson") { dismiss() }
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
-                    FeatureRow(symbol: .link, title: "1. Copy a Tricko link", detail: "Use a lesson link or code shared through Tricko.")
-                    FeatureRow(symbol: .search, title: "2. Paste it above", detail: "Tap Paste or enter the lesson code exactly as received. Codes are case-sensitive.")
+                    FeatureRow(symbol: .link, title: "1. Copy the link or code", detail: "Use the lesson link or code you received.")
+                    FeatureRow(symbol: .search, title: "2. Paste or type", detail: "On Home, tap Paste or enter the code as received. Codes are case-sensitive.")
                     FeatureRow(symbol: .play, title: "3. Open and watch", detail: "Tap Open lesson to find matching lessons, then swipe to watch.")
                     LocalizedText("No results? Check your input, or ask the sender for a new link.")
                         .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)

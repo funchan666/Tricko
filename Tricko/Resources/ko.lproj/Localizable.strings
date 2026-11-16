@@ -9,8 +9,8 @@
 "%@ views · %@ saves left today" = "오늘 시청 %@회 · 저장 %@회 남음";
 "%@, %@ per %@" = "%@, %@ / %@";
 "1. Copy your shared link" = "1. 공유 링크 복사";
-"2. Paste it above" = "2. 붙여넣거나 입력하기";
-"3. Open and watch" = "3. 레슨 찾기";
+"2. Paste or type" = "2. 붙여넣거나 입력하기";
+"3. Open and watch" = "3. 영상 찾기";
 "A better game\nstarts here." = "더 나은 테니스,\n여기서 시작하세요.";
 "A closer look at your own game" = "내 플레이를 자세히 살펴보세요";
 "A common set format is first to six games with a two-game lead, with a tiebreak at 6–6. A match is decided by sets. Tiebreak targets and match formats vary, so check the rules of the event you are watching." = "일반적인 세트는 상대보다 두 게임 앞서며 먼저 여섯 게임을 따내면 이깁니다. 6–6에서는 타이브레이크를 합니다. 세트로 경기의 승패를 정하며, 타이브레이크 목표 점수와 경기 형식은 대회 규칙을 확인하세요.";
@@ -20,7 +20,7 @@
 "A little knowledge for your next session." = "다음 연습에 도움이 되는 작은 지식.";
 "A little luck, on us" = "보너스가 추가됐어요";
 "A right-handed player's backhand is usually struck on the left side of the body, slightly in front. A left-handed player reverses the sides. Give yourself room instead of letting the ball arrive too close." = "오른손잡이의 백핸드는 보통 몸 왼쪽의 약간 앞에서 칩니다. 왼손잡이는 반대입니다. 공이 몸에 너무 가까이 오지 않도록 공간을 만드세요.";
-"A secure connection to Tricko could not be established. Check your network or VPN, then try again. If it continues, the service may be temporarily unavailable." = "Tricko에 안전하게 연결하지 못했어요. 네트워크나 VPN을 확인한 뒤 다시 시도하세요.";
+"Couldn’t connect securely. Check your network or VPN, then try again." = "보안 연결을 설정하지 못했어요. 네트워크나 VPN을 확인한 뒤 다시 시도하세요.";
 "A serve starts with the toss." = "서브는 토스에서 시작됩니다.";
 "A short guide to following the score." = "점수를 이해하는 간단한 안내.";
 "Access password" = "접근 비밀번호";
@@ -30,7 +30,7 @@
 "All" = "전체";
 "All notes can be read offline. Original summaries with links to further reading." = "모든 글은 오프라인으로 읽을 수 있습니다. 직접 작성한 요약과 더 읽을 수 있는 링크를 제공합니다.";
 "Also called the French Open, this major is played on red clay. The court's familiar colour comes from a fine layer of crushed brick over its underlying structure." = "프랑스 오픈이라고도 불리며 붉은 클레이 코트에서 열립니다. 코트의 색은 아래 구조 위에 얇게 깔린 분쇄 벽돌층에서 나옵니다.";
-"An Apple purchase is awaiting account reconciliation. Its original order could not be identified; it has not been discarded." = "Apple 구매가 확인 대기 중이에요. Tricko는 거래 내역을 보관했지만 원래 주문을 찾지 못했어요.";
+"An Apple purchase is awaiting account reconciliation. Its original order could not be identified; it has not been discarded." = "Apple 구매가 확인 대기 중이에요. 원래 주문을 찾지 못했어요. 거래 내역은 보관 중이에요.";
 "An Apple request is already in progress." = "Apple 요청이 이미 진행 중입니다.";
 "An ad could not be loaded. Please try again later. %@" = "광고를 불러오지 못했습니다. 나중에 다시 시도하세요. %@";
 "An earlier purchase still needs to finish. Use Retry purchase confirmation." = "이전 구매 처리가 아직 끝나지 않았습니다. 구매 확인 재시도를 이용하세요.";
@@ -57,7 +57,7 @@
 "Bring your footwork or swing into focus." = "풋워크나 스윙을 집중해서 살펴보세요.";
 "Browse Files" = "파일에서 선택";
 "Build a repeatable rally" = "안정적인 랠리 만들기";
-"Build your lesson collection." = "나만의 레슨 모음을 만드세요.";
+"Build your lesson collection." = "나만의 영상 모음을 만들어 보세요.";
 "Cancel" = "취소";
 "Cancel export" = "내보내기 취소";
 "Change" = "변경";
@@ -65,16 +65,15 @@
 "Check your connection and try again." = "연결을 확인한 후 다시 시도하세요.";
 "Checking with Apple…" = "Apple에서 요금제 불러오는 중…";
 "Checking your Apple purchases…" = "Apple 구매 확인 중…";
-"Choose a clip from your device. We’ll keep your original untouched." = "Tricko는 영상 사본을 편집해요. 원본은 그대로 남아요.";
+"Choose a clip from your device. We’ll keep your original untouched." = "편집한 내용은 영상 사본에 적용돼요.";
 "Choose from Photos" = "사진에서 선택";
 "Choose your language" = "언어 선택";
 "Choose your practice footage in Tools to keep a local working copy." = "도구에서 연습 영상을 선택해 기기에 작업용 사본을 보관하세요.";
 "Clear" = "지우기";
-"Tricko is starting" = "Tricko 시작 중";
-"Tricko’s online service is not configured yet. Local editing is available." = "Tricko 온라인 서비스가 아직 설정되지 않았습니다. 로컬 편집은 이용할 수 있습니다.";
+"The online service isn’t set up yet. You can still edit local videos." = "온라인 서비스가 아직 설정되지 않았어요. 기기에 저장된 영상은 편집할 수 있어요.";
 "Close" = "닫기";
 "Confirming your purchase…" = "구매 확인 중…";
-"Connecting your lesson feed…" = "레슨 피드 연결 중…";
+"Connecting your lesson feed…" = "영상 피드에 연결 중…";
 "Continue with %@" = "%@으로 계속";
 "Control before speed" = "속도보다 컨트롤";
 "Copy a video link or short code first, then tap Paste link." = "영상 링크나 짧은 코드를 먼저 복사한 후 링크 붙여넣기를 누르세요.";
@@ -82,9 +81,9 @@
 "Couldn’t open this page" = "페이지를 불러오지 못했어요";
 "Daily allowance could not be read. Please try again later." = "남은 시청 및 다운로드 횟수를 불러오지 못했어요. 나중에 다시 시도하세요.";
 "Daily allowance resets at 5 AM" = "일일 이용 한도는 오전 5시에 초기화됩니다";
-"Delete local copy" = "Tricko에서 삭제";
-"Delete local file" = "Tricko에서 파일 삭제";
-"Delete this local copy?" = "Tricko에서 이 파일을 삭제할까요?";
+"Delete local copy" = "로컬 사본 삭제";
+"Delete local file" = "로컬 파일 삭제";
+"Delete this local copy?" = "이 로컬 사본을 삭제할까요?";
 "Discover" = "둘러보기";
 "Dismiss message" = "메시지 닫기";
 "Edit" = "편집";
@@ -106,8 +105,8 @@
 "Final duration · %@" = "최종 길이 · %@";
 "Find the frame." = "화면 조정";
 "Find your forehand." = "포핸드의 감각을 찾으세요.";
-"Finding more clips…" = "레슨 더 불러오는 중…";
-"Finding your next lesson…" = "레슨 불러오는 중…";
+"Finding more clips…" = "영상을 더 불러오는 중…";
+"Finding your next lesson…" = "영상을 불러오는 중…";
 "Finish a video or extract its audio in Tools. Your exports will be collected here." = "도구에서 영상을 완성하거나 오디오를 추출하세요. 내보낸 파일은 여기에 모입니다.";
 "Folder" = "폴더";
 "For a right-handed forehand, meet the ball slightly in front and to your right; reverse the side if you play left-handed. Small adjusting steps help you avoid getting crowded by the ball." = "오른손 포핸드는 몸의 약간 앞쪽 오른편에서 공을 맞히세요. 왼손잡이는 반대입니다. 작은 스텝으로 위치를 조절하면 공이 몸에 너무 가까이 오는 것을 피할 수 있습니다.";
@@ -132,7 +131,7 @@
 "Go further with Plus." = "Plus로 더 성장하세요.";
 "Got it" = "확인";
 "Has a password?" = "비밀번호가 있나요?";
-"Have a lesson link?" = "레슨 링크가 있나요?";
+"Have a lesson link?" = "영상 링크가 있나요?";
 "Hide password" = "비밀번호 숨기기";
 "Home" = "홈";
 "How to" = "링크 도움말";
@@ -156,15 +155,15 @@
 "Keep your game growing." = "계속 실력을 키워가세요.";
 "Know the game.\nEnjoy every point." = "경기를 알아가고,\n모든 포인트를 즐기세요.";
 "Leave room for contact" = "타점에 공간 만들기";
-"Lesson collections" = "레슨 모음";
-"Lesson link or short code" = "레슨 링크 또는 코드";
-"Lesson or collection link" = "레슨 또는 모음 링크";
+"Lesson collections" = "영상 모음";
+"Lesson link or short code" = "영상 링크 또는 코드";
+"Lesson or collection link" = "영상 또는 모음 링크";
 "Let it speak. Or don’t." = "오디오 설정";
 "Let the ball meet your motion" = "토스를 동작에 맞추기";
-"Let’s reconnect." = "Tricko에 연결하지 못했어요";
+"Let’s reconnect." = "연결하지 못했어요";
 "Library" = "보관함";
 "Load more" = "더 불러오기";
-"Loading your lesson feed." = "레슨 피드를 불러오는 중입니다.";
+"Loading your lesson feed." = "영상 피드를 불러오는 중입니다.";
 "Loading…" = "불러오는 중…";
 "Love, deuce, advantage." = "러브, 듀스, 어드밴티지.";
 "MP4 · Up to the selected resolution · 30 fps\nSmaller resolutions reduce export size. Source videos are never upscaled." = "MP4 · 선택한 해상도 이하 · 30fps\n해상도를 낮추면 파일 크기가 줄어듭니다. 원본보다 확대하지 않습니다.";
@@ -181,8 +180,8 @@
 "More court time." = "더 많은 코트 시간.";
 "Mute" = "음소거";
 "No ad is available right now. %@" = "이용할 수 있는 광고가 없었어요. %@";
-"No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "이 링크에 해당하는 레슨이 없어요. 코드와 대소문자를 확인하거나 나중에 다시 시도하세요.";
-"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "아직 레슨이 없습니다. 다른 검색어를 사용하거나 홈에서 공유받은 레슨 링크를 여세요.";
+"No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "이 링크에 해당하는 영상이 없어요. 코드와 대소문자를 확인하거나 나중에 다시 시도하세요.";
+"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "아직 영상이 없어요. 다른 검색어를 쓰거나 홈에서 공유받은 영상 링크를 붙여넣으세요.";
 "No reward was received. Finish a rewarded ad to get more views." = "보상을 받지 못했습니다. 보상형 광고를 끝까지 시청하면 시청 횟수가 추가됩니다.";
 "Nothing here yet" = "아직 비어 있어요";
 "ON COURT · ON REPEAT" = "코트에서 · 꾸준히";
@@ -194,9 +193,9 @@
 "One month of Plus" = "Plus 1개월 이용";
 "Online streams stay online. Import a video you own to make an edit." = "온라인 영상은 온라인으로만 재생됩니다. 편집하려면 소유한 영상을 가져오세요.";
 "Open Me and account settings" = "계정 설정 열기";
-"Open a lesson" = "레슨 열기";
+"Open a lesson" = "영상 열기";
 "Open link" = "링크 열기";
-"Open your next lesson" = "레슨 여는 방법";
+"Open your next lesson" = "영상 링크와 코드 사용법";
 "Opening document…" = "문서 불러오는 중…";
 "Opening link…" = "링크 여는 중…";
 "Or, keep it free" = "광고로 이용 횟수 늘리기";
@@ -256,7 +255,7 @@
 "Rules" = "규칙";
 "Save" = "저장";
 "Save a video or extract an audio track." = "영상을 저장하거나 오디오를 추출하세요.";
-"Save lessons as you watch. Come back to the ideas you want to try on court." = "시청하며 레슨을 저장하세요. 코트에서 시도하고 싶은 아이디어를 다시 찾아보세요.";
+"Save lessons as you watch. Come back to the ideas you want to try on court." = "보던 영상을 저장하면 나중에 다시 찾을 수 있어요.";
 "Save video" = "즐겨찾기에 추가";
 "Saved" = "저장됨";
 "Saves left" = "남은 저장 횟수";
@@ -277,14 +276,14 @@
 "Subscription information is being prepared. Please try again later." = "구독 정보를 준비 중입니다. 나중에 다시 시도하세요.";
 "Subscriptions are temporarily unavailable. Please try again later." = "구독을 일시적으로 이용할 수 없습니다. 나중에 다시 시도하세요.";
 "Supported streams adjust quality to your connection." = "지원되는 영상은 연결 상태에 따라 화질이 바뀝니다.";
-"Tap Open link to find matching lessons, then swipe to watch." = "링크 열기를 눌러 일치하는 레슨을 찾고 스와이프하여 시청하세요.";
+"Tap Open link to find matching lessons, then swipe to watch." = "링크 열기를 눌러 해당 영상을 찾은 뒤 스와이프하여 시청하세요.";
 "Tap Paste link or enter the code exactly as received. Uppercase and lowercase letters matter." = "링크 붙여넣기를 누르거나 받은 코드를 정확히 입력하세요. 대소문자를 구분합니다.";
 "Technique" = "기술";
 "Terms of Use" = "이용약관";
 "Test ads require Google's sample iOS App ID." = "테스트 광고에는 Google의 샘플 iOS 앱 ID가 필요합니다.";
 "The Championships are held at the All England Club. Wimbledon is the only one of the four majors still played on grass." = "윔블던은 올잉글랜드 클럽에서 개최됩니다. 4대 메이저 중 유일하게 현재 잔디 코트에서 열리는 대회입니다.";
 "The ad finished, but its reward could not be saved. %@" = "광고는 끝났지만 보상을 저장하지 못했습니다. %@";
-"The copy in Tricko will be removed. The original in Photos or Files will stay untouched." = "Tricko에 있는 사본을 삭제해요. Tricko 밖에 저장한 파일은 그대로 남아요.";
+"This removes the local copy. Your original file stays where it is." = "로컬 사본을 삭제해요. 원본 파일은 그대로 남아요.";
 "The direction of the racket face at contact strongly affects where the ball goes. Begin with a comfortable swing and aim to keep the ball in play. Add pace and spin as your contact becomes more reliable." = "임팩트 때 라켓 면의 방향은 공의 방향에 큰 영향을 줍니다. 편안한 스윙으로 공을 코트 안에 넣는 것부터 시작하세요. 타점이 안정되면 속도와 회전을 더하세요.";
 "The document was interrupted. Please try again." = "문서가 중단되었습니다. 다시 시도하세요.";
 "The export finished but could not be added to your library. %@" = "내보내기는 끝났지만 저장 또는 공유를 완료하지 못했어요. %@";
@@ -292,8 +291,8 @@
 "The other side" = "반대쪽 스트로크";
 "The request could not be completed." = "요청을 완료하지 못했습니다.";
 "The service is unavailable (%@). Please try again." = "서비스를 이용할 수 없습니다 (%@). 다시 시도하세요.";
-"The service returned an unreadable response. Please try again." = "Tricko가 응답을 읽지 못했어요. 다시 시도하세요.";
-"The service took too long to respond. Please try again." = "Tricko의 응답이 너무 늦어요. 다시 시도하세요.";
+"The service returned an unreadable response. Please try again." = "응답을 읽지 못했어요. 다시 시도하세요.";
+"The service took too long to respond. Please try again." = "응답을 받는 데 시간이 너무 오래 걸렸어요. 다시 시도하세요.";
 "The tossing arm is usually your non-dominant arm, so the movement can feel unfamiliar. Practise the toss on its own before combining it with the racket swing." = "토스는 보통 주로 쓰지 않는 팔로 하므로 어색할 수 있습니다. 라켓 스윙과 연결하기 전에 토스만 따로 연습하세요.";
 "This channel has no available videos." = "이 모음에 영상이 없어요.";
 "This clip could not be played." = "영상을 재생할 수 없습니다.";
@@ -338,7 +337,7 @@
 "Watch a full ad for %@ more views and %@ more saves." = "광고를 끝까지 보면 시청 %@회와 저장 %@회를 드립니다.";
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "광고를 끝까지 보면 오전 5시까지 무제한 시청과 저장 %@회를 드립니다.";
 "Watch an ad" = "광고 보기";
-"Watch lessons" = "레슨 보기";
+"Watch lessons" = "영상 둘러보기";
 "Watch. Practise. Repeat." = "보고. 연습하고. 반복하세요.";
 "What happens at 40–40?" = "40–40이면 어떻게 될까요?";
 "When reviewing your footage, pause at contact: is there space between the ball and your body?" = "영상을 볼 때 임팩트 순간에 멈춰보세요. 공과 몸 사이에 공간이 있나요?";
@@ -346,21 +345,21 @@
 "YOUR DAILY PRACTICE" = "매일의 연습";
 "Yearly" = "연간";
 "Your changes could not be saved on this device. Please try again." = "이 기기에 변경 사항을 저장하지 못했어요. 다시 시도하세요.";
-"Your connection is not ready yet. Please try again." = "Tricko에 연결한 뒤 레슨을 다시 열어 보세요.";
+"Your connection is not ready yet. Please try again." = "인터넷에 연결한 뒤 영상을 다시 열어 보세요.";
 "Your connection is not ready. Please try again shortly." = "계정을 확인하지 못했어요. 연결을 확인하고 다시 시도하세요.";
 "Your connection or purchase records are not ready. Please try again shortly." = "연결 또는 구매 기록이 준비되지 않았습니다. 잠시 후 다시 시도하세요.";
 "Your court pass." = "나만의 코트 패스.";
 "Your internet connection was interrupted. Reconnect and try again." = "연결이 끊겼어요. 인터넷에 다시 연결한 뒤 시도하세요.";
 "Your last bonus was just added. Please wait a minute before trying again." = "방금 보너스가 추가되었습니다. 1분 후 다시 시도하세요.";
 "Your local library could not be read. Existing files have been preserved." = "기기의 보관함을 읽을 수 없습니다. 기존 파일은 보존되었습니다.";
-"Your membership is active" = "Tricko Plus 이용 중";
+"Your membership is active" = "Plus 이용 중";
 "Your membership is already active." = "이미 멤버십이 활성화되어 있습니다.";
 "Your next session starts here." = "다음 연습은 여기서 시작됩니다.";
 "Your original stays untouched. Exports are saved to your local library." = "내보낸 파일은 보관함의 내보내기에서 확인하세요. 원본은 그대로 남아요.";
 "Your practice space" = "게스트 계정";
 "Your practice, in focus." = "내 연습을 자세히.";
 "Your purchase is waiting for approval." = "구매 승인을 기다리는 중이에요.";
-"Your session has expired. Please sign in again." = "연결 세션이 만료됐어요. Tricko에 다시 연결하세요.";
+"Your session has expired. Please sign in again." = "연결 세션이 만료됐어요. 계속하려면 다시 연결하세요.";
 "Your viewing and save allowance has been updated." = "시청 및 저장 이용 한도가 업데이트되었습니다.";
 "month" = "월";
 "per %@" = "/ %@";
@@ -395,7 +394,7 @@
 "Your viewing allowance has been updated." = "시청 횟수가 추가됐어요.";
 "Your download allowance has been updated." = "다운로드 횟수가 추가됐어요.";
 "Your download allowance is used up." = "이번 이용 기간의 다운로드 횟수를 모두 썼어요.";
-"Download a lesson from its playback options to watch without a connection." = "레슨의 재생 옵션에서 다운로드하면 오프라인에서 볼 수 있어요.";
+"Download a lesson from its playback options to watch without a connection." = "재생 옵션에서 영상을 다운로드하면 오프라인에서 볼 수 있어요.";
 "Offline downloads could not be read. Existing files have been preserved." = "오프라인 다운로드를 읽을 수 없습니다. 기존 파일은 보존되었습니다.";
 "Download interrupted. Please try again." = "다운로드가 중단됐어요. 다시 시도하세요.";
 "Download could not start. Please check your connection." = "다운로드를 시작할 수 없습니다. 연결을 확인하세요.";
@@ -403,7 +402,7 @@
 "Download failed. No download allowance was used." = "다운로드하지 못했어요. 남은 다운로드 횟수는 그대로예요.";
 "This video is not available for offline playback." = "이 영상은 오프라인 재생을 지원하지 않습니다.";
 "Download is waiting to be saved. Tap Retry." = "다운로드를 저장할 준비가 됐어요. 다시 시도를 눌러 완료하세요.";
-"This download is no longer on this device. Download it again." = "다운로드한 파일이 없어요. 레슨을 다시 다운로드하세요.";
+"This download is no longer on this device. Download it again." = "다운로드한 파일이 없어요. 영상을 다시 다운로드하세요.";
 "Purchase status is waiting to sync. Please try again when connected." = "구매 상태 동기화가 대기 중입니다. 연결 후 다시 시도하세요.";
 "No reward was received. Finish the ad to receive your reward." = "보상이 추가되지 않았어요. 보상을 받으려면 광고를 끝까지 보세요.";
 "Serve practice" = "서브 연습";
@@ -443,7 +442,7 @@
 
 "Follow system" = "기기 언어 사용";
 
-"No more lessons are available right now. Try again." = "지금은 더 볼 수 있는 레슨이 없습니다. 다시 시도해 주세요.";
+"No more lessons are available right now. Try again." = "지금은 더 볼 수 있는 영상이 없어요. 다시 시도해 주세요.";
 
 "Another download is being prepared." = "다른 다운로드를 준비하고 있습니다.";
 
@@ -473,7 +472,7 @@
 "Download could not be saved. Please try again. (%@)" = "다운로드를 저장하지 못했습니다. 다시 시도해 주세요. (%@)";
 "Loading ad…" = "광고 불러오는 중…";
 "Exporting…" = "내보내는 중…";
-"This stream can be watched offline in Tricko but cannot be exported." = "이 영상은 Tricko에서 오프라인으로 시청할 수 있지만 내보낼 수는 없습니다.";
+"This stream can be watched offline in Tricko but cannot be exported." = "이 영상은 오프라인으로 볼 수 있어요. 내보내기는 지원하지 않아요.";
 
 "Finish downloading this video to export it." = "다운로드가 완료되면 동영상을 내보낼 수 있습니다.";
 
@@ -481,7 +480,7 @@
 
 "Preparing export…" = "내보내기 준비 중…";
 
-"We download the video before exporting. Existing downloads are reused." = "내보내기에는 다운로드한 사본을 사용해요. 필요하면 Tricko가 영상을 다운로드합니다.";
+"We download the video before exporting. Existing downloads are reused." = "내보내기에는 다운로드한 사본을 사용해요. 필요하면 영상을 내려받아요.";
 
 "The provider has not supplied a downloadable video file. You can still cache this video for offline viewing." = "제공자가 다운로드 가능한 동영상 파일을 제공하지 않았습니다. 앱에서 오프라인 시청용으로 저장할 수 있습니다.";
 
@@ -508,7 +507,7 @@
 "Download" = "다운로드";
 "View" = "보기";
 "Remove offline video?" = "이 다운로드를 삭제할까요?";
-"This removes only the offline copy. Your favorite stays saved." = "다운로드한 사본을 삭제해요. 즐겨찾기에 추가한 레슨은 그대로 남아요.";
+"This removes only the offline copy. Your favorite stays saved." = "다운로드한 사본을 삭제해요. 즐겨찾기에 추가한 영상은 계속 거기에서 찾을 수 있어요.";
 "Stop this export?" = "내보내기를 중단할까요?";
 "The export is still in progress. Leaving now cancels it. Your video stays safe." = "지금 나가면 내보내기가 취소돼요. 원본 영상은 그대로 남아요.";
 "Keep exporting" = "계속 내보내기";
@@ -523,21 +522,20 @@
 "Connect to refresh your allowance." = "연결하면 남은 다운로드 횟수를 확인할 수 있어요.";
 
 // Tricko lesson link entry.
-"Tricko link or lesson code" = "Tricko 레슨 링크 또는 코드";
 "Paste" = "붙여넣기";
-"Open lesson" = "레슨 찾기";
-"Use a lesson link or code shared through Tricko." = "Tricko에서 받은 링크나 코드를 사용하세요.";
-"Copy a Tricko link or lesson code first, then tap Paste." = "레슨 링크나 코드를 복사한 뒤 붙여넣기를 누르세요.";
-"1. Copy a Tricko link" = "1. 링크 또는 코드 복사";
-"Tap Paste or enter the lesson code exactly as received. Codes are case-sensitive." = "붙여넣기를 누르거나 받은 코드를 그대로 입력하세요. 대소문자를 구분합니다.";
-"Tap Open lesson to find matching lessons, then swipe to watch." = "레슨 찾기를 누르세요. 위아래로 쓸어 넘기면 다른 영상을 볼 수 있어요.";
+"Open lesson" = "영상 찾기";
+"Use the lesson link or code you received." = "받은 영상 링크나 코드를 사용하세요.";
+"Copy a lesson link or code, then tap Paste." = "영상 링크나 코드를 복사한 뒤 붙여넣기를 누르세요.";
+"1. Copy the link or code" = "1. 링크 또는 코드 복사";
+"On Home, tap Paste or enter the code as received. Codes are case-sensitive." = "홈에서 붙여넣기를 누르거나 받은 코드를 그대로 입력하세요. 대소문자를 구분합니다.";
+"Tap Open lesson to find matching lessons, then swipe to watch." = "영상 찾기를 누르세요. 위아래로 쓸어 넘기면 다른 영상을 볼 수 있어요.";
 
 "Search in browser" = "웹에서 검색";
 "The browser could not open. Please try again." = "웹사이트를 열지 못했어요. 다시 시도하세요.";
-"Connect to verify your Plus membership before exporting." = "내보내기 전에 Tricko에 연결해 Plus 구독을 확인하세요.";
+"Connect to verify your Plus membership before exporting." = "내보내기 전에 인터넷에 연결해 Plus 구독을 확인하세요.";
 "Export is included with Plus." = "영상과 오디오를 내보내려면 Plus가 필요해요.";
-"Unlimited views, downloads and media exports." = "레슨 시청과 다운로드는 무제한이며, 영상과 오디오를 내보낼 수 있어요.";
-"No matching lessons. Search the web with your original input." = "일치하는 레슨이 없습니다. 입력한 내용으로 웹을 검색하세요.";
+"Unlimited views, downloads and media exports." = "영상 시청과 다운로드는 무제한이며, 영상과 오디오를 내보낼 수 있어요.";
+"No matching lessons. Search the web with your original input." = "일치하는 영상이 없어요. 입력한 내용으로 웹을 검색하세요.";
 
 "Official website" = "공식 웹사이트";
 
@@ -564,12 +562,12 @@
 "Mirror" = "거울 앞";
 "Camera" = "카메라 앞";
 "Live audience" = "관객 앞";
-"Open a magic lesson" = "레슨 열기";
+"Open a magic lesson" = "영상 열기";
 "Review your practice" = "연습 다시 보기";
-"Couldn’t load lessons" = "레슨을 불러오지 못했습니다";
-"No matching lessons" = "일치하는 레슨이 없어요";
-"No lessons yet" = "표시할 레슨이 없어요";
-"Open a lesson link or short code from Home." = "링크나 코드가 있다면 홈에서 레슨 열기를 누르세요.";
+"Couldn’t load lessons" = "영상을 불러오지 못했어요";
+"No matching lessons" = "일치하는 영상이 없어요";
+"No lessons yet" = "표시할 영상이 없어요";
+"Open a lesson link or short code from Home." = "홈에서 영상 링크를 붙여넣거나 코드를 입력하세요.";
 "Search the web with your original input." = "입력한 내용으로 웹에서 검색할 수 있어요.";
 
 /* Empty states */
@@ -577,7 +575,7 @@
 "No offline videos yet" = "아직 다운로드한 영상이 없어요";
 "No imported videos yet" = "아직 가져온 영상이 없어요";
 "No exports yet" = "아직 내보낸 파일이 없어요";
-"Tap Favorite while watching a lesson to save it here." = "레슨을 보다가 즐겨찾기에 추가하면 여기에 표시돼요.";
+"Tap Favorite while watching a lesson to save it here." = "영상을 보다가 즐겨찾기에 추가하면 여기에 표시돼요.";
 "Choose a video from Photos or Files to start editing." = "사진 또는 파일에서 영상을 가져와 편집하세요.";
 "Export a video or audio track from the editor to find it here." = "편집기에서 내보낸 영상과 오디오가 여기에 표시돼요.";
 "Import a video" = "영상 가져오기";
@@ -588,7 +586,7 @@
 
 /* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "모음을 불러오지 못했어요";
-"Setting up your table…" = "Tricko에 연결 중…";
+"Setting up your table…" = "연결 중…";
 "Slow down a move to check every frame." = "동작을 느리게 재생해 어떻게 보이는지 확인하세요.";
 "Bring your hands and props into focus." = "손과 소품이 잘 보이도록 영상의 화면을 잘라내세요.";
 "Run a routine. Record every run. Review your notes." = "매번 결과를 기록하고 연습 후 메모를 확인하세요.";
@@ -642,7 +640,7 @@
 "Check every angle" = "관객의 각도에서 확인하기";
 "Place the camera where spectators will be: seated, standing, to your left and to your right. Some moves only work from certain angles. Learn them before you perform." = "카메라를 앉은 관객과 선 관객의 눈높이에 각각 두고 촬영하세요. 양옆에서도 확인해 보세요. 공연 전에 동작이 드러나는 각도를 찾아 두세요.";
 "Review at half speed" = "절반 속도로 확인하기";
-"Play your footage at 0.5× to catch flashes and hesitations. Tricko’s speed and reframe tools let you study one moment at a time." = "녹화 영상을 0.5×로 재생하며 비밀이 잠깐 보이거나 동작이 멈추는 부분을 살펴보세요. Tricko에서 화면을 조정해 손을 더 자세히 볼 수 있어요.";
+"Play your footage at 0.5× to catch flashes and hesitations. Reframe the clip for a closer look at your hands." = "녹화 영상을 0.5×로 재생하며 비밀이 잠깐 보이거나 동작이 멈추는 부분을 살펴보세요. 구도를 조정하면 손을 더 자세히 볼 수 있어요.";
 "One clean run on camera tells you more than ten runs nobody saw." = "관객이 앉을 자리에서 연습을 처음부터 끝까지 촬영하세요. 다시 연습할 부분을 한 곳 적어 두세요.";
 "Magic etiquette" = "마술 예절";
 "Protect the wonder." = "관객과 창작자를 대하는 법";
@@ -686,19 +684,19 @@
 
 /* Plus benefits and review presets */
 "Included with Plus" = "Plus 혜택";
-"Unlimited lesson views" = "레슨 무제한 시청";
-"Watch lessons without using a daily view allowance." = "일일 시청 횟수 제한 없이 레슨을 보세요.";
+"Unlimited lesson views" = "영상 무제한 시청";
+"Watch lessons without using a daily view allowance." = "일일 시청 횟수 제한 없이 영상을 보세요.";
 "Unlimited offline downloads" = "오프라인 무제한 다운로드";
-"Download supported lessons for offline viewing without a daily limit." = "다운로드를 지원하는 레슨을 횟수 제한 없이 저장해 오프라인에서 보세요.";
+"Download supported lessons for offline viewing without a daily limit." = "다운로드를 지원하는 영상을 횟수 제한 없이 저장해 오프라인에서 보세요.";
 "Video and audio exports" = "영상과 오디오 내보내기";
 "Share edited videos as MP4 or save the audio as M4A." = "편집한 영상을 MP4로 공유하거나 오디오를 M4A로 저장하세요.";
 "Skip opening ads" = "시작 광고 건너뛰기";
-"Open Tricko or return to it without an app-open ad." = "Tricko를 열거나 다시 돌아올 때 시작 광고가 표시되지 않아요.";
+"Open or return to the app without an opening ad." = "앱을 열거나 돌아올 때 시작 광고가 표시되지 않아요.";
 "Review presets" = "복습 프리셋";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "연습 탭의 영상 편집기에서 느린 재생 프리셋을 적용하거나 저장한 설정을 다시 쓰세요.";
 "Review presets are included with Plus." = "복습 프리셋은 Plus에서 이용할 수 있어요.";
 "Hide review presets" = "복습 프리셋 접기";
-"Unlimited lessons, no opening ads and review presets." = "레슨 무제한 시청, 시작 광고 건너뛰기, 복습 프리셋.";
+"Unlimited lessons, no opening ads and review presets." = "영상 무제한 시청, 시작 광고 건너뛰기, 복습 프리셋.";
 "Presets keep your trim points. Play the preview to check the result." = "프리셋을 적용해도 자르기 구간은 유지돼요. 미리보기를 재생해 결과를 확인하세요.";
 "Slow mirror" = "느린 미러 모드";
 "Half speed with a horizontal flip." = "0.5배속과 좌우 반전을 적용해요.";
@@ -717,7 +715,7 @@
 "Open a video" = "동영상 열기";
 "Preview, trim or change the speed of a video on your device." = "기기에 있는 동영상을 재생하고, 자르고, 속도를 조절할 수 있어요.";
 "View all" = "모두 보기";
-"No lesson collections yet." = "아직 레슨 모음이 없어요.";
+"No lesson collections yet." = "아직 영상 모음이 없어요.";
 "Play a clip slower or faster." = "동영상을 느리게 또는 빠르게 재생하세요.";
 "Crop, rotate or flip a video." = "동영상의 화면을 자르거나, 회전하거나, 좌우로 뒤집으세요.";
 "Video exports, editing presets and no opening ads." = "동영상 내보내기와 편집 프리셋을 이용하고 시작 광고를 건너뛰세요.";

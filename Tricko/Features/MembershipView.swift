@@ -5,7 +5,6 @@ struct PlusEntryButton: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let active: Bool
     var compact = false
-    var inline = false
     let action: () -> Void
 
     private var title: String {
@@ -17,7 +16,7 @@ struct PlusEntryButton: View {
             Group {
                 if compact {
                     LocalizedText(title).font(.stage(.footnote, weight: .semibold))
-                        .fixedSize(horizontal: inline, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .frame(minWidth: 44, minHeight: 44)
                         .foregroundStyle(TrickoStyle.accent)
@@ -206,7 +205,7 @@ struct MembershipView: View {
 
     private var membershipIntro: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(verbatim: "Tricko Plus")
+            LocalizedText("Plus")
                 .font(.stage(.largeTitle, weight: .heavy))
                 .tracking(-0.6)
                 .fixedSize(horizontal: false, vertical: true)
@@ -230,7 +229,7 @@ struct MembershipView: View {
             }
             .padding(16)
             .background { StageSurface(tone: .ivory, radius: 16) }
-            benefit(.exit, "Skip opening ads", "Open Tricko or return to it without an app-open ad.")
+            benefit(.exit, "Skip opening ads", "Open or return to the app without an opening ad.")
             benefit(.play, "Unlimited lesson views", "Watch lessons without using a daily view allowance.")
             benefit(.download, "Unlimited offline downloads", "Download supported lessons for offline viewing without a daily limit.")
         }

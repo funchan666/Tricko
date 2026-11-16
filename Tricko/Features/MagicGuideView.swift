@@ -71,7 +71,7 @@ private struct MagicNote: Identifiable {
                 .init("Check every angle",
                       "Place the camera where spectators will be: seated, standing, to your left and to your right. Some moves only work from certain angles. Learn them before you perform."),
                 .init("Review at half speed",
-                      "Play your footage at 0.5× to catch flashes and hesitations. Tricko’s speed and reframe tools let you study one moment at a time.")
+                      "Play your footage at 0.5× to catch flashes and hesitations. Reframe the clip for a closer look at your hands.")
             ],
             takeaway: "One clean run on camera tells you more than ten runs nobody saw.",
             sources: []),

@@ -108,7 +108,7 @@ struct TrickoStartupView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(.container, edges: .all)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(verbatim: L10n.text("Tricko is starting")))
+            .accessibilityLabel(Text(verbatim: L10n.text("Loading…")))
             .background(Color("LaunchBackground").ignoresSafeArea())
     }
 }
@@ -146,7 +146,6 @@ struct TrickoRootView: View {
     @SceneStorage("root.tab") private var tabRaw = TrickoTab.home.rawValue
     @SceneStorage("home.linkDraft") private var linkDraft = ""
     @State private var showingAccount = false
-    @State private var showingLessonLink = false
     @State private var libraryEditor: PracticeRecording?
     @State private var libraryFilter = "Imports"
     @State private var channel: ChannelRoute?
@@ -249,8 +248,7 @@ struct TrickoRootView: View {
         switch item {
         case .home:
             HomeView(openAccount: { showingAccount = true }, openVideo: openVideo,
-                     showImports: showImports, link: $linkDraft, channel: $channel, searchRequest: $searchRequest,
-                     showingLink: $showingLessonLink)
+                     showImports: showImports, link: $linkDraft, channel: $channel, searchRequest: $searchRequest)
         case .tools:
             ToolsView()
         case .library:

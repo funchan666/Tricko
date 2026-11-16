@@ -101,7 +101,7 @@ struct LibraryView: View {
                     VStack(alignment: .leading, spacing: 22) {
                         SheetHeading(title: "Delete this local copy?") { removing = nil }
                         Text(verbatim: movie.title).font(.stage(.headline))
-                        LocalizedText("The copy in Tricko will be removed. The original in Photos or Files will stay untouched.").foregroundStyle(TrickoStyle.secondary)
+                        LocalizedText("This removes the local copy. Your original file stays where it is.").foregroundStyle(TrickoStyle.secondary)
                         ActionButton(title: "Delete local copy") { library.delete(movie); removing = nil }
                         ActionButton(title: "Keep it", primary: false) { removing = nil }
                     }.padding(24)
@@ -367,14 +367,21 @@ struct LibraryView: View {
                 }
             }
             .aspectRatio(1.60, contentMode: .fit)
-            .overlay(alignment: .bottomLeading) {
-                Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
-                    .font(.stage(.caption2, weight: .semibold).monospacedDigit())
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .foregroundStyle(TrickoStyle.paper)
-                    .background(TrickoStyle.ink.opacity(0.92), in: Capsule())
-                    .padding(8)
-                    .allowsHitTesting(false)
+            .overlay(alignment: .bottom) {
+                HStack(alignment: .bottom) {
+                    Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
+                        .font(.stage(.caption2, weight: .semibold).monospacedDigit())
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .foregroundStyle(TrickoStyle.paper)
+                        .background(TrickoStyle.ink.opacity(0.92), in: Capsule())
+                    Spacer(minLength: 0)
+                    if !isAudio {
+                        Glyph(symbol: .edit, size: 14, tint: TrickoStyle.paper)
+                            .frame(width: 32, height: 32)
+                            .background(TrickoStyle.ink.opacity(0.92), in: Circle())
+                    }
+                }
+                .padding(8).allowsHitTesting(false)
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)

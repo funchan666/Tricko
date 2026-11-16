@@ -9,8 +9,8 @@
 "%@ views · %@ saves left today" = "المتبقي اليوم: %@ مشاهدة · %@ حفظ";
 "%@, %@ per %@" = "%@، %@ لكل %@";
 "1. Copy your shared link" = "1. انسخ الرابط الذي وصلك";
-"2. Paste it above" = "٢. ألصقه أو اكتبه";
-"3. Open and watch" = "٣. ابحث عن الدرس";
+"2. Paste or type" = "٢. ألصقه أو اكتبه";
+"3. Open and watch" = "٣. ابحث عن الفيديو";
 "A better game\nstarts here." = "لعب أفضل\nيبدأ هنا.";
 "A closer look at your own game" = "ألقِ نظرة أدق على أدائك";
 "A common set format is first to six games with a two-game lead, with a tiebreak at 6–6. A match is decided by sets. Tiebreak targets and match formats vary, so check the rules of the event you are watching." = "في صيغة شائعة، يفوز بالمجموعة من يصل إلى ستة أشواط بفارق شوطين، مع شوط فاصل عند 6–6. تُحسم المباراة بالمجموعات. تختلف أهداف الشوط الفاصل وصيغ المباريات، لذا راجع قواعد البطولة.";
@@ -20,7 +20,7 @@
 "A little knowledge for your next session." = "معرفة بسيطة لتدريبك القادم.";
 "A little luck, on us" = "أضيفت مكافأة";
 "A right-handed player's backhand is usually struck on the left side of the body, slightly in front. A left-handed player reverses the sides. Give yourself room instead of letting the ball arrive too close." = "يضرب اللاعب الأيمن الضربة الخلفية عادةً إلى يسار جسمه وأمامه قليلًا، والعكس للأعسر. اترك مساحة حتى لا تقترب الكرة من جسمك كثيرًا.";
-"A secure connection to Tricko could not be established. Check your network or VPN, then try again. If it continues, the service may be temporarily unavailable." = "تعذّر الاتصال بـ Tricko بشكل آمن. تحقّق من الشبكة أو VPN ثم حاول مرة أخرى.";
+"Couldn’t connect securely. Check your network or VPN, then try again." = "تعذّر إنشاء اتصال آمن. تحقّق من الشبكة أو VPN ثم حاول مرة أخرى.";
 "A serve starts with the toss." = "الإرسال يبدأ برمي الكرة.";
 "A short guide to following the score." = "دليل مختصر لفهم النتيجة.";
 "Access password" = "كلمة مرور الوصول";
@@ -30,7 +30,7 @@
 "All" = "الكل";
 "All notes can be read offline. Original summaries with links to further reading." = "يمكن قراءة جميع المقالات دون اتصال. ملخصات أصلية مع روابط لمزيد من القراءة.";
 "Also called the French Open, this major is played on red clay. The court's familiar colour comes from a fine layer of crushed brick over its underlying structure." = "تُعرف أيضًا ببطولة فرنسا المفتوحة، وتُقام على أرضية ترابية حمراء. يأتي لونها المميز من طبقة رقيقة من الطوب المسحوق فوق البنية الأساسية للملعب.";
-"An Apple purchase is awaiting account reconciliation. Its original order could not be identified; it has not been discarded." = "هناك عملية شراء من Apple قيد الانتظار. احتفظ Tricko بالمعاملة وتعذّر ربطها بطلبها الأصلي.";
+"An Apple purchase is awaiting account reconciliation. Its original order could not be identified; it has not been discarded." = "هناك عملية شراء من Apple قيد الانتظار. تعذّر العثور على الطلب الأصلي. لا تزال المعاملة محفوظة.";
 "An Apple request is already in progress." = "يوجد طلب إلى Apple قيد التنفيذ.";
 "An ad could not be loaded. Please try again later. %@" = "تعذر تحميل الإعلان. حاول لاحقًا. %@";
 "An earlier purchase still needs to finish. Use Retry purchase confirmation." = "لم تكتمل عملية شراء سابقة. استخدم إعادة محاولة تأكيد الشراء.";
@@ -40,7 +40,7 @@
 "Apple has no pending purchases to restore." = "لم يتم العثور على مشتريات يمكن استعادتها.";
 "Apple is taking too long to respond. Please try again." = "تأخرت استجابة Apple. أعد المحاولة.";
 "Apple returned a different subscription period. Please try again later." = "أعادت Apple مدة اشتراك مختلفة. حاول لاحقًا.";
-"Apple’s receipt is unavailable. Retry confirmation when connected." = "تعذّر على Tricko الحصول على إيصال Apple. اتصل وأعد محاولة تأكيد الشراء.";
+"Apple’s receipt is unavailable. Retry confirmation when connected." = "تعذّر الحصول على إيصال Apple. اتصل بالإنترنت وأعد محاولة تأكيد الشراء.";
 "Audio" = "الصوت";
 "Audio extraction uses your trim and speed settings." = "يستخدم استخراج الصوت إعدادات القص والسرعة.";
 "Audio playback is unavailable." = "تعذر تشغيل الصوت.";
@@ -57,7 +57,7 @@
 "Bring your footwork or swing into focus." = "ركّز على حركة قدميك أو تأرجح المضرب.";
 "Browse Files" = "تصفّح الملفات";
 "Build a repeatable rally" = "ابنِ تبادلًا منتظمًا";
-"Build your lesson collection." = "أنشئ مجموعتك من الدروس.";
+"Build your lesson collection." = "أنشئ مجموعتك من الفيديوهات.";
 "Cancel" = "إلغاء";
 "Cancel export" = "إلغاء التصدير";
 "Change" = "تغيير";
@@ -65,16 +65,15 @@
 "Check your connection and try again." = "تحقق من الاتصال وأعد المحاولة.";
 "Checking with Apple…" = "جارٍ تحميل الخطط من Apple…";
 "Checking your Apple purchases…" = "جارٍ التحقق من مشتريات Apple…";
-"Choose a clip from your device. We’ll keep your original untouched." = "يعدّل Tricko نسخة من الفيديو. يبقى الفيديو الأصلي كما هو.";
+"Choose a clip from your device. We’ll keep your original untouched." = "تُطبَّق التعديلات على نسخة من الفيديو.";
 "Choose from Photos" = "اختيار من الصور";
 "Choose your language" = "اختر لغة";
 "Choose your practice footage in Tools to keep a local working copy." = "اختر فيديو تدريبك في الأدوات للاحتفاظ بنسخة عمل على الجهاز.";
 "Clear" = "مسح";
-"Tricko is starting" = "جارٍ بدء Tricko";
-"Tricko’s online service is not configured yet. Local editing is available." = "لم تُهيَّأ خدمة Tricko عبر الإنترنت بعد. التحرير المحلي متاح.";
+"The online service isn’t set up yet. You can still edit local videos." = "لم تُهيَّأ الخدمة عبر الإنترنت بعد. يمكنك تحرير الفيديوهات المحلية.";
 "Close" = "إغلاق";
 "Confirming your purchase…" = "جارٍ تأكيد الشراء…";
-"Connecting your lesson feed…" = "جارٍ الاتصال بقائمة الدروس…";
+"Connecting your lesson feed…" = "جارٍ الاتصال بقائمة الفيديوهات…";
 "Continue with %@" = "المتابعة مع %@";
 "Control before speed" = "التحكم قبل السرعة";
 "Copy a video link or short code first, then tap Paste link." = "انسخ رابط الفيديو أو الرمز المختصر أولًا، ثم اضغط لصق الرابط.";
@@ -82,9 +81,9 @@
 "Couldn’t open this page" = "تعذّر تحميل هذه الصفحة";
 "Daily allowance could not be read. Please try again later." = "تعذّر تحميل المشاهدات والتنزيلات المتبقية. حاول مرة أخرى لاحقًا.";
 "Daily allowance resets at 5 AM" = "تتجدد الحصة اليومية الساعة 5 صباحًا";
-"Delete local copy" = "الحذف من Tricko";
-"Delete local file" = "حذف الملف من Tricko";
-"Delete this local copy?" = "هل تريد حذف هذا الملف من Tricko؟";
+"Delete local copy" = "حذف النسخة المحلية";
+"Delete local file" = "حذف الملف المحلي";
+"Delete this local copy?" = "هل تريد حذف هذه النسخة المحلية؟";
 "Discover" = "استكشاف";
 "Dismiss message" = "إغلاق الرسالة";
 "Edit" = "تحرير";
@@ -106,14 +105,14 @@
 "Final duration · %@" = "المدة النهائية · %@";
 "Find the frame." = "ضبط الإطار";
 "Find your forehand." = "تعرّف على ضربتك الأمامية.";
-"Finding more clips…" = "جارٍ تحميل المزيد من الدروس…";
-"Finding your next lesson…" = "جارٍ تحميل الدروس…";
+"Finding more clips…" = "جارٍ تحميل المزيد من الفيديوهات…";
+"Finding your next lesson…" = "جارٍ تحميل الفيديوهات…";
 "Finish a video or extract its audio in Tools. Your exports will be collected here." = "أكمل تحرير فيديو أو استخرج الصوت في الأدوات. ستجد ملفاتك المصدَّرة هنا.";
 "Folder" = "مجلد";
 "For a right-handed forehand, meet the ball slightly in front and to your right; reverse the side if you play left-handed. Small adjusting steps help you avoid getting crowded by the ball." = "في الضربة الأمامية للأيمن، اضرب الكرة أمامك قليلًا وإلى يمينك؛ اعكس الجهة إن كنت أعسر. تساعد خطوات تعديل صغيرة على تجنّب اقتراب الكرة أكثر من اللازم.";
 "Four majors. Three surfaces." = "أربع بطولات كبرى. ثلاث أرضيات.";
 "Frame" = "الإطار";
-"Frames crop from the center. Use Preview changes to inspect the result." = "يقصّ Tricko الفيديو من المنتصف. اضغط على «معاينة التغييرات» للتحقّق من الإطار.";
+"Frames crop from the center. Use Preview changes to inspect the result." = "يُقصّ الفيديو من المنتصف. اضغط على «معاينة التغييرات» للتحقّق من الإطار.";
 "Free plan" = "الخطة المجانية";
 "From raw to ready" = "من التسجيل إلى النتيجة";
 "From watching to playing" = "من المشاهدة إلى اللعب";
@@ -132,7 +131,7 @@
 "Go further with Plus." = "تقدّم أكثر مع Plus.";
 "Got it" = "فهمت";
 "Has a password?" = "هل توجد كلمة مرور؟";
-"Have a lesson link?" = "هل لديك رابط درس؟";
+"Have a lesson link?" = "هل لديك رابط فيديو؟";
 "Hide password" = "إخفاء كلمة المرور";
 "Home" = "الرئيسية";
 "How to" = "مساعدة في استخدام الروابط";
@@ -156,15 +155,15 @@
 "Keep your game growing." = "واصل تطوير لعبك.";
 "Know the game.\nEnjoy every point." = "افهم اللعبة.\nواستمتع بكل نقطة.";
 "Leave room for contact" = "اترك مساحة لضرب الكرة";
-"Lesson collections" = "مجموعات الدروس";
-"Lesson link or short code" = "رابط الدرس أو رمزه";
-"Lesson or collection link" = "رابط درس أو مجموعة";
+"Lesson collections" = "مجموعات الفيديو";
+"Lesson link or short code" = "رابط الفيديو أو رمزه";
+"Lesson or collection link" = "رابط فيديو أو مجموعة";
 "Let it speak. Or don’t." = "إعدادات الصوت";
 "Let the ball meet your motion" = "اجعل الكرة تناسب حركتك";
-"Let’s reconnect." = "تعذّر الاتصال بـ Tricko";
+"Let’s reconnect." = "تعذّر الاتصال";
 "Library" = "المكتبة";
 "Load more" = "تحميل المزيد";
-"Loading your lesson feed." = "جارٍ تحميل قائمة دروسك.";
+"Loading your lesson feed." = "جارٍ تحميل قائمة الفيديوهات.";
 "Loading…" = "جارٍ التحميل…";
 "Love, deuce, advantage." = "صفر، تعادل، أفضلية.";
 "MP4 · Up to the selected resolution · 30 fps\nSmaller resolutions reduce export size. Source videos are never upscaled." = "MP4 · حتى الدقة المحددة · 30 إطارًا/ث\nالدقة الأقل تصغّر الملف. لا تُرفع الدقة فوق دقة الفيديو الأصلي.";
@@ -181,8 +180,8 @@
 "More court time." = "وقت أطول في الملعب.";
 "Mute" = "كتم الصوت";
 "No ad is available right now. %@" = "لم يتوفّر إعلان. %@";
-"No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "لم يُعثر على درس لهذا الرابط. تحقّق من الرمز والأحرف الكبيرة والصغيرة، أو حاول مرة أخرى لاحقًا.";
-"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "لا توجد دروس هنا بعد. جرّب بحثًا آخر أو افتح رابط درس من الرئيسية.";
+"No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "لم يُعثر على فيديو لهذا الرابط. تحقّق من الرمز والأحرف الكبيرة والصغيرة، أو حاول مرة أخرى لاحقًا.";
+"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "لا توجد فيديوهات هنا بعد. جرّب بحثًا آخر أو ألصق رابط فيديو في الصفحة الرئيسية.";
 "No reward was received. Finish a rewarded ad to get more views." = "لم تُستلم مكافأة. أكمل الإعلان بمكافأة للحصول على مشاهدات إضافية.";
 "Nothing here yet" = "لا يوجد شيء هنا بعد";
 "ON COURT · ON REPEAT" = "في الملعب · باستمرار";
@@ -194,9 +193,9 @@
 "One month of Plus" = "شهر من Plus";
 "Online streams stay online. Import a video you own to make an edit." = "البث عبر الإنترنت يبقى عبر الإنترنت. استورد فيديو تملكه لتحريره.";
 "Open Me and account settings" = "فتح إعدادات الحساب";
-"Open a lesson" = "فتح درس";
+"Open a lesson" = "فتح فيديو";
 "Open link" = "فتح الرابط";
-"Open your next lesson" = "كيفية فتح درس";
+"Open your next lesson" = "طريقة استخدام رابط فيديو أو رمز";
 "Opening document…" = "جارٍ تحميل المستند…";
 "Opening link…" = "جارٍ فتح الرابط…";
 "Or, keep it free" = "احصل على استخدام إضافي عبر الإعلانات";
@@ -230,7 +229,7 @@
 "Purchase could not be completed." = "تعذر إكمال الشراء.";
 "Purchase help" = "مساعدة الشراء";
 "Purchase is pending confirmation. %@" = "الشراء بانتظار التأكيد. %@";
-"Purchase recovery storage is unavailable. Purchases are paused to protect existing orders." = "تعذّر فتح سجلات الشراء في Tricko. أُوقفت عمليات الشراء مؤقتًا لحماية الطلبات الحالية.";
+"Purchase recovery storage is unavailable. Purchases are paused to protect existing orders." = "تعذّر فتح سجلات الشراء. أُوقفت عمليات الشراء مؤقتًا لحماية الطلبات الحالية.";
 "Purchase service is unavailable (%@)." = "خدمة الشراء غير متاحة (%@).";
 "Purchases are not allowed on this device." = "الشراء غير مسموح على هذا الجهاز.";
 "Purchases are temporarily unavailable. Please try again later." = "الشراء غير متاح مؤقتًا. حاول لاحقًا.";
@@ -256,7 +255,7 @@
 "Rules" = "القواعد";
 "Save" = "حفظ";
 "Save a video or extract an audio track." = "احفظ فيديو أو استخرج مسارًا صوتيًا.";
-"Save lessons as you watch. Come back to the ideas you want to try on court." = "احفظ الدروس أثناء المشاهدة، وارجع للأفكار التي تريد تجربتها في الملعب.";
+"Save lessons as you watch. Come back to the ideas you want to try on court." = "احفظ الفيديوهات أثناء مشاهدتها لتجدها بسهولة لاحقًا.";
 "Save video" = "إضافة إلى المفضّلة";
 "Saved" = "المحفوظات";
 "Saves left" = "عمليات الحفظ المتبقية";
@@ -277,23 +276,23 @@
 "Subscription information is being prepared. Please try again later." = "جارٍ تجهيز معلومات الاشتراك. حاول لاحقًا.";
 "Subscriptions are temporarily unavailable. Please try again later." = "الاشتراكات غير متاحة مؤقتًا. حاول لاحقًا.";
 "Supported streams adjust quality to your connection." = "تتكيّف جودة الفيديو مع اتصالك في المقاطع التي تدعم ذلك.";
-"Tap Open link to find matching lessons, then swipe to watch." = "اضغط على فتح الرابط للعثور على الدروس المطابقة، ثم اسحب للمشاهدة.";
+"Tap Open link to find matching lessons, then swipe to watch." = "اضغط على «فتح الرابط» للعثور على الفيديوهات المطابقة، ثم اسحب للمشاهدة.";
 "Tap Paste link or enter the code exactly as received. Uppercase and lowercase letters matter." = "اضغط لصق الرابط أو أدخل الرمز كما وصلك تمامًا. الأحرف الكبيرة والصغيرة مختلفة.";
 "Technique" = "التقنيات";
 "Terms of Use" = "شروط الاستخدام";
 "Test ads require Google's sample iOS App ID." = "تتطلب الإعلانات التجريبية معرّف تطبيق iOS التجريبي من Google.";
 "The Championships are held at the All England Club. Wimbledon is the only one of the four majors still played on grass." = "تُقام ويمبلدون في نادي عموم إنجلترا، وهي الوحيدة بين البطولات الأربع التي ما زالت تُلعب على العشب.";
 "The ad finished, but its reward could not be saved. %@" = "اكتمل الإعلان، لكن تعذر حفظ المكافأة. %@";
-"The copy in Tricko will be removed. The original in Photos or Files will stay untouched." = "تُحذف النسخة الموجودة في Tricko. تبقى الملفات المحفوظة خارج التطبيق في مكانها.";
+"This removes the local copy. Your original file stays where it is." = "تُحذف النسخة المحلية. يبقى الملف الأصلي في مكانه.";
 "The direction of the racket face at contact strongly affects where the ball goes. Begin with a comfortable swing and aim to keep the ball in play. Add pace and spin as your contact becomes more reliable." = "يؤثر اتجاه وجه المضرب عند ملامسة الكرة كثيرًا في مسارها. ابدأ بحركة مريحة وحافظ على الكرة في اللعب، ثم أضف السرعة والدوران عندما يصبح الضرب أكثر ثباتًا.";
 "The document was interrupted. Please try again." = "انقطع تحميل المستند. أعد المحاولة.";
-"The export finished but could not be added to your library. %@" = "اكتمل التصدير. تعذّر على Tricko إكمال الحفظ أو المشاركة. %@";
+"The export finished but could not be added to your library. %@" = "اكتمل التصدير. تعذّر إكمال الحفظ أو المشاركة. %@";
 "The first major of the calendar year is held at Melbourne Park in Australia. It is played on hard courts; the tournament moved away from grass when it moved to this venue in 1988." = "تُقام أول بطولة كبرى في السنة في ملبورن بارك بأستراليا. تُلعب على أرضية صلبة، وقد تخلّت عن العشب عند انتقالها إلى هذا الموقع عام 1988.";
 "The other side" = "الجانب الآخر";
 "The request could not be completed." = "تعذر إكمال الطلب.";
 "The service is unavailable (%@). Please try again." = "الخدمة غير متاحة (%@). أعد المحاولة.";
-"The service returned an unreadable response. Please try again." = "تعذّر على Tricko قراءة الردّ. حاول مرة أخرى.";
-"The service took too long to respond. Please try again." = "استغرق ردّ Tricko وقتًا طويلًا. حاول مرة أخرى.";
+"The service returned an unreadable response. Please try again." = "تعذّرت قراءة الردّ. حاول مرة أخرى.";
+"The service took too long to respond. Please try again." = "استغرق ردّ الخدمة وقتًا طويلًا. حاول مرة أخرى.";
 "The tossing arm is usually your non-dominant arm, so the movement can feel unfamiliar. Practise the toss on its own before combining it with the racket swing." = "عادةً تُرمى الكرة بالذراع غير المسيطرة، لذا قد تبدو الحركة غير مألوفة. تدرّب على الرمية وحدها قبل دمجها بحركة المضرب.";
 "This channel has no available videos." = "لا توجد فيديوهات في هذه المجموعة.";
 "This clip could not be played." = "تعذر تشغيل هذا الفيديو.";
@@ -338,7 +337,7 @@
 "Watch a full ad for %@ more views and %@ more saves." = "شاهد إعلانًا كاملًا لإضافة %@ مشاهدة و%@ عملية حفظ.";
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "شاهد إعلانًا كاملًا لمشاهدة بلا حدود حتى 5 صباحًا وإضافة %@ عملية حفظ.";
 "Watch an ad" = "مشاهدة إعلان";
-"Watch lessons" = "مشاهدة الدروس";
+"Watch lessons" = "تصفّح الفيديوهات";
 "Watch. Practise. Repeat." = "شاهد. تدرّب. كرّر.";
 "What happens at 40–40?" = "ماذا يحدث عند 40–40؟";
 "When reviewing your footage, pause at contact: is there space between the ball and your body?" = "أوقف الفيديو عند ضرب الكرة: هل توجد مساحة بين الكرة وجسمك؟";
@@ -346,21 +345,21 @@
 "YOUR DAILY PRACTICE" = "تدريبك اليومي";
 "Yearly" = "سنوي";
 "Your changes could not be saved on this device. Please try again." = "تعذّر حفظ تغييراتك على هذا الجهاز. حاول مرة أخرى.";
-"Your connection is not ready yet. Please try again." = "اتصل بـ Tricko، ثم حاول فتح الدرس مرة أخرى.";
+"Your connection is not ready yet. Please try again." = "اتصل بالإنترنت، ثم حاول فتح الفيديو مرة أخرى.";
 "Your connection is not ready. Please try again shortly." = "تعذّر التحقّق من حسابك. تحقّق من الاتصال وحاول مرة أخرى.";
 "Your connection or purchase records are not ready. Please try again shortly." = "الاتصال أو سجلات الشراء غير جاهزة. أعد المحاولة بعد قليل.";
 "Your court pass." = "بطاقتك إلى الملعب.";
 "Your internet connection was interrupted. Reconnect and try again." = "انقطع الاتصال. أعد الاتصال بالإنترنت وحاول مرة أخرى.";
 "Your last bonus was just added. Please wait a minute before trying again." = "أُضيفت مكافأتك للتو. انتظر دقيقة قبل المحاولة مجددًا.";
 "Your local library could not be read. Existing files have been preserved." = "تعذرت قراءة المكتبة المحلية. تم الاحتفاظ بالملفات الموجودة.";
-"Your membership is active" = "Tricko Plus مفعّل";
+"Your membership is active" = "اشتراك Plus مفعّل";
 "Your membership is already active." = "عضويتك مفعّلة بالفعل.";
 "Your next session starts here." = "تدريبك القادم يبدأ هنا.";
 "Your original stays untouched. Exports are saved to your local library." = "تجد الملفات المصدّرة ضمن «الصادرات» في المكتبة. يبقى الملف الأصلي كما هو.";
 "Your practice space" = "حساب ضيف";
 "Your practice, in focus." = "تدريبك تحت التركيز.";
 "Your purchase is waiting for approval." = "بانتظار الموافقة على الشراء.";
-"Your session has expired. Please sign in again." = "انتهت صلاحية الجلسة. أعد الاتصال بـ Tricko.";
+"Your session has expired. Please sign in again." = "انتهت صلاحية الجلسة. أعد الاتصال للمتابعة.";
 "Your viewing and save allowance has been updated." = "تم تحديث حصتك من المشاهدات وعمليات الحفظ.";
 "month" = "شهر";
 "per %@" = "لكل %@";
@@ -395,7 +394,7 @@
 "Your viewing allowance has been updated." = "أضيفت مشاهدات.";
 "Your download allowance has been updated." = "أضيفت تنزيلات.";
 "Your download allowance is used up." = "استخدمت كل التنزيلات المتاحة لهذه الفترة.";
-"Download a lesson from its playback options to watch without a connection." = "افتح خيارات تشغيل الدرس لتنزيله ومشاهدته دون اتصال.";
+"Download a lesson from its playback options to watch without a connection." = "نزّل الفيديو من خيارات التشغيل لمشاهدته دون اتصال.";
 "Offline downloads could not be read. Existing files have been preserved." = "تعذّرت قراءة التنزيلات. تم الاحتفاظ بالملفات الموجودة.";
 "Download interrupted. Please try again." = "انقطع التنزيل. حاول مرة أخرى.";
 "Download could not start. Please check your connection." = "تعذّر بدء التنزيل. تحقق من اتصالك.";
@@ -403,7 +402,7 @@
 "Download failed. No download allowance was used." = "فشل التنزيل. يبقى عدد تنزيلاتك المتبقية كما هو.";
 "This video is not available for offline playback." = "هذا الفيديو غير متاح للتشغيل دون اتصال.";
 "Download is waiting to be saved. Tap Retry." = "التنزيل جاهز للحفظ. اضغط على «إعادة المحاولة» لإكماله.";
-"This download is no longer on this device. Download it again." = "الملف المنزّل مفقود. نزّل الدرس مرة أخرى.";
+"This download is no longer on this device. Download it again." = "الملف المنزّل مفقود. نزّل الفيديو مرة أخرى.";
 "Purchase status is waiting to sync. Please try again when connected." = "حالة الشراء بانتظار المزامنة. حاول مجددًا عند الاتصال.";
 "No reward was received. Finish the ad to receive your reward." = "لم تُضف مكافأة. شاهد الإعلان حتى النهاية لتحصل عليها.";
 "Serve practice" = "تدريب الإرسال";
@@ -443,7 +442,7 @@
 
 "Follow system" = "استخدام لغة الجهاز";
 
-"No more lessons are available right now. Try again." = "لا توجد دروس إضافية حاليًا. حاول مرة أخرى.";
+"No more lessons are available right now. Try again." = "لا توجد فيديوهات إضافية حاليًا. حاول مرة أخرى.";
 
 "Another download is being prepared." = "يجري تجهيز تنزيل آخر.";
 
@@ -473,7 +472,7 @@
 "Download could not be saved. Please try again. (%@)" = "تعذر حفظ التنزيل. حاول مرة أخرى. (%@)";
 "Loading ad…" = "جارٍ تحميل الإعلان…";
 "Exporting…" = "جارٍ التصدير…";
-"This stream can be watched offline in Tricko but cannot be exported." = "يمكن مشاهدة هذا الفيديو دون اتصال في Tricko، لكن لا يمكن تصديره.";
+"This stream can be watched offline in Tricko but cannot be exported." = "يمكنك مشاهدة هذا الفيديو دون اتصال. التصدير غير متاح.";
 
 "Finish downloading this video to export it." = "أكمل تنزيل هذا الفيديو لتصديره.";
 
@@ -481,7 +480,7 @@
 
 "Preparing export…" = "جارٍ تجهيز التصدير…";
 
-"We download the video before exporting. Existing downloads are reused." = "يستخدم التصدير نسخة منزّلة. ينزّل Tricko الفيديو عند الحاجة.";
+"We download the video before exporting. Existing downloads are reused." = "يستخدم التصدير نسخة منزّلة. يُنزَّل الفيديو عند الحاجة.";
 
 "The provider has not supplied a downloadable video file. You can still cache this video for offline viewing." = "لم يوفّر مزوّد المحتوى ملف فيديو قابلاً للتنزيل. لا يزال بإمكانك حفظه للمشاهدة دون اتصال داخل التطبيق.";
 
@@ -508,7 +507,7 @@
 "Download" = "تنزيل";
 "View" = "عرض";
 "Remove offline video?" = "هل تريد إزالة هذا التنزيل؟";
-"This removes only the offline copy. Your favorite stays saved." = "تُزال النسخة المنزّلة. إذا أضفت الدرس إلى المفضّلة، فسيبقى هناك.";
+"This removes only the offline copy. Your favorite stays saved." = "تُزال النسخة المنزّلة. يمكنك العثور على الفيديو في المفضّلة إذا حفظته هناك.";
 "Stop this export?" = "إيقاف التصدير؟";
 "The export is still in progress. Leaving now cancels it. Your video stays safe." = "ستؤدي المغادرة إلى إلغاء التصدير. يبقى الفيديو الأصلي كما هو.";
 "Keep exporting" = "متابعة التصدير";
@@ -523,21 +522,20 @@
 "Connect to refresh your allowance." = "اتصل بالإنترنت لمعرفة عدد التنزيلات المتبقية.";
 
 // Tricko lesson link entry.
-"Tricko link or lesson code" = "رابط درس Tricko أو رمزه";
 "Paste" = "لصق";
-"Open lesson" = "البحث عن الدرس";
-"Use a lesson link or code shared through Tricko." = "استخدم الرابط أو الرمز الذي تمت مشاركته معك من Tricko.";
-"Copy a Tricko link or lesson code first, then tap Paste." = "انسخ رابط الدرس أو رمزه، ثم اضغط على «لصق».";
-"1. Copy a Tricko link" = "١. انسخ الرابط أو الرمز";
-"Tap Paste or enter the lesson code exactly as received. Codes are case-sensitive." = "اضغط على «لصق» أو اكتب الرمز كما وصلك. انتبه إلى الأحرف الكبيرة والصغيرة.";
-"Tap Open lesson to find matching lessons, then swipe to watch." = "اضغط على «البحث عن الدرس». اسحب لأعلى أو لأسفل للتنقل بين الفيديوهات.";
+"Open lesson" = "البحث عن فيديو";
+"Use the lesson link or code you received." = "استخدم رابط الفيديو أو الرمز الذي وصلك.";
+"Copy a lesson link or code, then tap Paste." = "انسخ رابط الفيديو أو رمزه، ثم اضغط على «لصق».";
+"1. Copy the link or code" = "١. انسخ الرابط أو الرمز";
+"On Home, tap Paste or enter the code as received. Codes are case-sensitive." = "في الصفحة الرئيسية، اضغط على «لصق» أو اكتب الرمز كما وصلك. انتبه إلى الأحرف الكبيرة والصغيرة.";
+"Tap Open lesson to find matching lessons, then swipe to watch." = "اضغط على «البحث عن فيديو». اسحب لأعلى أو لأسفل للتنقل بين الفيديوهات.";
 
 "Search in browser" = "البحث على الويب";
 "The browser could not open. Please try again." = "تعذّر فتح الموقع. حاول مرة أخرى.";
-"Connect to verify your Plus membership before exporting." = "اتصل بـ Tricko للتحقّق من اشتراك Plus قبل التصدير.";
+"Connect to verify your Plus membership before exporting." = "اتصل بالإنترنت للتحقّق من اشتراك Plus قبل التصدير.";
 "Export is included with Plus." = "يتطلّب تصدير الفيديو والصوت اشتراك Plus.";
-"Unlimited views, downloads and media exports." = "شاهد الدروس ونزّلها بلا حدود، وصدّر الفيديو والصوت.";
-"No matching lessons. Search the web with your original input." = "لا توجد دروس مطابقة. ابحث في الويب باستخدام النص الذي أدخلته.";
+"Unlimited views, downloads and media exports." = "شاهد الفيديوهات ونزّلها بلا حدود، وصدّر الفيديو والصوت.";
+"No matching lessons. Search the web with your original input." = "لا توجد فيديوهات مطابقة. ابحث في الويب باستخدام النص الذي أدخلته.";
 
 "Official website" = "الموقع الرسمي";
 
@@ -564,20 +562,20 @@
 "Mirror" = "أمام المرآة";
 "Camera" = "أمام الكاميرا";
 "Live audience" = "أمام جمهور";
-"Open a magic lesson" = "فتح درس";
+"Open a magic lesson" = "فتح فيديو";
 "Review your practice" = "مراجعة التدريب";
-"Couldn’t load lessons" = "تعذّر تحميل الدروس";
-"No matching lessons" = "لم يُعثر على دروس مطابقة";
-"No lessons yet" = "لا توجد دروس لعرضها";
-"Open a lesson link or short code from Home." = "لاستخدام رابط أو رمز، انتقل إلى الرئيسية واضغط على «فتح درس».";
+"Couldn’t load lessons" = "تعذّر تحميل الفيديوهات";
+"No matching lessons" = "لم يُعثر على فيديوهات مطابقة";
+"No lessons yet" = "لا توجد فيديوهات لعرضها";
+"Open a lesson link or short code from Home." = "ألصق رابط الفيديو أو أدخل رمزه في الصفحة الرئيسية.";
 "Search the web with your original input." = "يمكنك البحث على الويب عمّا أدخلته.";
 
 /* Empty states */
-"No favorites yet" = "لا توجد دروس مفضّلة بعد";
+"No favorites yet" = "لا توجد فيديوهات في المفضّلة بعد";
 "No offline videos yet" = "لا توجد تنزيلات بعد";
 "No imported videos yet" = "لا توجد فيديوهات مستوردة بعد";
 "No exports yet" = "لا توجد ملفات مصدّرة بعد";
-"Tap Favorite while watching a lesson to save it here." = "أضف الدرس إلى المفضّلة أثناء مشاهدته ليظهر هنا.";
+"Tap Favorite while watching a lesson to save it here." = "أضف الفيديو إلى المفضّلة أثناء مشاهدته ليظهر هنا.";
 "Choose a video from Photos or Files to start editing." = "استورد فيديو من الصور أو الملفات لبدء تحريره.";
 "Export a video or audio track from the editor to find it here." = "تظهر هنا الفيديوهات والمقاطع الصوتية التي تصدّرها من المحرر.";
 "Import a video" = "استيراد فيديو";
@@ -588,7 +586,7 @@
 
 /* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "تعذّر تحميل المجموعات";
-"Setting up your table…" = "جارٍ الاتصال بـ Tricko…";
+"Setting up your table…" = "جارٍ الاتصال…";
 "Slow down a move to check every frame." = "أبطئ الحركة لترى كيف تبدو.";
 "Bring your hands and props into focus." = "اقصص إطار الفيديو لإبراز يديك وأدواتك.";
 "Run a routine. Record every run. Review your notes." = "سجّل كل محاولة وراجع ملاحظاتك بعد التدريب.";
@@ -642,7 +640,7 @@
 "Check every angle" = "تحقّق من زوايا الجمهور";
 "Place the camera where spectators will be: seated, standing, to your left and to your right. Some moves only work from certain angles. Learn them before you perform." = "ضع الكاميرا على مستوى عيني متفرّج جالس، ثم ارفعها إلى مستوى عيني متفرّج واقف. افحص المشهد من الجانبين أيضًا. حدّد الزوايا التي تكشف الحركة قبل العرض.";
 "Review at half speed" = "راجع بنصف السرعة";
-"Play your footage at 0.5× to catch flashes and hesitations. Tricko’s speed and reframe tools let you study one moment at a time." = "شغّل التسجيل بسرعة 0.5× وابحث عن لحظة ينكشف فيها الأسلوب أو تتوقّف فيها الحركة. اضبط الإطار في Tricko لتفحص حركة يديك عن قرب.";
+"Play your footage at 0.5× to catch flashes and hesitations. Reframe the clip for a closer look at your hands." = "شغّل التسجيل بسرعة 0.5× وابحث عن لحظة ينكشف فيها الأسلوب أو تتوقّف فيها الحركة. اضبط الإطار لتفحص حركة يديك عن قرب.";
 "One clean run on camera tells you more than ten runs nobody saw." = "صوّر محاولة كاملة من مكان جلوس المتفرّج. دوّن جزءًا واحدًا تريد التدرّب عليه مجددًا.";
 "Magic etiquette" = "آداب عروض الخدع";
 "Protect the wonder." = "التعامل مع الجمهور ومبتكري الخدع";
@@ -686,19 +684,19 @@
 
 /* Plus benefits and review presets */
 "Included with Plus" = "مزايا Plus";
-"Unlimited lesson views" = "مشاهدة الدروس بلا حدود";
-"Watch lessons without using a daily view allowance." = "شاهد الدروس دون استخدام حصّة المشاهدة اليومية.";
+"Unlimited lesson views" = "مشاهدة بلا حدود";
+"Watch lessons without using a daily view allowance." = "شاهد الفيديوهات دون حد يومي للمشاهدة.";
 "Unlimited offline downloads" = "تنزيلات بلا حدود للمشاهدة دون اتصال";
-"Download supported lessons for offline viewing without a daily limit." = "نزّل الدروس التي تدعم المشاهدة دون اتصال بلا حد يومي.";
+"Download supported lessons for offline viewing without a daily limit." = "نزّل الفيديوهات التي تدعم المشاهدة دون اتصال بلا حد يومي.";
 "Video and audio exports" = "تصدير الفيديو والصوت";
 "Share edited videos as MP4 or save the audio as M4A." = "شارك الفيديو المعدّل بصيغة MP4 أو احفظ الصوت بصيغة M4A.";
 "Skip opening ads" = "تخطّي إعلانات فتح التطبيق";
-"Open Tricko or return to it without an app-open ad." = "افتح Tricko أو عُد إليه دون ظهور إعلان فتح التطبيق.";
+"Open or return to the app without an opening ad." = "افتح التطبيق أو عُد إليه دون إعلان عند بدء الاستخدام.";
 "Review presets" = "إعدادات مسبقة للمراجعة";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "افتح محرّر الفيديو في «التدريب» لاستخدام إعدادات العرض البطيء أو إعادة تطبيق إعداداتك.";
 "Review presets are included with Plus." = "الإعدادات المسبقة للمراجعة متاحة مع Plus.";
 "Hide review presets" = "إخفاء الإعدادات المسبقة للمراجعة";
-"Unlimited lessons, no opening ads and review presets." = "دروس بلا حدود، وتخطٍّ لإعلانات فتح التطبيق، وإعدادات مسبقة للمراجعة.";
+"Unlimited lessons, no opening ads and review presets." = "مشاهدة بلا حدود، وتخطٍّ لإعلانات فتح التطبيق، وإعدادات مسبقة للمراجعة.";
 "Presets keep your trim points. Play the preview to check the result." = "تحافظ الإعدادات المسبقة على نقطتي القصّ. شغّل المعاينة للتحقّق من النتيجة.";
 "Slow mirror" = "انعكاس بطيء";
 "Half speed with a horizontal flip." = "نصف السرعة مع قلب الصورة أفقيًا.";
@@ -717,7 +715,7 @@
 "Open a video" = "فتح فيديو";
 "Preview, trim or change the speed of a video on your device." = "شغّل فيديو من جهازك أو قصّه أو غيّر سرعته.";
 "View all" = "عرض الكل";
-"No lesson collections yet." = "لا توجد مجموعات دروس بعد.";
+"No lesson collections yet." = "لا توجد مجموعات فيديو بعد.";
 "Play a clip slower or faster." = "شغّل المقطع بسرعة أبطأ أو أسرع.";
 "Crop, rotate or flip a video." = "اقتصّ إطار الفيديو أو دوّره أو اعكسه.";
 "Video exports, editing presets and no opening ads." = "تصدير الفيديو، وإعدادات تحرير مسبقة، وفتح التطبيق بلا إعلانات.";

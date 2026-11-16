@@ -21,9 +21,10 @@ enum TrickoStyle {
 
 struct StagePhoto: View {
     let asset: String
+    var alignment: Alignment = .center
 
     var body: some View {
-        TrickoStyle.surface.overlay {
+        TrickoStyle.surface.overlay(alignment: alignment) {
             Image(asset).resizable().interpolation(.high).scaledToFill()
         }.clipped()
             .allowsHitTesting(false).accessibilityHidden(true)
