@@ -712,6 +712,8 @@
 "Preset saved on this device." = "حُفظ الإعداد المسبق على هذا الجهاز.";
 
 /* Local video workspace */
+"Files" = "الملفات";
+"Photos" = "الصور";
 "Open a video" = "فتح فيديو";
 "Preview, trim or change the speed of a video on your device." = "شغّل فيديو من جهازك أو قصّه أو غيّر سرعته.";
 "View all" = "عرض الكل";

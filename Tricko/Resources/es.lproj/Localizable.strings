@@ -712,6 +712,8 @@
 "Preset saved on this device." = "El preajuste se ha guardado en este dispositivo.";
 
 /* Local video workspace */
+"Files" = "Archivos";
+"Photos" = "Fotos";
 "Open a video" = "Abrir un vídeo";
 "Preview, trim or change the speed of a video on your device." = "Reproduce, recorta o cambia la velocidad de un vídeo de tu dispositivo.";
 "View all" = "Ver todos";

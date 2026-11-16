@@ -712,6 +712,8 @@
 "Preset saved on this device." = "この端末にプリセットを保存しました。";
 
 /* Local video workspace */
+"Files" = "ファイル";
+"Photos" = "写真";
 "Open a video" = "動画を開く";
 "Preview, trim or change the speed of a video on your device." = "端末の動画を再生して、トリミングや速度調整ができます。";
 "View all" = "すべて表示";

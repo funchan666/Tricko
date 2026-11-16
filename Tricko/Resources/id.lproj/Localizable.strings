@@ -712,6 +712,8 @@
 "Preset saved on this device." = "Preset disimpan di perangkat ini.";
 
 /* Local video workspace */
+"Files" = "File";
+"Photos" = "Foto";
 "Open a video" = "Buka video";
 "Preview, trim or change the speed of a video on your device." = "Putar, pangkas, atau ubah kecepatan video di perangkatmu.";
 "View all" = "Lihat semua";

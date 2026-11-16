@@ -46,8 +46,9 @@ struct PlusEntryButton: View {
     }
 
     private var artwork: some View {
-        Image("TrickoLaunchMark").resizable().scaledToFit().frame(width: 44, height: 44)
-            .accessibilityHidden(true)
+        StagePhoto(asset: "VideoPlusPhoto")
+            .frame(width: 60, height: 52)
+            .clipShape(.rect(cornerRadius: 9))
     }
 
     private var copy: some View {
@@ -111,7 +112,7 @@ struct MembershipView: View {
     }
 
     var body: some View {
-        StagePage(asset: "PlusBackdrop", minHeight: 136, maxHeight: 164, photoOpacity: 0.24) { _ in
+        StagePage(asset: "VideoPlusPhoto", minHeight: 204, maxHeight: 258, photoOpacity: 1) { _ in
             membershipIntro
         } content: {
             subscriptionOptions
@@ -207,6 +208,7 @@ struct MembershipView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(verbatim: "Tricko Plus")
                 .font(.stage(.largeTitle, weight: .heavy))
+                .tracking(-0.6)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             LocalizedText("Video exports, editing presets and no opening ads.")
@@ -218,11 +220,16 @@ struct MembershipView: View {
     }
 
     private var plusBenefits: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             LocalizedText("Included with Plus").font(.stage(.title3, weight: .bold))
                 .accessibilityAddTraits(.isHeader)
-            benefit(.edit, "Video and audio exports", "Share edited videos as MP4 or save the audio as M4A.")
-            benefit(.settings, "Review presets", "Apply slow-motion presets or reuse your saved settings in the video editor.")
+            VStack(alignment: .leading, spacing: 14) {
+                benefit(.edit, "Video and audio exports", "Share edited videos as MP4 or save the audio as M4A.", onPaper: true)
+                Divider().overlay(TrickoStyle.ink.opacity(0.16))
+                benefit(.settings, "Review presets", "Apply slow-motion presets or reuse your saved settings in the video editor.", onPaper: true)
+            }
+            .padding(16)
+            .background { StageSurface(tone: .ivory, radius: 16) }
             benefit(.exit, "Skip opening ads", "Open Tricko or return to it without an app-open ad.")
             benefit(.play, "Unlimited lesson views", "Watch lessons without using a daily view allowance.")
             benefit(.download, "Unlimited offline downloads", "Download supported lessons for offline viewing without a daily limit.")
@@ -230,13 +237,15 @@ struct MembershipView: View {
         .padding(.top, 10)
     }
 
-    private func benefit(_ symbol: TrickoGlyph, _ title: String, _ description: String) -> some View {
+    private func benefit(_ symbol: TrickoGlyph, _ title: String, _ description: String, onPaper: Bool = false) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Glyph(symbol: symbol, size: 19, tint: TrickoStyle.accent)
+            Glyph(symbol: symbol, size: 19, tint: onPaper ? TrickoStyle.ink : TrickoStyle.accent)
                 .frame(width: 30, height: 28)
             VStack(alignment: .leading, spacing: 4) {
                 LocalizedText(title).font(.stage(.subheadline, weight: .semibold))
-                LocalizedText(description).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                    .foregroundStyle(onPaper ? TrickoStyle.ink : TrickoStyle.paper)
+                LocalizedText(description).font(.stage(.footnote))
+                    .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -274,36 +283,35 @@ struct MembershipView: View {
                         LocalizedText(plan.title).font(.stage(.headline, weight: .semibold))
                             .fixedSize(horizontal: true, vertical: false)
                         Spacer(minLength: 0)
-                        planPrice(price, period: period, alignment: .trailing, intrinsicWidth: true)
+                        planPrice(price, period: period, alignment: .trailing, onPaper: selected, intrinsicWidth: true)
                     }
                     VStack(alignment: .leading, spacing: 6) {
                         LocalizedText(plan.title).font(.stage(.headline, weight: .semibold))
                             .fixedSize(horizontal: false, vertical: true)
-                        planPrice(price, period: period, alignment: .leading)
+                        planPrice(price, period: period, alignment: .leading, onPaper: selected)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
-                Glyph(symbol: .saved, size: 16, tint: TrickoStyle.accent)
+                Glyph(symbol: .saved, size: 16, tint: TrickoStyle.ink)
                     .opacity(selected ? 1 : 0)
             }
             .padding(14)
             .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-            .foregroundStyle(TrickoStyle.paper)
-            .background { StageSurface(tone: selected ? .velvet : .smoke, radius: 14,
-                                      border: selected ? TrickoStyle.accent : nil) }
-            .contentShape(.rect(cornerRadius: 14))
+            .foregroundStyle(selected ? TrickoStyle.ink : TrickoStyle.paper)
+            .background { StageSurface(tone: selected ? .ivory : .smoke, radius: 16) }
+            .contentShape(.rect(cornerRadius: 16))
         }.buttonStyle(PressStyle()).disabled(interactionLocked)
             .accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityIdentifier("membership.plan.\(plan.id)")
     }
 
-    private func planPrice(_ price: String, period: String, alignment: HorizontalAlignment,
+    private func planPrice(_ price: String, period: String, alignment: HorizontalAlignment, onPaper: Bool,
                             intrinsicWidth: Bool = false) -> some View {
         VStack(alignment: alignment, spacing: 3) {
             Text(verbatim: price).environment(\.layoutDirection, .leftToRight)
                 .font(.stage(.title3, weight: .bold)).monospacedDigit()
             if !period.isEmpty {
                 LocalizedText("Billed every %@", period).font(.stage(.caption))
-                    .foregroundStyle(TrickoStyle.secondary)
+                    .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
             }
         }.fixedSize(horizontal: intrinsicWidth, vertical: true)
     }

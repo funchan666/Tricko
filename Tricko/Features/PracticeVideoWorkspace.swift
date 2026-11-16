@@ -307,6 +307,7 @@ private struct EditorWorkspace: View {
     @EnvironmentObject private var library: LibraryStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     let initialTool: VideoTool
     @StateObject private var editor = VideoEditor()
     @State private var selected: PracticeRecording?
@@ -363,37 +364,8 @@ private struct EditorWorkspace: View {
 
     private func videoWorkspace(_ selected: PracticeRecording) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(verbatim: selected.title).font(.stage(.subheadline)).lineLimit(1)
-                    .accessibilityAddTraits(initialTool == .studio ? .isHeader : [])
-                Spacer()
-                if !departure.running, !editor.isExporting, !editor.isPreparingPreview {
-                    Button("Change") {
-                        showingPresets = false
-                        self.selected = nil
-                        error = nil
-                        editor.close()
-                    }
-                    .buttonStyle(CompactActionStyle())
-                }
-            }
-            VStack(spacing: 6) {
-                let previewWidth = min(540, 360 * editor.previewAspectRatio)
-                VideoSurface(player: editor.preview.player, fill: false)
-                    .aspectRatio(editor.previewAspectRatio, contentMode: .fit)
-                    .frame(maxWidth: previewWidth)
-                    .background(.black)
-                    .clipShape(.rect(cornerRadius: 16))
-                    .overlay {
-                        if editor.isLoading {
-                            AccountLoadingIndicator(title: "Preparing your video…")
-                        }
-                    }
-                EditorPlaybackBar(playback: editor.preview, timeline: editor.preview.timeline,
-                                  disabled: editor.isLoading || editor.isPreparingPreview || departure.running)
-                    .frame(maxWidth: max(280, previewWidth))
-            }
-            .frame(maxWidth: .infinity)
+            fileHeading(selected)
+            previewTray
             if let error = editor.error { ErrorNote(message: error) }
             if editor.isPreparingPreview { AccountLoadingIndicator(title: "Preparing preview…").frame(maxWidth: .infinity) }
             if initialTool == .studio {
@@ -414,14 +386,76 @@ private struct EditorWorkspace: View {
                     ActionButton(title: "Cancel export", primary: false) { departure.request() }
                 }
             } else {
-                ActionButton(title: initialTool == .audio ? "Export audio as M4A" : "Export video") {
-                    export(audio: initialTool == .audio, title: selected.title)
-                }
-                    .disabled(editor.isLoading || editor.isPreparingPreview || editor.duration <= 0)
-                ActionButton(title: "Preview changes", primary: false) { Task { await editor.applyPreview() } }
-                    .disabled(editor.isLoading || editor.isPreparingPreview || editor.duration <= 0)
+                editingActions(selected)
             }
         }
+    }
+
+    private func fileHeading(_ movie: PracticeRecording) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: movie.title).font(.stage(.title3, weight: .semibold)).lineLimit(2)
+                    .accessibilityAddTraits(initialTool == .studio ? .isHeader : [])
+                Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
+                    .font(.stage(.caption2, weight: .medium))
+                    .foregroundStyle(TrickoStyle.coolAccent)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if !departure.running, !editor.isExporting, !editor.isPreparingPreview {
+                Button {
+                    showingPresets = false
+                    selected = nil
+                    error = nil
+                    editor.close()
+                } label: {
+                    LocalizedText("Change").font(.stage(.footnote, weight: .semibold))
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .trickoGlass(in: Capsule())
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(PressStyle())
+            }
+        }
+    }
+
+    private var previewTray: some View {
+        let previewWidth = min(540, 360 * editor.previewAspectRatio)
+        return VStack(spacing: 0) {
+            VideoSurface(player: editor.preview.player, fill: false)
+                .aspectRatio(editor.previewAspectRatio, contentMode: .fit)
+                .frame(maxWidth: previewWidth)
+                .frame(maxWidth: .infinity)
+                .background(.black)
+                .overlay {
+                    if editor.isLoading {
+                        AccountLoadingIndicator(title: "Preparing your video…")
+                    }
+                }
+            EditorPlaybackBar(playback: editor.preview, timeline: editor.preview.timeline,
+                              disabled: editor.isLoading || editor.isPreparingPreview || departure.running)
+                .padding(.horizontal, 10).padding(.vertical, 7)
+        }
+        .background(TrickoStyle.surface)
+        .clipShape(.rect(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18).strokeBorder(TrickoStyle.line)
+                .allowsHitTesting(false).accessibilityHidden(true)
+        }
+    }
+
+    private func editingActions(_ movie: PracticeRecording) -> some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 8))
+        return layout {
+            ActionButton(title: "Preview changes", primary: false) { Task { await editor.applyPreview() } }
+            ActionButton(title: initialTool == .audio ? "Export audio as M4A" : "Export video") {
+                export(audio: initialTool == .audio, title: movie.title)
+            }
+        }
+        .disabled(editor.isLoading || editor.isPreparingPreview || editor.duration <= 0)
     }
 
     private var reviewPresets: some View {
@@ -630,17 +664,21 @@ private struct EditorPlaybackBar: View {
     @ObservedObject var playback: PlaybackController
     @ObservedObject var timeline: PlaybackTimeline
     let disabled: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var scrubbing = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 4)) : AnyLayout(HStackLayout(spacing: 8))
+        layout {
             IconButton(symbol: playback.isPlaying ? .pause : .play,
                        label: playback.isPlaying ? "Pause preview" : "Play preview") { playback.toggle() }
                 .trickoGlass(in: Circle())
             PlayerProgressControl(playback: playback, timeline: timeline, enabled: !disabled,
                                   canResume: !disabled, scrubbing: $scrubbing)
-            Text(verbatim: durationLabel(timeline.duration)).font(.stage(.footnote).monospacedDigit())
+            Text(verbatim: "\(durationLabel(timeline.elapsed)) / \(durationLabel(timeline.duration))")
+                .font(.stage(.caption, weight: .medium).monospacedDigit())
                 .foregroundStyle(TrickoStyle.secondary)
+                .environment(\.layoutDirection, .leftToRight)
         }
         .disabled(disabled || timeline.duration <= 0 || playback.error != nil)
     }
