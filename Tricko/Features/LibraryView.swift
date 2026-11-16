@@ -68,11 +68,12 @@ struct LibraryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
-                    .accessibilityIdentifier("library.membership")
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                libraryHeader
                 categoryIndex
-                if category == .imports { LocalVideoImportButtons(onImport: edit) }
+                if category == .imports {
+                    if localMovies.isEmpty { emptyArchive }
+                    LocalVideoImportButtons(onImport: edit)
+                }
                 librarySection
             }.trickoPage()
         }
@@ -108,26 +109,55 @@ struct LibraryView: View {
             }
     }
 
+    private var libraryHeader: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                libraryHeading.fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 0)
+                membershipButton.fixedSize(horizontal: true, vertical: false)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                libraryHeading
+                membershipButton
+            }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var libraryHeading: some View {
+        LocalizedText("Library")
+            .font(.stage(.title2, weight: .bold))
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private var membershipButton: some View {
+        PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
+            .accessibilityIdentifier("library.membership")
+    }
+
     private var categoryIndex: some View {
-        let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 8),
+        let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 4),
                             count: typeSize.isAccessibilitySize ? 1 : 2)
-        return LazyVGrid(columns: columns, spacing: 8) {
+        return LazyVGrid(columns: columns, spacing: 4) {
             ForEach(Category.allCases) { entry in
                 let selected = category == entry
+                let labelColor = selected ? TrickoStyle.ink : TrickoStyle.paper
                 Button { filter = entry.rawValue } label: {
                     HStack(spacing: 7) {
-                        Glyph(symbol: entry.glyph, size: 16, tint: selected ? TrickoStyle.accent : TrickoStyle.secondary)
+                        Glyph(symbol: entry.glyph, size: 16, tint: selected ? TrickoStyle.ink : TrickoStyle.coolAccent)
                         LocalizedText(entry.title).font(.stage(.subheadline, weight: .semibold))
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text(count(in: entry), format: .number.locale(locale))
                             .font(.stage(.footnote, weight: .medium).monospacedDigit())
-                            .foregroundStyle(selected ? TrickoStyle.accent : TrickoStyle.secondary)
+                            .foregroundStyle(selected ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
                     }
-                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .foregroundStyle(labelColor)
+                    .padding(.horizontal, 10).padding(.vertical, 6)
                     .frame(minHeight: 44)
-                    .background { StageSurface(tone: selected ? .velvet : .smoke, radius: 12,
-                                               border: selected ? TrickoStyle.accent.opacity(0.32) : nil) }
+                    .background {
+                        if selected { StageSurface(tone: .ivory, radius: 12) }
+                    }
                     .contentShape(.rect(cornerRadius: 12))
                 }
                 .buttonStyle(PressStyle())
@@ -136,6 +166,8 @@ struct LibraryView: View {
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
+        .padding(5)
+        .background { StageSurface(tone: .smoke, radius: 17) }
     }
 
     private var librarySection: some View {
@@ -144,7 +176,7 @@ struct LibraryView: View {
             if total == 0 {
                 if category == .offline, offline.isRestoring {
                     AccountLoadingIndicator(title: "Loading downloads…").frame(maxWidth: .infinity)
-                } else if category != .offline || offline.downloadingID == nil {
+                } else if category != .imports, category != .offline || offline.downloadingID == nil {
                     emptyCategory
                 }
                 if category == .offline {
@@ -164,9 +196,7 @@ struct LibraryView: View {
                         ForEach(offline.videos) { video in downloadRow(video) }
                     }
                 case .imports, .exports:
-                    LazyVStack(spacing: 4) {
-                        ForEach(localMovies) { movie in movieRow(movie) }
-                    }
+                    localGallery
                 }
             }
         }
@@ -174,15 +204,40 @@ struct LibraryView: View {
 
     private var emptyCategory: some View {
         VStack(alignment: .leading, spacing: 16) {
-            EmptyStateCopy(title: category.emptyTitle, message: category.emptyMessage)
             if category == .exports {
+                emptyArchive
                 LocalVideoImportButtons(onImport: edit)
-            } else if category != .imports {
+            } else {
+                EmptyStateCopy(title: category.emptyTitle, message: category.emptyMessage)
                 Button(action: watchLessons) { LocalizedText("Watch lessons") }
                     .buttonStyle(EmptyStateActionStyle(symbol: .play))
             }
         }
-        .padding(.top, 6).padding(.bottom, 10)
+    }
+
+    private var emptyArchive: some View {
+        EmptyStateCopy(title: category.emptyTitle, message: category.emptyMessage)
+            .padding(18).frame(minHeight: 182, alignment: .bottomLeading)
+            .background {
+                StagePhoto(asset: "VideoArchivePhoto")
+                    .overlay {
+                        LinearGradient(stops: [
+                            .init(color: .clear, location: 0.28),
+                            .init(color: TrickoStyle.background.opacity(0.86), location: 0.73),
+                            .init(color: TrickoStyle.background, location: 1)
+                        ], startPoint: .top, endPoint: .bottom)
+                    }
+            }
+            .clipShape(.rect(cornerRadius: 19))
+    }
+
+    private var localGallery: some View {
+        let columns = typeSize.isAccessibilitySize
+            ? [GridItem(.flexible(), alignment: .top)]
+            : [GridItem(.adaptive(minimum: 148), spacing: 12, alignment: .top)]
+        return LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
+            ForEach(localMovies) { movie in movieCard(movie) }
+        }
     }
 
     private func count(in entry: Category) -> Int {
@@ -272,55 +327,65 @@ struct LibraryView: View {
         .modifier(LibraryRowSurface())
     }
 
-    private func movieRow(_ movie: PracticeRecording) -> some View {
+    private func movieCard(_ movie: PracticeRecording) -> some View {
         let isAudio = movie.filename.hasSuffix(".m4a")
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .center, spacing: 12) {
-                if isAudio {
-                    movieLabel(movie, isAudio: true)
-                } else {
-                    Button { edit(movie) } label: { movieLabel(movie, isAudio: false) }
-                        .buttonStyle(PressStyle())
-                        .accessibilityHint(LocalizedStringKey("Full editor"))
+        return VStack(alignment: .leading, spacing: 2) {
+            if isAudio {
+                movieLabel(movie, isAudio: true)
+            } else {
+                Button { edit(movie) } label: { movieLabel(movie, isAudio: false) }
+                    .buttonStyle(PressStyle())
+                    .accessibilityHint(LocalizedStringKey("Full editor"))
+            }
+            HStack(spacing: 2) {
+                Button { shareMovie(movie) } label: {
+                    LocalizedText(sharingMovieID == movie.id ? "Preparing export…" : "Share")
+                        .font(.stage(.footnote, weight: .semibold))
+                        .foregroundStyle(TrickoStyle.coolAccent)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(PressStyle()).disabled(sharingMovieID != nil)
                 removeButton(.close, title: "Delete local file") { removing = movie }
             }
-            Button(LocalizedStringKey(sharingMovieID == movie.id ? "Preparing export…" : "Share")) {
-                shareMovie(movie)
-            }.buttonStyle(LibraryActionStyle()).disabled(sharingMovieID != nil)
+            .padding(.leading, 12).padding(.trailing, 4)
         }
-        .modifier(LibraryRowSurface())
+        .background { StageSurface(tone: .smoke, radius: 15) }
+        .clipShape(.rect(cornerRadius: 15))
     }
 
     private func movieLabel(_ movie: PracticeRecording, isAudio: Bool) -> some View {
-        HStack(spacing: 12) {
-            if isAudio {
-                itemGlyph(.sound)
-            } else {
-                LocalVideoCover(url: library.url(for: movie)).frame(width: 84, height: 52)
+        VStack(alignment: .leading, spacing: 8) {
+            Group {
+                if isAudio {
+                    TrickoStyle.raised.overlay {
+                        Glyph(symbol: .sound, size: 29, tint: TrickoStyle.coolAccent)
+                    }
+                } else {
+                    LocalVideoCover(url: library.url(for: movie), cornerRadius: 0, maximumPixelSize: 760)
+                }
+            }
+            .aspectRatio(1.60, contentMode: .fit)
+            .overlay(alignment: .bottomLeading) {
+                Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
+                    .font(.stage(.caption2, weight: .semibold).monospacedDigit())
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .foregroundStyle(TrickoStyle.paper)
+                    .background(TrickoStyle.ink.opacity(0.92), in: Capsule())
+                    .padding(8)
+                    .allowsHitTesting(false)
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 6) {
-                        LocalizedDateText(date: movie.date).fixedSize()
-                        fileFormat(movie)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        LocalizedDateText(date: movie.date)
-                        fileFormat(movie)
-                    }
-                }.font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-            }.frame(maxWidth: .infinity, alignment: .leading)
-            if !isAudio {
-                Glyph(symbol: .back, size: 12, tint: TrickoStyle.secondary).rotationEffect(.degrees(180))
+                    .foregroundStyle(TrickoStyle.paper)
+                LocalizedDateText(date: movie.date)
+                    .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12).padding(.top, 2)
         }
         .contentShape(Rectangle())
-    }
-
-    private func fileFormat(_ movie: PracticeRecording) -> some View {
-        Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
     }
 
     private func itemGlyph(_ symbol: TrickoGlyph) -> some View {
