@@ -5,9 +5,9 @@ import UIKit
 import OSLog
 
 struct TrickoConfiguration {
+    static let logSubsystem = Bundle.main.bundleIdentifier ?? "Tricko"
     let apiBaseURL: URL?
-    let bundleID: String // Installed identity: signing and background transfers.
-    let servicePackageName: String // Login `source` and business `packageName`.
+    let bundleID: String // Installed identity, login `source`, and business `packageName`.
     let releaseName: String // getV2 `name`: this app's name, original capitalisation.
     let version: String
     let websiteURL: URL?
@@ -26,7 +26,6 @@ struct TrickoConfiguration {
         let base = host.isEmpty || host.contains("$(") || host.contains("/") ? nil : URL(string: "https://" + host)
         let releaseName = value("TrickoReleaseName")
         return Self(apiBaseURL: base, bundleID: bundle.bundleIdentifier ?? "",
-                    servicePackageName: value("TrickoServicePackageName"),
                     releaseName: releaseName.isEmpty || releaseName.contains("$(") ? "Tricko" : releaseName,
                     version: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0",
                     websiteURL: WebAddress.media(value("TrickoWebsiteURL")),
@@ -36,7 +35,7 @@ struct TrickoConfiguration {
     }
     var isReady: Bool {
         apiBaseURL?.host != nil && !bundleID.isEmpty && !bundleID.contains("unconfigured")
-            && !servicePackageName.isEmpty && !servicePackageName.contains("$(")
+            && !bundleID.contains("$(")
     }
 }
 
@@ -101,7 +100,7 @@ enum InstallationIdentity {
 
 @MainActor
 final class APIClient: ObservableObject {
-    private let diagnostics = Logger(subsystem: "com.tricko.video", category: "API")
+    private let diagnostics = Logger(subsystem: TrickoConfiguration.logSubsystem, category: "API")
     @Published private(set) var session: VisitorSession?
     // Local ownership only: never use this as authentication or purchase entitlement.
     @Published private(set) var offlineOwnerID: String?
@@ -155,7 +154,7 @@ final class APIClient: ObservableObject {
             }
             let publicIPv4 = try await loginPublicIPv4()
             try Task.checkCancellation()
-            let body = try JSONSerialization.data(withJSONObject: ["deviceCode": device, "source": configuration.servicePackageName, "uniqueId": publicIPv4])
+            let body = try JSONSerialization.data(withJSONObject: ["deviceCode": device, "source": configuration.bundleID, "uniqueId": publicIPv4])
             // Diagnose the wire payload without logging the IP, UUID or credentials.
             diagnostics.debug("Guest login payload: uniqueId IPv4 present \(!publicIPv4.isEmpty)")
             let result: VisitorSession = try await perform("/app-api/member/auth/app_tourist_login", method: "POST", body: body, authenticated: false)
@@ -233,22 +232,22 @@ final class APIClient: ObservableObject {
         let codes = links.compactMap { WebAddress.landingCode($0) }
         guard !codes.isEmpty else { return [] }
         let body = try JSONSerialization.data(withJSONObject: codes.map {
-            ["externalLinks": $0, "packageName": configuration.servicePackageName]
+            ["externalLinks": $0, "packageName": configuration.bundleID]
         })
         return try await perform("/app-api/flow/land-page/info_by_links_list", method: "POST", body: body, authenticated: false)
     }
     func resolve(_ link: String, password: String) async throws -> LandingInfo {
         try await perform("/app-api/flow/land-page/info_by_links", query: [
-            "externalLinks": link, "password": password, "packageName": configuration.servicePackageName],
+            "externalLinks": link, "password": password, "packageName": configuration.bundleID],
             missingDataMessage: "No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later.")
     }
     func channelPage(link: String, page: Int) async throws -> ChannelPage {
         try await perform("/app-api/flow/land-page/list_by_links_page", query: [
-            "externalLinks": link, "pageNo": String(max(1, page)), "pageSize": "20", "packageName": configuration.servicePackageName])
+            "externalLinks": link, "pageNo": String(max(1, page)), "pageSize": "20", "packageName": configuration.bundleID])
     }
     func feed(query: String, feedID: String?, cursor: String?) async throws -> LessonFeedPage {
         guard let session else { throw TrickoError.unauthorized }
-        var queryItems = ["userId": session.userId.value, "packageName": configuration.servicePackageName, "pageSize": "10"]
+        var queryItems = ["userId": session.userId.value, "packageName": configuration.bundleID, "pageSize": "10"]
         if let feedID = feedID?.nilIfBlank { queryItems["feedId"] = feedID }
         if let cursor = cursor?.nilIfBlank { queryItems["cursor"] = cursor }
         if let query = query.nilIfBlank { queryItems["query"] = query }

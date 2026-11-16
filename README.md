@@ -7,7 +7,7 @@ Open `Tricko.xcodeproj` and select the shared `Tricko` scheme. The minimum deplo
 ## Test configuration
 
 - API host `devapi.io-jp.com` and `getV2.name` `Tricko`.
-- Bundle ID `im.seex.lobo` in `Config/Tricko.xcconfig`. The guest login source and business package name derive from the same setting. These test apps share a Bundle ID, so install them one at a time.
+- Bundle ID `com.trickostudio.videodesk` in `Config/Tricko.xcconfig`. The guest login `source` and business `packageName` derive from this setting.
 - Google iOS demo App ID, app-open and rewarded units. Membership requests `coins_1.99` monthly (USD 9.99) and `conis_4.99` yearly (USD 99.99) in Apple Sandbox. The app displays the prices returned by StoreKit.
 - Website, terms and privacy point to HTTPS placeholders.
 
@@ -17,7 +17,7 @@ The demo app-open ad preloads during guest login. Its five-second cold-start win
 
 ## Production transition
 
-After test acceptance, update the Bundle ID, API domain, AdMob configuration, official links and registered membership mapping for this app. The release configuration name stays `Tricko`. Check backend registration, receipt routing and signing against the effective build settings.
+After test acceptance, configure the production API domain, AdMob settings, official links and registered membership mapping. Check backend registration, receipt routing and signing against the effective Bundle ID and use `Tricko` as the release configuration name.
 
 ## Verification
 

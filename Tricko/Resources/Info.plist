@@ -56,8 +56,6 @@
 	<string>$(TRICKO_PRIVACY_URL)</string>
 	<key>TrickoReleaseName</key>
 	<string>$(TRICKO_RELEASE_NAME)</string>
-	<key>TrickoServicePackageName</key>
-	<string>$(TRICKO_SERVICE_PACKAGE_NAME)</string>
 	<key>TrickoTermsURL</key>
 	<string>$(TRICKO_TERMS_URL)</string>
 	<key>TrickoWebsiteURL</key>

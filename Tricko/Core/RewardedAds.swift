@@ -24,7 +24,7 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
     private var preparedAppOpenDate: Date?
     private var preparedUnitID: String?
     private var presentedUnitID: String?
-    private let appOpenLog = Logger(subsystem: "com.tricko.video", category: "AppOpen")
+    private let appOpenLog = Logger(subsystem: TrickoConfiguration.logSubsystem, category: "AppOpen")
     private var appOpenStage = "idle"
     private var appOpenDeadline: Task<Void, Never>?
     private var appOpenAttempt: UUID?
@@ -302,7 +302,7 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
                 }?.displayInterval
                 let interval = placement.isOfficialDemo ? 0 : serverInterval
                 let unitID = placement.unitID
-                let key = "tricko.app-open.last-impression.\(commerce.api.configuration.servicePackageName).\(commerce.api.configuration.apiBaseURL?.host ?? "none").\(placement.isOfficialDemo ? "demo" : "production")"
+                let key = "tricko.app-open.last-impression.\(commerce.api.configuration.bundleID).\(commerce.api.configuration.apiBaseURL?.host ?? "none").\(placement.isOfficialDemo ? "demo" : "production")"
                 self.appOpenLog.info("App-open rights/configuration ready; intervalMinutes=\(interval ?? -1)")
                 if self.appOpenAttempt == attempt { self.appOpenStage = "ad-preparation" }
                 // Late inventory may be retained, but consent/presentation may not interrupt Home.

@@ -20,7 +20,7 @@ struct HomeView: View {
     @State private var channelRetry = 0
     @State private var showingLinkGuide = false
     @State private var showingRecentLinks = false
-    @State private var showingCollections = false
+    @State private var showingCollections = true
     @State private var loadingCollections = true
     @State private var composerError: String?
     @FocusState private var focused: Bool

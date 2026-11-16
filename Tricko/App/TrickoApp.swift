@@ -74,7 +74,7 @@ struct TrickoStartupHost: View {
         }
         .onReceive(ads.$startupFinished) { complete in
             if complete, !finished {
-                Logger(subsystem: "com.tricko.video", category: "Startup")
+                Logger(subsystem: TrickoConfiguration.logSubsystem, category: "Startup")
                     .info("Home became interactive after \(startupBegan.duration(to: .now).description, privacy: .public)")
                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { finished = true }
             }

@@ -357,7 +357,8 @@ final class OfflineStore: NSObject, ObservableObject {
             transfer.systemAssetURL = url.absoluteURL
             transfer.relativePath = nil
         } else {
-            Logger(subsystem: "com.tricko.video", category: "Offline").error("Rejected offline location outside application container")
+            Logger(subsystem: TrickoConfiguration.logSubsystem, category: "Offline")
+                .error("Rejected offline location outside application container")
             fail(id, message: "Download location is unavailable. Please try again."); return
         }
         do {
@@ -495,7 +496,7 @@ extension OfflineStore: AVAssetDownloadDelegate, URLSessionDownloadDelegate {
             Task { @MainActor in self.receiveLocation(id: id, url: destination) }
         } catch {
             let failure = error as NSError
-            Logger(subsystem: "com.tricko.video", category: "Offline")
+            Logger(subsystem: TrickoConfiguration.logSubsystem, category: "Offline")
                 .error("Offline file move failed: \(failure.domain, privacy: .public) code \(failure.code)")
             let message = failure.domain == NSCocoaErrorDomain && failure.code == NSFileWriteOutOfSpaceError
                 ? "Not enough storage. Free up space and try again."

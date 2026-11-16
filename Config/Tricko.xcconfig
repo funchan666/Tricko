@@ -1,10 +1,6 @@
-// Tricko — TEST configuration (toolkit fixed test baseline, Clipo 0d55c2d).
-// Do not replace until the user confirms testing passed and supplies production values.
-// Test builds of every toolkit app share this Bundle ID: installing one replaces another.
-PRODUCT_BUNDLE_IDENTIFIER = im.seex.lobo
+// Tricko bundle identifier and test service settings (Clipo 0d55c2d baseline).
+PRODUCT_BUNDLE_IDENTIFIER = com.trickostudio.videodesk
 TRICKO_API_HOST = devapi.io-jp.com
-// Login `source` and every business `packageName`.
-TRICKO_SERVICE_PACKAGE_NAME = $(PRODUCT_BUNDLE_IDENTIFIER)
 // getV2 `name`: the app name, original capitalisation.
 TRICKO_RELEASE_NAME = Tricko
 // Empty expansion preserves // in xcconfig URL values. HTTPS placeholders until production.
