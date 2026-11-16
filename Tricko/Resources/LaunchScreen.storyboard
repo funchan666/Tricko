@@ -47,6 +47,6 @@
     <resources>
         <image name="TrickoLaunchMark" width="108" height="108"/>
         <image name="TrickoLoadingMark" width="40" height="5"/>
-        <namedColor name="LaunchBackground"><color red="0.078" green="0.082" blue="0.090" alpha="1" colorSpace="custom" customColorSpace="sRGB"/></namedColor>
+        <namedColor name="LaunchBackground"><color red="0.051" green="0.081" blue="0.091" alpha="1" colorSpace="custom" customColorSpace="sRGB"/></namedColor>
     </resources>
 </document>

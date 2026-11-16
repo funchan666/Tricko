@@ -107,6 +107,7 @@ struct HomeView: View {
                     .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.84))
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .shadow(color: .black.opacity(0.44), radius: 7, y: 2)
             LocalVideoImportButtons(onImport: openVideo)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
