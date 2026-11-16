@@ -14,6 +14,7 @@
 "A closer look at your own game" = "A closer look at your own game";
 "A full year of Plus" = "A full year of Plus";
 "No results? Check your input, or ask the sender for a new link." = "If nothing matches, check the link or code with the sender.";
+"If no videos match, your input is sent to Google Search." = "If no videos match, your input is sent to Google Search.";
 "A little knowledge for your next session." = "A little knowledge for your next session.";
 "A little luck, on us" = "Bonus added";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "Couldn’t connect securely. Check your network or VPN, then try again.";
@@ -50,6 +51,8 @@
 "Change speed" = "Change speed";
 "Check your connection and try again." = "Check your connection and try again.";
 "Checking with Apple…" = "Loading plans from Apple…";
+"Check Apple price" = "Check Apple price";
+"US reference price" = "US reference price";
 "Checking your Apple purchases…" = "Checking your Apple purchases…";
 "Choose a clip from your device. We’ll keep your original untouched." = "Edits apply to a copy of your video.";
 "Choose from Photos" = "Choose from Photos";
@@ -597,7 +600,6 @@
 "Subscription unavailable" = "Subscription unavailable";
 "Clear history" = "Clear history";
 "View options for more views and downloads" = "View options for more views and downloads";
-"Retry loading plans" = "Retry loading plans";
 
 "Included with Plus" = "Included with Plus";
 "Unlimited lesson views" = "Unlimited viewing";

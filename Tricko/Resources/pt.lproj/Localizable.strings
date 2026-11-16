@@ -14,6 +14,7 @@
 "A closer look at your own game" = "Veja seu jogo de perto";
 "A full year of Plus" = "Um ano de Plus";
 "No results? Check your input, or ask the sender for a new link." = "Se o vídeo não aparecer, confirme o link ou o código com quem enviou.";
+"If no videos match, your input is sent to Google Search." = "Se nenhum vídeo corresponder, o que você digitou é enviado à Pesquisa Google.";
 "A little knowledge for your next session." = "Um pouco de conhecimento para o próximo treino.";
 "A little luck, on us" = "Bônus adicionado";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "Não foi possível estabelecer uma conexão segura. Confira sua rede ou VPN e tente novamente.";
@@ -50,6 +51,8 @@
 "Change speed" = "Alterar velocidade";
 "Check your connection and try again." = "Confira a conexão e tente novamente.";
 "Checking with Apple…" = "Carregando planos da Apple…";
+"Check Apple price" = "Consultar preço na Apple";
+"US reference price" = "Preço de referência nos EUA";
 "Checking your Apple purchases…" = "Verificando suas compras da Apple…";
 "Choose a clip from your device. We’ll keep your original untouched." = "As alterações são aplicadas a uma cópia do vídeo.";
 "Choose from Photos" = "Escolher em Fotos";
@@ -597,7 +600,6 @@
 "Subscription unavailable" = "Assinatura indisponível";
 "Clear history" = "Limpar histórico";
 "View options for more views and downloads" = "Ver opções para mais visualizações e downloads";
-"Retry loading plans" = "Recarregar planos";
 
 "Included with Plus" = "Incluído no Plus";
 "Unlimited lesson views" = "Visualizações ilimitadas";

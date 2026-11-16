@@ -14,6 +14,7 @@
 "A closer look at your own game" = "自分のプレーをじっくり確認";
 "A full year of Plus" = "Plusを1年間";
 "No results? Check your input, or ask the sender for a new link." = "見つからないときは、送信元にリンクやコードを確認してください。";
+"If no videos match, your input is sent to Google Search." = "一致する動画がない場合、入力内容は Google 検索に送信されます。";
 "A little knowledge for your next session." = "次の練習に役立つ、小さな知識。";
 "A little luck, on us" = "ボーナスが追加されました";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "安全に接続できませんでした。ネットワークやVPNを確認してから、もう一度お試しください。";
@@ -50,6 +51,8 @@
 "Change speed" = "速度を変更";
 "Check your connection and try again." = "接続を確認して再試行してください。";
 "Checking with Apple…" = "Appleからプランを読み込み中…";
+"Check Apple price" = "Apple の価格を確認";
+"US reference price" = "米国での参考価格";
 "Checking your Apple purchases…" = "Appleの購入を確認中…";
 "Choose a clip from your device. We’ll keep your original untouched." = "編集は動画のコピーに適用されます。";
 "Choose from Photos" = "写真から選ぶ";
@@ -597,7 +600,6 @@
 "Subscription unavailable" = "サブスクリプションを利用できません";
 "Clear history" = "履歴を消去";
 "View options for more views and downloads" = "視聴とダウンロードの回数を増やす方法を見る";
-"Retry loading plans" = "プランを再読み込み";
 
 "Included with Plus" = "Plusに含まれる機能";
 "Unlimited lesson views" = "動画を視聴し放題";

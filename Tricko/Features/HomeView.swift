@@ -373,6 +373,9 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 8) {
             linkField
             if let composerError { ErrorNote(message: composerError) }
+            LocalizedText("If no videos match, your input is sent to Google Search.")
+                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
                     pasteButton(inline: true)

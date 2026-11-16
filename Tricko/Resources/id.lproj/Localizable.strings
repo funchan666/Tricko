@@ -14,6 +14,7 @@
 "A closer look at your own game" = "Lihat permainanmu lebih dekat";
 "A full year of Plus" = "Plus selama setahun";
 "No results? Check your input, or ask the sender for a new link." = "Jika tidak ada hasil, periksa tautan atau kode dengan pengirimnya.";
+"If no videos match, your input is sent to Google Search." = "Jika tidak ada video yang cocok, teks yang kamu masukkan dikirim ke Google Penelusuran.";
 "A little knowledge for your next session." = "Pengetahuan singkat untuk latihan berikutnya.";
 "A little luck, on us" = "Bonus ditambahkan";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "Koneksi aman tidak dapat dibuat. Periksa jaringan atau VPN, lalu coba lagi.";
@@ -50,6 +51,8 @@
 "Change speed" = "Ubah kecepatan";
 "Check your connection and try again." = "Periksa koneksi dan coba lagi.";
 "Checking with Apple…" = "Memuat paket dari Apple…";
+"Check Apple price" = "Cek harga di Apple";
+"US reference price" = "Harga referensi AS";
 "Checking your Apple purchases…" = "Memeriksa pembelian Apple…";
 "Choose a clip from your device. We’ll keep your original untouched." = "Perubahan diterapkan pada salinan videomu.";
 "Choose from Photos" = "Pilih dari Foto";
@@ -597,7 +600,6 @@
 "Subscription unavailable" = "Langganan tidak tersedia";
 "Clear history" = "Hapus riwayat";
 "View options for more views and downloads" = "Lihat pilihan untuk menambah kuota tonton dan unduhan";
-"Retry loading plans" = "Muat ulang paket";
 
 "Included with Plus" = "Termasuk dalam Plus";
 "Unlimited lesson views" = "Tonton tanpa batas";

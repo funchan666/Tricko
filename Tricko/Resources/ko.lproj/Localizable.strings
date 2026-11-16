@@ -14,6 +14,7 @@
 "A closer look at your own game" = "내 플레이를 자세히 살펴보세요";
 "A full year of Plus" = "Plus 1년 이용";
 "No results? Check your input, or ask the sender for a new link." = "검색 결과가 없으면 보낸 사람에게 링크나 코드를 확인하세요.";
+"If no videos match, your input is sent to Google Search." = "일치하는 영상이 없으면 입력한 내용이 Google 검색으로 전송됩니다.";
 "A little knowledge for your next session." = "다음 연습에 도움이 되는 작은 지식.";
 "A little luck, on us" = "보너스가 추가됐어요";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "보안 연결을 설정하지 못했어요. 네트워크나 VPN을 확인한 뒤 다시 시도하세요.";
@@ -50,6 +51,8 @@
 "Change speed" = "속도 변경";
 "Check your connection and try again." = "연결을 확인한 후 다시 시도하세요.";
 "Checking with Apple…" = "Apple에서 요금제 불러오는 중…";
+"Check Apple price" = "Apple 가격 확인";
+"US reference price" = "미국 기준 참고 가격";
 "Checking your Apple purchases…" = "Apple 구매 확인 중…";
 "Choose a clip from your device. We’ll keep your original untouched." = "편집한 내용은 영상 사본에 적용돼요.";
 "Choose from Photos" = "사진에서 선택";
@@ -597,7 +600,6 @@
 "Subscription unavailable" = "구독을 이용할 수 없어요";
 "Clear history" = "기록 지우기";
 "View options for more views and downloads" = "시청 및 다운로드 횟수를 늘리는 방법 보기";
-"Retry loading plans" = "요금제 다시 불러오기";
 
 "Included with Plus" = "Plus 혜택";
 "Unlimited lesson views" = "영상 무제한 시청";

@@ -81,6 +81,7 @@ struct MembershipView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedID: String?
+    @State private var priceRequest = 0
     @State private var attemptedPurchaseAction = false
     @State private var purchaseTask: Task<Void, Never>?
     @State private var rewardTask: Task<Void, Never>?
@@ -88,15 +89,14 @@ struct MembershipView: View {
     @State private var acknowledgedLuckyReward = false
 
     private struct Plan: Identifiable {
-        let title: String
-        let product: SKProduct
-        var id: String { product.productIdentifier }
+        let entry: CommerceConfiguration.Product
+        let product: SKProduct?
+        var id: String { entry.id }
     }
 
     private var plans: [Plan] {
-        (commerce.policy?.products ?? []).compactMap { entry in
-            commerce.products.first { $0.productIdentifier == entry.id }
-                .map { Plan(title: entry.period == .month ? "Monthly" : "Yearly", product: $0) }
+        (commerce.policy?.products ?? []).map { entry in
+            Plan(entry: entry, product: commerce.products.first { $0.productIdentifier == entry.id })
         }
     }
     private var selectedPlan: Plan? {
@@ -118,11 +118,8 @@ struct MembershipView: View {
         }
         .overlay(alignment: .topTrailing) { closeButton }
         .foregroundStyle(TrickoStyle.paper)
-        .task {
-            async let rights: Void = commerce.refresh()
-            await commerce.loadPlans()
-            await rights
-        }
+        .task { await commerce.refresh() }
+        .task(id: priceRequest) { await commerce.loadPlans() }
         .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in quota.resetIfNeeded() }
         .onDisappear {
             purchaseTask?.cancel(); purchaseTask = nil
@@ -157,8 +154,6 @@ struct MembershipView: View {
                 if !plans.isEmpty { planPicker }
                 if let error = commerce.plansError {
                     ErrorNote(message: error)
-                    Button { Task { await commerce.loadPlans() } } label: { LocalizedText("Retry loading plans") }
-                        .buttonStyle(EmptyStateActionStyle(primary: false)).disabled(interactionLocked)
                 }
             }
             renewalDisclosure
@@ -199,8 +194,8 @@ struct MembershipView: View {
         if commerce.loadingProducts || commerce.loadingPlans { return "Checking with Apple…" }
         if commerce.preparingPurchase { return "Preparing your subscription…" }
         if commerce.busy { return "Confirming your purchase…" }
-        if selectedPlan == nil { return "Subscription unavailable" }
-        return "Subscribe"
+        guard let plan = selectedPlan else { return "Subscription unavailable" }
+        return plan.product == nil ? "Check Apple price" : "Subscribe"
     }
 
     private var membershipIntro: some View {
@@ -273,19 +268,19 @@ struct MembershipView: View {
 
     private func planOption(_ plan: Plan) -> some View {
         let selected = selectedPlan?.id == plan.id
-        let price = commerce.price(plan.product)
-        let period = commerce.period(plan.product, locale: locale)
+        let price = plan.product.map { commerce.price($0) } ?? "USD \(plan.entry.displayPriceUSD)"
+        let period = plan.product.map { commerce.period($0, locale: locale) }
         return Button { selectedID = plan.id } label: {
             HStack(spacing: 14) {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        LocalizedText(plan.title).font(.stage(.headline, weight: .semibold))
+                        LocalizedText(plan.entry.label).font(.stage(.headline, weight: .semibold))
                             .fixedSize(horizontal: true, vertical: false)
                         Spacer(minLength: 0)
                         planPrice(price, period: period, alignment: .trailing, onPaper: selected, intrinsicWidth: true)
                     }
                     VStack(alignment: .leading, spacing: 6) {
-                        LocalizedText(plan.title).font(.stage(.headline, weight: .semibold))
+                        LocalizedText(plan.entry.label).font(.stage(.headline, weight: .semibold))
                             .fixedSize(horizontal: false, vertical: true)
                         planPrice(price, period: period, alignment: .leading, onPaper: selected)
                     }.frame(maxWidth: .infinity, alignment: .leading)
@@ -303,15 +298,20 @@ struct MembershipView: View {
             .accessibilityIdentifier("membership.plan.\(plan.id)")
     }
 
-    private func planPrice(_ price: String, period: String, alignment: HorizontalAlignment, onPaper: Bool,
+    private func planPrice(_ price: String, period: String?, alignment: HorizontalAlignment, onPaper: Bool,
                             intrinsicWidth: Bool = false) -> some View {
         VStack(alignment: alignment, spacing: 3) {
             Text(verbatim: price).environment(\.layoutDirection, .leftToRight)
                 .font(.stage(.title3, weight: .bold)).monospacedDigit()
-            if !period.isEmpty {
-                LocalizedText("Billed every %@", period).font(.stage(.caption))
-                    .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
+            Group {
+                if let period {
+                    LocalizedText("Billed every %@", period)
+                } else {
+                    LocalizedText("US reference price")
+                }
             }
+            .font(.stage(.caption))
+            .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
         }.fixedSize(horizontal: intrinsicWidth, vertical: true)
     }
 
@@ -337,6 +337,7 @@ struct MembershipView: View {
 
     private func subscribe() {
         guard !interactionLocked, let plan = selectedPlan else { return }
+        guard plan.product != nil else { priceRequest += 1; return }
         attemptedPurchaseAction = true
         purchaseTask = Task {
             await commerce.purchase(planID: plan.id)

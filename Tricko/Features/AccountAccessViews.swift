@@ -355,7 +355,7 @@ struct AccountSettingsSection: View {
                         rowDivider
                         Button { Task { await ads.privacyOptions() } } label: {
                             AccountMenuRow(title: "Advertising privacy")
-                        }
+                        }.disabled(ads.isPresentingConsent)
                     }
                 }.background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     .buttonStyle(PressStyle()).disabled(unavailable)

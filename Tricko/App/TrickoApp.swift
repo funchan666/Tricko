@@ -75,7 +75,7 @@ struct TrickoStartupHost: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { ads.didEnterBackground() }
-            if phase == .active, finished {
+            if phase == .active {
                 ads.didBecomeActive(commerce: commerce, accountAccess: accountAccess)
             }
         }

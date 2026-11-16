@@ -80,7 +80,7 @@ final class CommerceStore: NSObject, ObservableObject {
         }
         SKPaymentQueue.default().add(self)
     }
-    func refresh(waitForConfiguration: Bool = true) async {
+    func refresh(waitForConfiguration: Bool = true, clearError: Bool = true) async {
         let owner = api.session?.userId.value
         if let refreshTask, refreshingOwner == owner {
             if waitForConfiguration { await refreshTask.value }
@@ -100,7 +100,7 @@ final class CommerceStore: NSObject, ObservableObject {
             refreshingOwner = nil
             return
         }
-        error = nil
+        if clearError { error = nil }
         refreshingOwner = owner
         let rights = Task { await self.refreshRights(id: id, owner: owner) }
         rightsRefreshTask = rights
@@ -461,23 +461,21 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
                 case .purchased, .restored: await confirm(transaction)
                 case .failed:
                     busy = receivedRestoreTransaction != nil || !processing.isEmpty
-                    guard let index = records.firstIndex(where: { $0.id == transaction.payment.applicationUsername }) else {
-                        self.error = "An Apple purchase is awaiting account reconciliation. Its original order could not be identified; it has not been discarded."
-                        continue
-                    }
                     let cancelled = (transaction.error as? SKError)?.code == .paymentCancelled
-                    var next = records
-                    next[index].abandoned = true
-                    next[index].failure = PurchaseFailure(
-                        status: cancelled ? "canceled" : "error",
-                        transactionID: transaction.transactionIdentifier ?? "",
-                        receipt: Bundle.main.appStoreReceiptURL.flatMap { try? Data(contentsOf: $0) }?.base64EncodedString() ?? "")
-                    do { try save(next) } catch { self.error = error.localizedDescription; continue }
+                    if let recordID = transaction.payment.applicationUsername,
+                       let index = records.firstIndex(where: { $0.id == recordID }) {
+                        var next = records
+                        next[index].abandoned = true
+                        next[index].failure = PurchaseFailure(
+                            status: cancelled ? "canceled" : "error",
+                            transactionID: transaction.transactionIdentifier ?? "",
+                            receipt: Bundle.main.appStoreReceiptURL.flatMap { try? Data(contentsOf: $0) }?.base64EncodedString() ?? "")
+                        do { try save(next) } catch { self.error = error.localizedDescription; continue }
+                        Task { await reportFailure(recordID: recordID) }
+                    }
                     if cancelled { message = "Purchase cancelled." }
                     else { error = transaction.error?.localizedDescription ?? "Purchase could not be completed." }
                     queue.finishTransaction(transaction)
-                    let recordID = next[index].id
-                    Task { await reportFailure(recordID: recordID) }
                 case .deferred:
                     busy = receivedRestoreTransaction != nil || !processing.isEmpty
                     message = "Your purchase is waiting for approval."
@@ -495,7 +493,7 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
             if message == "Checking your Apple purchases…" {
                 message = !restored && queue.transactions.isEmpty ? "Apple has no pending purchases to restore." : nil
             }
-            await refresh()
+            await refresh(clearError: false)
         }
     }
     nonisolated func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {

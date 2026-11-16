@@ -41,17 +41,28 @@ enum VideoTool: String, Identifiable, CaseIterable {
 }
 
 struct ToolsView: View {
+    @EnvironmentObject private var commerce: CommerceStore
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selectedTool: VideoTool?
     @State private var showingPracticeResources = false
+    @State private var showingMembership = false
 
     var body: some View {
         GeometryReader { viewport in
             let topInset = viewport.safeAreaInsets.top
             let photoHeight = (viewport.size.height + topInset) * 0.5
+            let heroHeight = max(0, photoHeight - topInset)
             ScrollView {
                 VStack(spacing: 0) {
-                    studioEntry(minHeight: max(0, photoHeight - topInset))
+                    VStack(spacing: 12) {
+                        PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
+                            .accessibilityIdentifier("tools.membership")
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        studioEntry
+                    }
+                    .trickoPage()
+                    .frame(minHeight: heroHeight, idealHeight: heroHeight, alignment: .top)
+
                     VStack(alignment: .leading, spacing: 20) {
                         shortcuts
                         practiceResources
@@ -69,6 +80,7 @@ struct ToolsView: View {
         }
         .trickoScreenBackground()
         .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
+        .sheet(isPresented: $showingMembership) { MembershipView() }
         .sheet(isPresented: $showingPracticeResources) {
             PracticeResourcesSheet()
                 .presentationDetents([.medium, .large])
@@ -80,6 +92,8 @@ struct ToolsView: View {
             .environment(\.layoutDirection, .leftToRight)
             .overlay {
                 LinearGradient(stops: [
+                    .init(color: TrickoStyle.background.opacity(0.35), location: 0),
+                    .init(color: .clear, location: 0.24),
                     .init(color: .clear, location: 0.45),
                     .init(color: TrickoStyle.background.opacity(0.72), location: 0.78),
                     .init(color: TrickoStyle.background, location: 1)
@@ -89,24 +103,25 @@ struct ToolsView: View {
             .accessibilityHidden(true)
     }
 
-    private func studioEntry(minHeight: CGFloat) -> some View {
+    private var studioEntry: some View {
         Button { selectedTool = .studio } label: {
-            HStack(alignment: .bottom, spacing: 14) {
-                VStack(alignment: .leading, spacing: 6) {
-                    LocalizedText(VideoTool.studio.title).font(.stage(.title2, weight: .bold))
-                    LocalizedText(VideoTool.studio.detail)
-                        .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.86))
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                HStack(alignment: .bottom, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        LocalizedText(VideoTool.studio.title).font(.stage(.title2, weight: .bold))
+                        LocalizedText(VideoTool.studio.detail)
+                            .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.86))
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Glyph(symbol: .back, size: 13, tint: TrickoStyle.paper)
+                        .rotationEffect(.degrees(180))
+                        .frame(width: 44, height: 44)
+                        .trickoGlass(in: Circle())
                 }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 13, tint: TrickoStyle.paper)
-                    .rotationEffect(.degrees(180))
-                    .frame(width: 44, height: 44)
-                    .trickoGlass(in: Circle())
             }
             .foregroundStyle(TrickoStyle.paper)
-            .trickoPage()
-            .frame(minHeight: minHeight, alignment: .bottom)
             .contentShape(.interaction, Rectangle())
         }
         .buttonStyle(PressStyle())
@@ -366,6 +381,7 @@ struct LocalVideoCover: View {
     let url: URL
     var cornerRadius: CGFloat = 8
     var maximumPixelSize: CGFloat = 288
+    var placeholderSymbol: TrickoGlyph? = .feed
     @State private var image: UIImage?
 
     var body: some View {
@@ -373,8 +389,8 @@ struct LocalVideoCover: View {
             .overlay {
                 if let image {
                     Image(uiImage: image).resizable().scaledToFill()
-                } else {
-                    Glyph(symbol: .feed, size: 21, tint: TrickoStyle.coolAccent)
+                } else if let placeholderSymbol {
+                    Glyph(symbol: placeholderSymbol, size: 21, tint: TrickoStyle.coolAccent)
                 }
             }
             .clipShape(.rect(cornerRadius: cornerRadius))

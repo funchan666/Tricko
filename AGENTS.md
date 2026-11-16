@@ -1,14 +1,14 @@
 # Tricko 项目交接
 
-本项目是以本地视频文件为主的原生 SwiftUI App，附带在线魔术课程和练习内容。最低 iOS 17，工程与共享 Scheme 均为 `Tricko`。本文件记录 2026-11-13 的交付和用户确认的约定。后续状态以本项目的代码、配置和新验证记录为准。
+本项目是以本地视频文件为主的原生 SwiftUI App，附带在线视频和练习内容。最低 iOS 17，工程与共享 Scheme 均为 `Tricko`。Duo 布局使用 iOS 27.1 SDK。后续状态以本项目的代码、配置和新验证记录为准。
 
 ## 业务与服务配置
 
 - 业务沿用 Clipo。首页保留课程链接和短码输入，通过 `search-check` 进入可纵向切换的全屏播放器。游客登录、推荐、收藏、离线播放、编辑导出、额度、开屏与激励广告、订阅和恢复购买继续走原有路径。订阅与媒体导出保留服务端权益校验。
-- API 为 `https://lvtppgv.tricko.website`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。游客登录 `source` 和业务 `packageName` 固定为 `TrickoConfiguration.servicePackageName` 的 `com.trickostudio.videodesk`。打包 Bundle ID 由 Xcode 的 `PRODUCT_BUNDLE_IDENTIFIER` 决定。
+- API 为 `https://lvtppgv.tricko.website`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。`Config/Tricko.xcconfig` 的打包 Bundle ID 和应用内游客登录 `source` 及业务 `packageName` 均使用 `com.trickostudio.videodesk`。
 - AdMob App ID 为 `ca-app-pub-4423220037289714~3524842188`。开屏和激励广告位由 `getV2.adList` 下发，分别对应 Google 的 `adType=1` 和 `adType=5`。公开入口采用 [官网](https://www.tricko.website)、[用户协议](https://www.tricko.website/terms.html) 和 [隐私政策](https://www.tricko.website/privacy.html)。
-- Plus 月付商品为 `com.trickostudio.videodesk.plus.monthly`，年付商品为 `com.trickostudio.videodesk.plus.yearly`。会员页展示 StoreKit 返回的本地化价格和账期。
-- 播放联调使用当前 API 环境可用的链接或短码，在首页手动输入。接口与广告合同见工具包的 [Clipo 基线](/Users/chengdupengyuyan/.codex/skills/toolkit/references/clipo-baseline.md)。
+- Plus 商品 ID 以 `Tricko/Resources/Commerce.json` 为准，当前临时使用月付 `coins_1.99` 和年付 `conis_4.99`。会员页先展示标明币种的美国参考价，确认购买前显示 Apple 商店的实际价格和账期。
+- 播放联调使用当前 API 环境可用的链接或短码，在首页手动输入。
 - 核对后台发布记录时使用 `getV2.name=Tricko` 和业务包名 `com.trickostudio.videodesk`。待确认订单保留原订单的主机和账号归属。
 
 ## 本项目的原创界面
