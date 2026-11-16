@@ -4,8 +4,15 @@ import SwiftUI
 
 struct VideoReviewRoute: Identifiable {
     let movie: PracticeRecording
-    let startingAt: Double?
+    var startingAt: Double? = nil
+    var startingPointID: UUID? = nil
     var id: UUID { movie.id }
+}
+
+func reviewTimecode(_ seconds: Double) -> String {
+    let bounded = seconds.isFinite ? min(max(0, seconds), 359_999) : 0
+    let tenths = Int(bounded * 10)
+    return "\(durationLabel(Double(tenths / 10))).\(tenths % 10)"
 }
 
 struct VideoReviewButton: View {
@@ -41,32 +48,37 @@ struct VideoReviewView: View {
     @StateObject private var playback = PlaybackController()
     @State private var aspectRatio: CGFloat = 16.0 / 9.0
     @State private var unavailable = false
+    @State private var restoredReview = false
     @State private var activePointID: UUID?
-    @State private var selectedMarkerFilter: MarkerFilter?
+    @State private var selectedMarkerFilter: VideoReviewFilter?
+    @State private var markerToReveal: UUID?
+    @State private var listPositions = MarkerListPositions()
+    @State private var listResetID = UUID()
     @State private var finishedPendingReview = false
     @State private var draft: VideoReviewPoint?
     @State private var saveError: String?
+    @State private var restartConfirmation: RestartConfirmation?
     let movie: PracticeRecording
     var startingAt: Double? = nil
+    var startingPointID: UUID? = nil
 
     private enum Section: Hashable {
         case draft
-        case marker(UUID)
     }
 
-    private enum MarkerFilter: String, CaseIterable {
-        case pending = "Pending review"
-        case all = "All"
+    private enum RestartConfirmation {
+        case wasPlaying
+        case wasPaused
+    }
+
+    private final class MarkerListPositions {
+        var values: [VideoReviewFilter: VideoReviewListPosition] = [:]
     }
 
     private static let completionMessage = "All markers reviewed."
 
     private var points: [VideoReviewPoint] {
-        let saved = library.movies.first { $0.id == movie.id }?.reviewPoints ?? []
-        return saved.sorted {
-            if $0.seconds == $1.seconds { return $0.updatedAt < $1.updatedAt }
-            return $0.seconds < $1.seconds
-        }
+        library.movies.first { $0.id == movie.id }?.orderedReviewPoints ?? []
     }
 
     private var canMark: Bool {
@@ -83,26 +95,72 @@ struct VideoReviewView: View {
         let pendingPoints = points.filter(\.isPendingReview)
         let filter = markerFilter(for: pendingPoints)
         let activePoint = points.first { $0.id == activePointID }
+        let isConfirmingRestart = restartConfirmation != nil
         VStack(spacing: 0) {
-            SheetHeading(title: "Video review") { dismiss() }
-            if let draft {
-                draftWorkspace(draft)
-            } else {
-                reviewWorkspace(points: points, pendingPoints: pendingPoints, filter: filter, activePoint: activePoint)
+            reviewHeading
+            if restoredReview {
+                if let draft {
+                    draftWorkspace(draft)
+                } else {
+                    reviewWorkspace(points: points, pendingPoints: pendingPoints, filter: filter, activePoint: activePoint)
+                }
             }
         }
         .trickoScreenBackground()
         .foregroundStyle(TrickoStyle.paper)
-        .interactiveDismissDisabled(draft != nil)
+        .allowsHitTesting(!isConfirmingRestart)
+        .accessibilityHidden(isConfirmingRestart)
+        .overlay {
+            if isConfirmingRestart {
+                AccountDecisionDialog(
+                    title: "Start over?",
+                    message: "The video goes back to the beginning and both lists return to the top. Your markers and review status are kept.",
+                    confirmTitle: "Start over",
+                    dismissOnOutsideTap: true,
+                    cancel: cancelRestart,
+                    confirm: restartReview
+                )
+                .accessibilityAction(.escape, cancelRestart)
+            }
+        }
+        .interactiveDismissDisabled(draft != nil || isConfirmingRestart)
         .task(id: movie.id) { await openVideo() }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { playback.pause() } }
-        .onDisappear { playback.release() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { playback.pause() }
+            if phase == .background { saveReviewResume() }
+        }
+        .onDisappear {
+            saveReviewResume()
+            playback.release()
+        }
+    }
+
+    private var reviewHeading: some View {
+        HStack(spacing: 8) {
+            LocalizedText("Video review")
+                .font(.stage(.title3, display: true))
+                .lineLimit(2)
+                .accessibilityAddTraits(.isHeader)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if draft == nil {
+                Button(action: requestRestart) { LocalizedText("Start over") }
+                    .buttonStyle(EmptyStateActionStyle(primary: false, minHeight: 44, horizontalPadding: 12))
+                    .disabled(!restoredReview || !canJumpToMarker)
+            }
+            IconButton(symbol: .close, label: "Close") {
+                playback.pause()
+                saveReviewResume()
+                dismiss()
+            }
+        }
+        .pageHorizontalMargins()
+        .padding(.top, 8)
     }
 
     private func reviewWorkspace(
         points: [VideoReviewPoint],
         pendingPoints: [VideoReviewPoint],
-        filter: MarkerFilter,
+        filter: VideoReviewFilter,
         activePoint: VideoReviewPoint?
     ) -> some View {
         GeometryReader { viewport in
@@ -141,11 +199,11 @@ struct VideoReviewView: View {
     private func reviewMarkerLists(
         points: [VideoReviewPoint],
         pendingPoints: [VideoReviewPoint],
-        filter: MarkerFilter,
+        filter: VideoReviewFilter,
         compact: Bool
     ) -> some View {
         ZStack(alignment: .topLeading) {
-            ForEach(MarkerFilter.allCases, id: \.rawValue) { listFilter in
+            ForEach(VideoReviewFilter.allCases, id: \.rawValue) { listFilter in
                 let isVisible = listFilter == filter
                 VStack(alignment: .leading, spacing: 8) {
                     if listFilter == .pending && !pendingPoints.isEmpty {
@@ -154,8 +212,9 @@ struct VideoReviewView: View {
                     if !points.isEmpty {
                         markerFilters(totalCount: points.count, pendingCount: pendingPoints.count, filter: listFilter)
                     }
-                    reviewMarkerList(listFilter == .pending ? pendingPoints : points,
+                    reviewMarkerList(listFilter == .pending ? pendingPoints : points, filter: listFilter,
                                      hasMarkers: !points.isEmpty, isVisible: isVisible)
+                        .id(listResetID)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .opacity(isVisible ? 1 : 0)
@@ -167,11 +226,12 @@ struct VideoReviewView: View {
 
     private func reviewMarkerList(
         _ visiblePoints: [VideoReviewPoint],
+        filter: VideoReviewFilter,
         hasMarkers: Bool,
         isVisible: Bool
     ) -> some View {
         ScrollViewReader { listScroll in
-            ScrollView {
+            let content = ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if visiblePoints.isEmpty && !finishedPendingReview {
                         LocalizedText(hasMarkers ? Self.completionMessage : "Mark a moment to revisit it later.")
@@ -184,18 +244,48 @@ struct VideoReviewView: View {
                             Rectangle().fill(TrickoStyle.line).frame(height: 1).accessibilityHidden(true)
                             markerRow(point, isCurrent: point.id == activePointID) { seek(to: point) }
                         }
-                        .id(Section.marker(point.id))
+                        .id(point.id)
                     }
                 }
+                .scrollTargetLayout()
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize)
-            .onChange(of: activePointID, initial: true) { _, id in
-                guard isVisible, let id, visiblePoints.contains(where: { $0.id == id }) else { return }
-                listScroll.scrollTo(Section.marker(id), anchor: nil)
-            }
+            restoreListScroll(content, filter: filter, visiblePoints: visiblePoints, isVisible: isVisible)
+                .onChange(of: markerToReveal, initial: true) { _, id in
+                    guard isVisible, let id else { return }
+                    if visiblePoints.contains(where: { $0.id == id }) {
+                        listScroll.scrollTo(id, anchor: nil)
+                    }
+                    markerToReveal = nil
+                }
         }
         .frame(minHeight: 44, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private func restoreListScroll<Content: View>(
+        _ content: Content,
+        filter: VideoReviewFilter,
+        visiblePoints: [VideoReviewPoint],
+        isVisible: Bool
+    ) -> some View {
+        let saved: VideoReviewListPosition? = listPositions.values[filter].flatMap { position in
+            if case .marker(let id) = position, !visiblePoints.contains(where: { $0.id == id }) {
+                return nil
+            }
+            return position
+        }
+        let resetID = listResetID
+        let record: (VideoReviewListPosition) -> Void = { position in
+            guard listResetID == resetID else { return }
+            listPositions.values[filter] = position
+        }
+        if #available(iOS 18.0, *) {
+            content.modifier(ReviewScrollOffset(saved: saved, isVisible: isVisible, record: record))
+        } else {
+            content.modifier(ReviewScrollMarker(saved: saved, isVisible: isVisible, record: record))
+        }
     }
 
     private func reviewFooter(_ activePoint: VideoReviewPoint?) -> some View {
@@ -268,14 +358,14 @@ struct VideoReviewView: View {
         .clipShape(.rect(cornerRadius: 18))
     }
 
-    private func markerFilters(totalCount: Int, pendingCount: Int, filter: MarkerFilter) -> some View {
-        let counts = [MarkerFilter.pending.rawValue: pendingCount, MarkerFilter.all.rawValue: totalCount]
-        return StageFilter(values: MarkerFilter.allCases.map(\.rawValue), selected: filter.rawValue, counts: counts) {
-            selectedMarkerFilter = MarkerFilter(rawValue: $0)
+    private func markerFilters(totalCount: Int, pendingCount: Int, filter: VideoReviewFilter) -> some View {
+        let counts = [VideoReviewFilter.pending.label: pendingCount, VideoReviewFilter.all.label: totalCount]
+        return StageFilter(values: VideoReviewFilter.allCases.map(\.label), selected: filter.label, counts: counts) { label in
+            selectedMarkerFilter = VideoReviewFilter.allCases.first { $0.label == label }
         }
     }
 
-    private func markerFilter(for pendingPoints: [VideoReviewPoint]) -> MarkerFilter {
+    private func markerFilter(for pendingPoints: [VideoReviewPoint]) -> VideoReviewFilter {
         selectedMarkerFilter ?? (pendingPoints.isEmpty ? .all : .pending)
     }
 
@@ -356,7 +446,7 @@ struct VideoReviewView: View {
         HStack(alignment: .top, spacing: 4) {
             Button(action: jump) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(verbatim: timecode(point.seconds))
+                    Text(verbatim: reviewTimecode(point.seconds))
                         .font(.stage(.subheadline, weight: isCurrent ? .bold : .semibold).monospacedDigit())
                         .foregroundStyle(TrickoStyle.accent)
                         .environment(\.layoutDirection, .leftToRight)
@@ -383,7 +473,7 @@ struct VideoReviewView: View {
             .accessibilityAddTraits(isCurrent ? .isSelected : [])
             .disabled(!canJumpToMarker)
             IconButton(symbol: .edit, label: "Edit marker") {
-                seek(to: point)
+                seek(to: point, revealInList: false)
                 draft = point
             }
             .padding(.top, 5)
@@ -405,7 +495,7 @@ struct VideoReviewView: View {
             ? AnyLayout(VStackLayout(spacing: 8))
             : AnyLayout(HStackLayout(spacing: 8))
         return VStack(alignment: .leading, spacing: 12) {
-            Text(verbatim: timecode(point.seconds))
+            Text(verbatim: reviewTimecode(point.seconds))
                 .font(.stage(.title2, weight: .semibold).monospacedDigit())
                 .foregroundStyle(TrickoStyle.accent)
                 .environment(\.layoutDirection, .leftToRight)
@@ -439,18 +529,33 @@ struct VideoReviewView: View {
 
     private func openVideo() async {
         guard !Task.isCancelled else { return }
+        let current = library.movies.first { $0.id == movie.id }
+        let resume = current?.reviewResume
+        let requestedPoint = current?.reviewPoints?.first { $0.id == startingPointID }
+        let restoredPoint = current?.reviewPoints?.first { $0.id == resume?.activePointID }
+        markerToReveal = nil
+        activePointID = restoredPoint?.id
+        selectedMarkerFilter = resume?.selectedFilter
+        listPositions.values[.pending] = resume?.pendingListPosition
+        listPositions.values[.all] = resume?.allListPosition
+        restoredReview = true
         let url = library.url(for: movie)
         guard FileManager.default.fileExists(atPath: url.path) else {
             unavailable = true
             return
         }
         unavailable = false
+        if let requestedPoint {
+            let filter: VideoReviewFilter = requestedPoint.isPendingReview ? .pending : .all
+            activePointID = requestedPoint.id
+            selectedMarkerFilter = filter
+            listPositions.values[filter] = .marker(requestedPoint.id)
+        }
         let asset = AVURLAsset(url: url)
         playback.load(AVPlayerItem(asset: asset), autoplay: false)
-        let current = library.movies.first { $0.id == movie.id }
-        if let seconds = startingAt {
+        if let seconds = requestedPoint?.seconds ?? resume?.seconds ?? restoredPoint?.seconds ?? startingAt {
             playback.seek(seconds)
-        } else if let point = current?.latestPendingReviewPoint {
+        } else if resume == nil, let point = current?.latestPendingReviewPoint {
             seek(to: point)
         }
         if let track = try? await asset.loadTracks(withMediaType: .video).first,
@@ -472,18 +577,39 @@ struct VideoReviewView: View {
         draft = VideoReviewPoint(seconds: max(0, min(time, duration)))
     }
 
-    private func seek(to point: VideoReviewPoint) {
+    private func seek(to point: VideoReviewPoint, revealInList: Bool = true) {
         playback.pause()
         playback.seek(point.seconds)
         activePointID = point.id
+        markerToReveal = revealInList ? point.id : nil
         finishedPendingReview = false
         saveError = nil
     }
 
-    private func timecode(_ seconds: Double) -> String {
-        let bounded = seconds.isFinite ? min(max(0, seconds), 359_999) : 0
-        let tenths = Int(bounded * 10)
-        return "\(durationLabel(Double(tenths / 10))).\(tenths % 10)"
+    private func requestRestart() {
+        guard restartConfirmation == nil else { return }
+        restartConfirmation = playback.intendsPlayback ? .wasPlaying : .wasPaused
+        playback.pause()
+    }
+
+    private func cancelRestart() {
+        let shouldResume = restartConfirmation == .wasPlaying
+        restartConfirmation = nil
+        if shouldResume && scenePhase == .active { playback.play() }
+    }
+
+    private func restartReview() {
+        guard restartConfirmation != nil else { return }
+        restartConfirmation = nil
+        playback.pause()
+        playback.seek(0)
+        activePointID = nil
+        markerToReveal = nil
+        finishedPendingReview = false
+        saveError = nil
+        listPositions.values = [.pending: .offset(0), .all: .offset(0)]
+        listResetID = UUID()
+        saveReviewResume()
     }
 
     private func saveDraft() {
@@ -491,7 +617,21 @@ struct VideoReviewView: View {
         point.note = point.note.trimmingCharacters(in: .whitespacesAndNewlines)
         guard persist(point) else { return }
         activePointID = point.id
+        markerToReveal = point.id
         clearDraft()
+    }
+
+    private func saveReviewResume() {
+        guard restoredReview else { return }
+        let previous = library.movies.first { $0.id == movie.id }?.reviewResume
+        let resume = VideoReviewResume(
+            seconds: playback.resumeSeconds ?? previous?.seconds,
+            activePointID: activePointID,
+            selectedFilter: selectedMarkerFilter,
+            pendingListPosition: listPositions.values[.pending],
+            allListPosition: listPositions.values[.all]
+        )
+        library.saveReviewResume(resume, for: movie.id)
     }
 
     @discardableResult
@@ -519,5 +659,65 @@ struct VideoReviewView: View {
     private func clearDraft() {
         draft = nil
         saveError = nil
+    }
+}
+
+@available(iOS 18.0, *)
+private struct ReviewScrollOffset: ViewModifier {
+    @State private var position: ScrollPosition
+    let isVisible: Bool
+    let record: (VideoReviewListPosition) -> Void
+
+    init(saved: VideoReviewListPosition?, isVisible: Bool, record: @escaping (VideoReviewListPosition) -> Void) {
+        self.isVisible = isVisible
+        self.record = record
+        let initialPosition: ScrollPosition
+        switch saved {
+        case .offset(let y)? where y.isFinite && y >= 0:
+            initialPosition = ScrollPosition(idType: UUID.self, y: CGFloat(y))
+        case .marker(let id)?:
+            initialPosition = ScrollPosition(id: id, anchor: .top)
+        default:
+            initialPosition = ScrollPosition(idType: UUID.self)
+        }
+        _position = State(initialValue: initialPosition)
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: Optional<Double>.self) { geometry in
+                guard geometry.containerSize.height > 0 else { return nil }
+                let y = geometry.contentOffset.y + geometry.contentInsets.top
+                let maximum = max(0, geometry.contentSize.height + geometry.contentInsets.top +
+                                  geometry.contentInsets.bottom - geometry.containerSize.height)
+                return Double(min(max(0, y), maximum))
+            } action: { _, y in
+                if isVisible, let y, y.isFinite { record(.offset(y)) }
+            }
+    }
+}
+
+private struct ReviewScrollMarker: ViewModifier {
+    @State private var markerID: UUID?
+    let isVisible: Bool
+    let record: (VideoReviewListPosition) -> Void
+
+    init(saved: VideoReviewListPosition?, isVisible: Bool, record: @escaping (VideoReviewListPosition) -> Void) {
+        self.isVisible = isVisible
+        self.record = record
+        if case .marker(let id)? = saved {
+            _markerID = State(initialValue: id)
+        } else {
+            _markerID = State(initialValue: nil)
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .scrollPosition(id: $markerID, anchor: .top)
+            .onChange(of: markerID) { _, id in
+                if isVisible, let id { record(.marker(id)) }
+            }
     }
 }

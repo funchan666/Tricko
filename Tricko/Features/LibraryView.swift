@@ -2,6 +2,7 @@ import SwiftUI
 import AVFoundation
 
 struct LibraryView: View {
+    @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var offline: OfflineStore
     @EnvironmentObject private var commerce: CommerceStore
@@ -9,38 +10,115 @@ struct LibraryView: View {
     @State private var showingExportMembership = false
     let edit: (PracticeRecording) -> Void
     let watchLessons: () -> Void
+    let isActive: Bool
     @Binding var filter: String
     @State private var player: PlayerRoute?
-    @State private var reviewingVideo: PracticeRecording?
+    @State private var reviewingVideo: VideoReviewRoute?
+    @State private var libraryScroll = LibraryScrollState()
+    @State private var pendingReviewScroll = PendingReviewScroll()
+    @State private var visitedCategories: Set<Category> = []
     @State private var sharing: SharedFile?
     @State private var removing: PracticeRecording?
     @State private var removingDownload: OfflineVideo?
     @State private var sharingMovieID: UUID?
     @Environment(\.locale) private var locale
+    @Environment(\.layoutDirection) private var direction
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.scenePhase) private var scenePhase
 
     private var category: Category { Category(rawValue: filter) ?? .imports }
-    private var localMovies: [PracticeRecording] {
-        library.movies.filter { $0.isExport == (category == .exports) }
+    private enum LibraryScrollSpace: Hashable, Sendable {
+        case viewport(Category)
+        case content(Category)
     }
 
-    private enum Category: String, CaseIterable, Identifiable {
+    private struct LibraryScrollLayout: Equatable, Sendable {
+        let viewport: CGRect
+        let contentHeight: CGFloat
+        let waitingForOfflineOwner: Bool
+
+        var range: CGFloat { max(0, contentHeight - viewport.height) }
+        var offset: CGFloat { min(max(0, viewport.minY), range) }
+
+        func anchor(for offset: CGFloat) -> UnitPoint {
+            guard range > 0 else { return .top }
+            return UnitPoint(x: 0.5, y: min(max(0, offset), range) / range)
+        }
+    }
+
+    @MainActor
+    private final class LibraryScrollState {
+        var layouts: [Category: LibraryScrollLayout] = [:]
+        var restored: Set<Category> = []
+        private var offsetsToSave: [Category: Double] = [:]
+        private var saveTask: Task<Void, Never>?
+
+        func record(_ offset: CGFloat, for entry: Category) {
+            offsetsToSave[entry] = Double(offset)
+            guard saveTask == nil else { return }
+            saveTask = Task { [weak self] in
+                do { try await Task.sleep(for: .milliseconds(350)) }
+                catch { return }
+                self?.saveOffsets()
+            }
+        }
+
+        func saveOffsets() {
+            saveTask?.cancel()
+            saveTask = nil
+            let defaults = UserDefaults.standard
+            for (entry, offset) in offsetsToSave where defaults.double(forKey: entry.scrollOffsetKey) != offset {
+                defaults.set(offset, forKey: entry.scrollOffsetKey)
+            }
+            offsetsToSave.removeAll()
+        }
+
+        func leaveLibrary() {
+            saveOffsets()
+            restored.removeAll()
+        }
+    }
+
+    private struct PendingReviewRowFrames: PreferenceKey {
+        static var defaultValue: [UUID: CGRect] { [:] }
+
+        static func reduce(value: inout [UUID: CGRect], nextValue: () -> [UUID: CGRect]) {
+            value.merge(nextValue(), uniquingKeysWith: { _, frame in frame })
+        }
+    }
+
+    private struct PendingReviewPosition {
+        let rows: [UUID]
+        let firstVisibleIndex: Int
+        let visibleFrames: [UUID: CGRect]
+        let viewportHeight: CGFloat
+        let offset: CGFloat
+    }
+
+    private final class PendingReviewScroll {
+        var rowFrames: [UUID: CGRect] = [:]
+        var returnPosition: PendingReviewPosition?
+    }
+
+    private enum Category: String, CaseIterable, Hashable, Identifiable, Sendable {
         case imports = "Imports"
         case exports = "Exports"
         case saved = "Saved"
         case offline = "Downloads"
+        case pendingReviews = "Pending review overview"
 
         var id: String { rawValue }
+        var scrollOffsetKey: String { "tricko.library.scrollOffset.\(rawValue)" }
         var title: String {
             switch self {
             case .saved: "Favorites"
             case .offline: "Offline videos"
-            case .imports, .exports: rawValue
+            case .imports, .exports, .pendingReviews: rawValue
             }
         }
         var glyph: TrickoGlyph {
             switch self {
-            case .saved: .bookmark
+            case .saved, .pendingReviews: .bookmark
             case .offline: .download
             case .imports: .folder
             case .exports: .edit
@@ -53,6 +131,7 @@ struct LibraryView: View {
             case .offline: "No offline videos yet"
             case .imports: "No imported videos yet"
             case .exports: "No exports yet"
+            case .pendingReviews: "No pending reviews"
             }
         }
 
@@ -62,25 +141,56 @@ struct LibraryView: View {
             case .offline: "Download a lesson from its playback options to watch without a connection."
             case .imports: "Choose a video from Photos or Files to start editing."
             case .exports: "Export a video or audio track from the editor to find it here."
+            case .pendingReviews: "Add a marker while reviewing a video to see it here."
             }
         }
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                libraryHeader
-                categoryIndex
-                if category == .imports {
-                    if localMovies.isEmpty { emptyArchive }
-                    LocalVideoImportButtons(onImport: edit)
-                }
-                librarySection
-            }.trickoPage()
+        ScrollViewReader { scroll in
+            libraryScrollView(scroll)
         }
+    }
+
+    private func libraryScrollView(_ scroll: ScrollViewProxy) -> some View {
+        ZStack {
+            ForEach(Category.allCases) { entry in
+                let isSelected = entry == category
+                if isSelected || visitedCategories.contains(entry) {
+                    categoryScrollView(for: entry, using: scroll)
+                        .opacity(isSelected ? 1 : 0)
+                        .allowsHitTesting(isSelected)
+                        .accessibilityHidden(!isSelected)
+                }
+            }
+        }
+            .onChange(of: category, initial: true) { previous, selected in
+                libraryScroll.saveOffsets()
+                visitedCategories.insert(selected)
+                restoreSavedScroll(for: selected, using: scroll)
+                if selected == .pendingReviews {
+                    if reviewingVideo == nil { restorePendingReviewScroll(using: scroll, onlyIfRowsChanged: true) }
+                } else if previous == .pendingReviews, pendingReviewScroll.returnPosition == nil {
+                    rememberPendingReviewScroll()
+                }
+            }
+            .onChange(of: isActive) { _, active in
+                if active {
+                    restoreSavedScroll(for: category, using: scroll)
+                } else {
+                    libraryScroll.leaveLibrary()
+                }
+            }
+            .onAppear { restoreSavedScroll(for: category, using: scroll) }
+            .onDisappear { libraryScroll.leaveLibrary() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase != .active { libraryScroll.saveOffsets() }
+            }
             .trickoScreenBackground()
             .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
-            .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0) }
+            .sheet(item: $reviewingVideo, onDismiss: { restorePendingReviewScroll(using: scroll) }) { route in
+                VideoReviewView(movie: route.movie, startingAt: route.startingAt, startingPointID: route.startingPointID)
+            }
             .sheet(isPresented: $showingMembership) { MembershipView() }
             .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
@@ -111,6 +221,66 @@ struct LibraryView: View {
             }
     }
 
+    private func categoryScrollView(for entry: Category, using scroll: ScrollViewProxy) -> some View {
+        let viewportSpace = LibraryScrollSpace.viewport(entry)
+        let waitingForOfflineOwner = entry == .offline && offline.videos.isEmpty && api.offlineOwnerID == nil
+        return ScrollView {
+            libraryPage(for: entry)
+                .id(LibraryScrollSpace.content(entry))
+                .onGeometryChange(for: LibraryScrollLayout?.self) { geometry in
+                    let height = geometry.size.height
+                    guard let viewport = geometry.bounds(of: .named(viewportSpace)),
+                          viewport.height > 0, viewport.height.isFinite, viewport.minY.isFinite,
+                          height > 0, height.isFinite else { return nil }
+                    return LibraryScrollLayout(viewport: viewport, contentHeight: height,
+                                               waitingForOfflineOwner: waitingForOfflineOwner)
+                } action: { layout in
+                    libraryScroll.layouts[entry] = layout
+                    if restoreSavedScroll(for: entry, using: scroll), let layout, scenePhase == .active,
+                       entry != .pendingReviews || reviewingVideo == nil {
+                        libraryScroll.record(layout.offset, for: entry)
+                    }
+                }
+        }
+        .coordinateSpace(.named(viewportSpace))
+        .onPreferenceChange(PendingReviewRowFrames.self) { frames in
+            if entry == .pendingReviews { pendingReviewScroll.rowFrames = frames }
+        }
+    }
+
+    @discardableResult
+    private func restoreSavedScroll(for entry: Category, using scroll: ScrollViewProxy) -> Bool {
+        guard isActive, entry == category, let layout = libraryScroll.layouts[entry] else { return false }
+        if libraryScroll.restored.contains(entry) { return true }
+
+        let storedOffset = UserDefaults.standard.double(forKey: entry.scrollOffsetKey)
+        let saved = storedOffset.isFinite ? max(0, CGFloat(storedOffset)) : 0
+        if saved > 0, layout.waitingForOfflineOwner { return false }
+
+        libraryScroll.restored.insert(entry)
+        let offset = min(saved, layout.range)
+        guard abs(layout.offset - offset) >= 1 else { return true }
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            scroll.scrollTo(LibraryScrollSpace.content(entry), anchor: layout.anchor(for: offset))
+        }
+        return false
+    }
+
+    private func libraryPage(for entry: Category) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            libraryHeader
+            pendingReviewIndex
+            categoryIndex
+            if entry == .imports {
+                if count(in: entry) == 0 { emptyArchive(for: entry) }
+                LocalVideoImportButtons(onImport: edit)
+            }
+            librarySection(for: entry)
+        }.trickoPage()
+    }
+
     private var libraryHeader: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 12) {
@@ -137,11 +307,48 @@ struct LibraryView: View {
             .accessibilityIdentifier("library.membership")
     }
 
+    private var pendingReviewIndex: some View {
+        let entry = Category.pendingReviews
+        let total = count(in: entry)
+        let selected = category == entry
+        let shape = RoundedRectangle(cornerRadius: 17, style: .continuous)
+        return Button { filter = entry.rawValue } label: {
+            HStack(spacing: 10) {
+                Glyph(symbol: entry.glyph, size: 18, tint: TrickoStyle.accent)
+                    .accessibilityHidden(true)
+                LocalizedText(entry.title)
+                    .font(.stage(.subheadline, weight: .semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if total > 0 {
+                    pendingReviewBadge(total)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .frame(minHeight: 48)
+            .foregroundStyle(TrickoStyle.paper)
+            .trickoGlass(in: shape)
+            .overlay {
+                if selected {
+                    shape.strokeBorder(TrickoStyle.accent.opacity(0.55), lineWidth: 1)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(.interaction, shape)
+        }
+        .buttonStyle(PressStyle())
+        .accessibilityValue(Text(total, format: .number.locale(locale)))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("library.pendingReviewOverview")
+    }
+
     private var categoryIndex: some View {
         let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 4),
                             count: typeSize.isAccessibilitySize ? 1 : 2)
         return LazyVGrid(columns: columns, spacing: 4) {
-            ForEach(Category.allCases) { entry in
+            ForEach(Category.allCases.filter { $0 != .pendingReviews }) { entry in
                 let selected = category == entry
                 let labelColor = selected ? TrickoStyle.ink : TrickoStyle.paper
                 Button { filter = entry.rawValue } label: {
@@ -172,21 +379,21 @@ struct LibraryView: View {
         .background { StageSurface(tone: .smoke, radius: 17) }
     }
 
-    private var librarySection: some View {
-        let total = count(in: category)
+    private func librarySection(for entry: Category) -> some View {
+        let total = count(in: entry)
         return VStack(alignment: .leading, spacing: 16) {
             if total == 0 {
-                if category == .offline, offline.isRestoring {
+                if entry == .offline, offline.isRestoring {
                     AccountLoadingIndicator(title: "Loading downloads…").frame(maxWidth: .infinity)
-                } else if category != .imports, category != .offline || offline.downloadingID == nil {
-                    emptyCategory
+                } else if entry != .imports, entry != .offline || offline.downloadingID == nil {
+                    emptyCategory(for: entry)
                 }
-                if category == .offline {
+                if entry == .offline {
                     downloadStatus
                     DownloadAllowanceSummary()
                 }
             } else {
-                switch category {
+                switch entry {
                 case .saved:
                     LazyVStack(spacing: 4) {
                         ForEach(library.favorites) { clip in favoriteRow(clip) }
@@ -198,27 +405,34 @@ struct LibraryView: View {
                         ForEach(offline.videos) { video in downloadRow(video) }
                     }
                 case .imports, .exports:
-                    localGallery
+                    localGallery(for: entry)
+                case .pendingReviews:
+                    pendingReviewOverview
                 }
             }
         }
     }
 
-    private var emptyCategory: some View {
+    private func emptyCategory(for entry: Category) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            if category == .exports {
-                emptyArchive
+            if entry == .exports {
+                emptyArchive(for: entry)
                 LocalVideoImportButtons(onImport: edit)
             } else {
-                EmptyStateCopy(title: category.emptyTitle, message: category.emptyMessage)
-                Button(action: watchLessons) { LocalizedText("Watch lessons") }
-                    .buttonStyle(EmptyStateActionStyle(symbol: .play))
+                EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
+                if entry == .pendingReviews {
+                    Button { filter = Category.imports.rawValue } label: { LocalizedText("Imports") }
+                        .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .folder))
+                } else {
+                    Button(action: watchLessons) { LocalizedText("Watch lessons") }
+                        .buttonStyle(EmptyStateActionStyle(symbol: .play))
+                }
             }
         }
     }
 
-    private var emptyArchive: some View {
-        EmptyStateCopy(title: category.emptyTitle, message: category.emptyMessage)
+    private func emptyArchive(for entry: Category) -> some View {
+        EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
             .padding(18).frame(minHeight: 182, alignment: .bottomLeading)
             .background {
                 StagePhoto(asset: "VideoArchivePhoto")
@@ -233,12 +447,143 @@ struct LibraryView: View {
             .clipShape(.rect(cornerRadius: 19))
     }
 
-    private var localGallery: some View {
+    private func localGallery(for entry: Category) -> some View {
+        let movies = library.movies.filter { $0.isExport == (entry == .exports) }
         let columns = typeSize.isAccessibilitySize
             ? [GridItem(.flexible(), alignment: .top)]
             : [GridItem(.adaptive(minimum: 148), spacing: 12, alignment: .top)]
         return LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
-            ForEach(localMovies) { movie in movieCard(movie) }
+            ForEach(movies) { movie in movieCard(movie) }
+        }
+    }
+
+    private var pendingReviewOverview: some View {
+        let movies = library.movies.filter { $0.pendingReviewCount > 0 }
+        return LazyVStack(alignment: .leading, spacing: 12) {
+            ForEach(movies) { movie in
+                let pending = movie.orderedReviewPoints.filter(\.isPendingReview)
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 10) {
+                        Text(verbatim: movie.title)
+                            .font(.stage(.headline, weight: .semibold))
+                            .foregroundStyle(TrickoStyle.paper)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        pendingReviewBadge(pending.count)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 12)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
+                    ForEach(pending) { point in
+                        VStack(spacing: 0) {
+                            Divider().overlay(TrickoStyle.line).padding(.horizontal, 14)
+                                .accessibilityHidden(true)
+                            pendingReviewRow(point, in: movie)
+                        }
+                        .background {
+                            GeometryReader { geometry in
+                                let viewport = LibraryScrollSpace.viewport(.pendingReviews)
+                                Color.clear.preference(key: PendingReviewRowFrames.self,
+                                                       value: [point.id: geometry.frame(in: .named(viewport))])
+                            }
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                        }
+                        .id(point.id)
+                    }
+                }
+                .background { StageSurface(tone: .smoke, radius: 17) }
+            }
+        }
+    }
+
+    private func pendingReviewBadge(_ count: Int) -> some View {
+        let text = count.formatted(.number.locale(locale))
+        let label = L10n.format("%@ pending review", [text], language: AppLanguage.from(locale))
+        return CountBadge(text: text).accessibilityLabel(Text(verbatim: label))
+    }
+
+    private func pendingReviewRow(_ point: VideoReviewPoint, in movie: PracticeRecording) -> some View {
+        Button {
+            guard reviewingVideo == nil else { return }
+            rememberPendingReviewScroll(opening: point.id)
+            reviewingVideo = VideoReviewRoute(movie: movie, startingPointID: point.id)
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: reviewTimecode(point.seconds))
+                        .font(.stage(.subheadline, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(TrickoStyle.accent)
+                        .environment(\.layoutDirection, .leftToRight)
+                    if let note = point.note.nilIfBlank {
+                        Text(verbatim: note)
+                            .font(.stage(.footnote))
+                            .foregroundStyle(TrickoStyle.secondary)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent)
+                    .rotationEffect(.degrees(direction == .rightToLeft ? 0 : 180))
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+        .accessibilityHint(LocalizedStringKey("Review video"))
+    }
+
+    private var pendingReviewRowIDs: [UUID] {
+        library.movies.flatMap { movie in
+            movie.orderedReviewPoints.filter(\.isPendingReview).map(\.id)
+        }
+    }
+
+    private func rememberPendingReviewScroll(opening pointID: UUID? = nil) {
+        let rows = pendingReviewRowIDs
+        guard !rows.isEmpty, let layout = libraryScroll.layouts[.pendingReviews] else { return }
+        let height = layout.viewport.height
+        let visible = pendingReviewScroll.rowFrames.filter { _, frame in
+            frame.maxY > 0 && frame.minY < height && !frame.isEmpty
+        }
+        let index = rows.firstIndex(where: { visible[$0] != nil }) ?? pointID.flatMap { rows.firstIndex(of: $0) } ?? rows.startIndex
+        pendingReviewScroll.returnPosition = PendingReviewPosition(
+            rows: rows, firstVisibleIndex: index, visibleFrames: visible, viewportHeight: height,
+            offset: layout.offset
+        )
+    }
+
+    private func restorePendingReviewScroll(using scroll: ScrollViewProxy, onlyIfRowsChanged: Bool = false) {
+        guard category == .pendingReviews, let position = pendingReviewScroll.returnPosition else { return }
+        pendingReviewScroll.returnPosition = nil
+
+        let remaining = pendingReviewRowIDs
+        guard !remaining.isEmpty, !onlyIfRowsChanged || remaining != position.rows else { return }
+        let available = Set(remaining)
+        let following = position.rows.dropFirst(position.firstVisibleIndex).first(where: available.contains)
+        let previous = position.rows.prefix(position.firstVisibleIndex).last(where: available.contains)
+        let target = following ?? previous ?? remaining[min(position.firstVisibleIndex, remaining.count - 1)]
+        var anchor: UnitPoint = following == nil && previous != nil ? .bottom : .top
+        var useSavedOffset = position.visibleFrames.isEmpty || pendingReviewScroll.rowFrames[target] == nil
+        if let frame = position.visibleFrames[target] {
+            let availableHeight = position.viewportHeight - frame.height
+            if abs(availableHeight) >= 1 {
+                anchor = UnitPoint(x: 0.5, y: frame.minY / availableHeight)
+            } else {
+                useSavedOffset = true
+            }
+        }
+
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            if useSavedOffset, let layout = libraryScroll.layouts[.pendingReviews], layout.range > 0 {
+                scroll.scrollTo(LibraryScrollSpace.content(.pendingReviews), anchor: layout.anchor(for: position.offset))
+            } else {
+                scroll.scrollTo(target, anchor: anchor)
+            }
         }
     }
 
@@ -248,6 +593,7 @@ struct LibraryView: View {
         case .offline: offline.videos.count
         case .imports: library.movies.lazy.filter { !$0.isExport }.count
         case .exports: library.movies.lazy.filter(\.isExport).count
+        case .pendingReviews: library.movies.reduce(0) { $0 + $1.pendingReviewCount }
         }
     }
 
@@ -339,7 +685,7 @@ struct LibraryView: View {
                     .buttonStyle(PressStyle())
                     .accessibilityHint(LocalizedStringKey("Full editor"))
                 if !movie.isExport {
-                    VideoReviewButton(movie: movie) { reviewingVideo = movie }
+                    VideoReviewButton(movie: movie) { reviewingVideo = VideoReviewRoute(movie: movie) }
                         .padding(.horizontal, 12)
                         .padding(.top, 6)
                 }

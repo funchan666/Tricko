@@ -150,6 +150,13 @@ final class LibraryStore: ObservableObject {
     func removeReviewPoint(_ pointID: UUID, from movieID: UUID) throws {
         try updateReviewPoints(for: movieID) { $0.removeAll { $0.id == pointID } }
     }
+    func saveReviewResume(_ resume: VideoReviewResume, for movieID: UUID) {
+        guard let index = snapshot.movies.firstIndex(where: { $0.id == movieID }),
+              snapshot.movies[index].reviewResume != resume else { return }
+        var next = snapshot
+        next.movies[index].reviewResume = resume
+        save(next)
+    }
     private func updateReviewPoints(for movieID: UUID, _ update: (inout [VideoReviewPoint]) -> Void) throws {
         var next = snapshot
         guard let index = next.movies.firstIndex(where: { $0.id == movieID }) else { throw TrickoError.storage }

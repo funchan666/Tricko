@@ -136,17 +136,22 @@ struct TrickoRootView: View {
     @EnvironmentObject private var offline: OfflineStore
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.locale) private var locale
-    @SceneStorage("root.tab") private var tabRaw = TrickoTab.home.rawValue
+    @SceneStorage("root.tab") private var legacyTabRaw: Int?
     @SceneStorage("home.linkDraft") private var linkDraft = ""
+    @AppStorage("tricko.root.tab") private var tabRaw: Int?
+    @AppStorage("tricko.library.category") private var libraryFilter = "Imports"
     @State private var showingAccount = false
     @State private var libraryEditor: PracticeRecording?
-    @State private var libraryFilter = "Imports"
     @State private var channel: ChannelRoute?
     @State private var searchRequest: LessonSearch?
     @State private var downloadsAfterLesson = false
 
+    private var selectedTab: TrickoTab {
+        (tabRaw ?? legacyTabRaw).flatMap(TrickoTab.init(rawValue:)) ?? .home
+    }
+
     private var tab: Binding<TrickoTab> {
-        Binding(get: { TrickoTab(rawValue: tabRaw) ?? .home }, set: { tabRaw = $0.rawValue })
+        Binding(get: { selectedTab }, set: { tabRaw = $0.rawValue })
     }
 
     var body: some View {
@@ -173,6 +178,11 @@ struct TrickoRootView: View {
                     guard query.nilIfBlank != nil else { return }
                     library.record(link: query, title: clip.title)
                 })
+            }
+            .onChange(of: legacyTabRaw, initial: true) { _, previous in
+                if tabRaw == nil, let previous, TrickoTab(rawValue: previous) != nil {
+                    tabRaw = previous
+                }
             }
             .onChange(of: library.downloadsRequest) { _, request in
                 guard request != nil else { return }
@@ -246,7 +256,8 @@ struct TrickoRootView: View {
             ToolsView()
         case .library:
             LibraryView(edit: openVideo,
-                        watchLessons: { searchRequest = LessonSearch(query: "") }, filter: $libraryFilter)
+                        watchLessons: { searchRequest = LessonSearch(query: "") },
+                        isActive: selectedTab == .library, filter: $libraryFilter)
         }
     }
 

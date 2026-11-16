@@ -717,6 +717,9 @@
 "Review video" = "Review video";
 "Continue review" = "Continue review";
 "Video review" = "Video review";
+"Start over" = "Start over";
+"Start over?" = "Start over?";
+"The video goes back to the beginning and both lists return to the top. Your markers and review status are kept." = "The video goes back to the beginning and both lists return to the top. Your markers and review status are kept.";
 "Mark this moment" = "Mark this moment";
 "This video is unavailable for review." = "This video is unavailable for review.";
 "Review markers" = "Review markers";
@@ -735,6 +738,9 @@
 "Practice resources" = "Practice resources";
 "%@ pending review" = "%@ pending review";
 "Pending review" = "Pending review";
+"Pending review overview" = "Pending review overview";
+"No pending reviews" = "No pending reviews";
+"Add a marker while reviewing a video to see it here." = "Add a marker while reviewing a video to see it here.";
 "All markers reviewed." = "All markers reviewed.";
 "Previous marker" = "Previous marker";
 "Next marker" = "Next marker";

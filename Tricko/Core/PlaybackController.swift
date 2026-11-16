@@ -19,6 +19,12 @@ final class PlaybackController: ObservableObject {
     @Published var speed: Float = 1
     private(set) var loadedURL: URL?
     var intendsPlayback: Bool { wantsPlayback }
+    var resumeSeconds: Double? {
+        if let target = pendingSeek ?? seekInProgress { return target }
+        guard player.currentItem?.status == .readyToPlay else { return nil }
+        let seconds = player.currentTime().seconds
+        return seconds.isFinite && seconds >= 0 ? seconds : nil
+    }
     private var status: NSKeyValueObservation?
     private var timeStatus: NSKeyValueObservation?
     private var playerStatus: NSKeyValueObservation?
@@ -29,6 +35,7 @@ final class PlaybackController: ObservableObject {
     private var warming = false
     private var generation = UUID()
     private var pendingSeek: Double?
+    private var seekInProgress: Double?
     private var loadingDeadline: Task<Void, Never>?
 
     init() {
@@ -149,12 +156,14 @@ final class PlaybackController: ObservableObject {
     private func performPendingSeek() {
         guard !isSeeking, player.currentItem?.status == .readyToPlay, let target = pendingSeek else { return }
         pendingSeek = nil
+        seekInProgress = target
         isSeeking = true
         let token = generation
         player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
                     toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == token else { return }
+                self.seekInProgress = nil
                 self.isSeeking = false
                 if self.pendingSeek != nil { self.performPendingSeek() }
                 else {
@@ -196,6 +205,7 @@ final class PlaybackController: ObservableObject {
         endObserver = nil
         failureObserver = nil
         pendingSeek = nil
+        seekInProgress = nil
         if isSeeking { isSeeking = false }
         player.currentItem?.cancelPendingSeeks()
         player.replaceCurrentItem(with: nil)

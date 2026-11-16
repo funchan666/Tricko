@@ -151,6 +151,14 @@ struct PracticeRecording: Codable, Identifiable, Hashable {
     let date: Date
     let isExport: Bool
     var reviewPoints: [VideoReviewPoint]? = nil
+    var reviewResume: VideoReviewResume? = nil
+
+    var orderedReviewPoints: [VideoReviewPoint] {
+        (reviewPoints ?? []).sorted {
+            if $0.seconds == $1.seconds { return $0.updatedAt < $1.updatedAt }
+            return $0.seconds < $1.seconds
+        }
+    }
 
     var pendingReviewCount: Int {
         reviewPoints?.lazy.filter(\.isPendingReview).count ?? 0
@@ -160,6 +168,31 @@ struct PracticeRecording: Codable, Identifiable, Hashable {
         reviewPoints?.lazy.filter(\.isPendingReview).max { $0.updatedAt < $1.updatedAt }
     }
 }
+
+enum VideoReviewFilter: String, Codable, CaseIterable, Hashable {
+    case pending, all
+
+    var label: String {
+        switch self {
+        case .pending: "Pending review"
+        case .all: "All"
+        }
+    }
+}
+
+enum VideoReviewListPosition: Codable, Hashable {
+    case offset(Double)
+    case marker(UUID)
+}
+
+struct VideoReviewResume: Codable, Hashable {
+    let seconds: Double?
+    let activePointID: UUID?
+    let selectedFilter: VideoReviewFilter?
+    let pendingListPosition: VideoReviewListPosition?
+    let allListPosition: VideoReviewListPosition?
+}
+
 enum VideoReviewCategory: String, Codable, CaseIterable, Hashable {
     case visuals, audio, pacing, editPoint, highlight
 

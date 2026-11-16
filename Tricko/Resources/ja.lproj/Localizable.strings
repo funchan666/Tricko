@@ -717,6 +717,9 @@
 "Review video" = "動画を振り返る";
 "Continue review" = "振り返りを再開";
 "Video review" = "動画の振り返り";
+"Start over" = "最初から";
+"Start over?" = "最初から見直しますか？";
+"The video goes back to the beginning and both lists return to the top. Your markers and review status are kept." = "動画は冒頭に、2つのリストは先頭に戻ります。マーカーと確認状況はそのままです。";
 "Mark this moment" = "この場面にマーク";
 "This video is unavailable for review." = "この動画は振り返りに使用できません。";
 "Review markers" = "振り返りマーカー";
@@ -735,6 +738,9 @@
 "Practice resources" = "練習メニュー";
 "%@ pending review" = "未確認%@件";
 "Pending review" = "未確認";
+"Pending review overview" = "未確認マーカー一覧";
+"No pending reviews" = "未確認のマーカーはありません";
+"Add a marker while reviewing a video to see it here." = "動画の確認中にマーカーを付けると、ここに表示されます。";
 "All markers reviewed." = "すべてのマーカーが確認済みです。";
 "Previous marker" = "前のマーカー";
 "Next marker" = "次のマーカー";

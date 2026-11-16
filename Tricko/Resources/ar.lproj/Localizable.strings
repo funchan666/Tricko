@@ -717,6 +717,9 @@
 "Review video" = "مراجعة الفيديو";
 "Continue review" = "متابعة المراجعة";
 "Video review" = "مراجعة الفيديو";
+"Start over" = "ابدأ من البداية";
+"Start over?" = "هل تريد البدء من البداية؟";
+"The video goes back to the beginning and both lists return to the top. Your markers and review status are kept." = "سيعود الفيديو إلى بدايته وستعود القائمتان إلى أعلاهما. ستبقى العلامات وحالة مراجعتها محفوظة.";
 "Mark this moment" = "وضع علامة عند هذه اللحظة";
 "This video is unavailable for review." = "هذا الفيديو غير متاح للمراجعة.";
 "Review markers" = "علامات المراجعة";
@@ -735,6 +738,9 @@
 "Practice resources" = "موارد التدريب";
 "%@ pending review" = "%@ بانتظار المراجعة";
 "Pending review" = "بانتظار المراجعة";
+"Pending review overview" = "المراجعات المعلّقة";
+"No pending reviews" = "لا توجد علامات بانتظار المراجعة";
+"Add a marker while reviewing a video to see it here." = "أضف علامة أثناء مراجعة فيديو لتظهر هنا.";
 "All markers reviewed." = "تمت مراجعة كل العلامات.";
 "Previous marker" = "العلامة السابقة";
 "Next marker" = "العلامة التالية";

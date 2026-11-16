@@ -2,14 +2,14 @@
 
 本项目是以本地视频文件为主的原生 SwiftUI App，附带在线魔术课程和练习内容。最低 iOS 17，工程与共享 Scheme 均为 `Tricko`。本文件记录 2026-11-13 的交付和用户确认的约定。后续状态以本项目的代码、配置和新验证记录为准。
 
-## 业务与测试约定
+## 业务与服务配置
 
 - 业务沿用 Clipo。首页保留课程链接和短码输入，通过 `search-check` 进入可纵向切换的全屏播放器。游客登录、推荐、收藏、离线播放、编辑导出、额度、开屏与激励广告、订阅和恢复购买继续走原有路径。订阅与媒体导出保留服务端权益校验。
-- 当前 API 使用测试配置 `https://devapi.io-jp.com`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。Bundle ID 为 `com.trickostudio.videodesk`，由 `Config/Tricko.xcconfig` 定义，并派生游客登录 `source` 和业务 `packageName`。
-- 广告使用 Clipo 的 Google 官方演示 App ID 和开屏、激励广告位。测试版开屏与游客登录并行预载，冷启动最多等待五秒，展示前核对当前账户权益。官网、用户协议、隐私政策使用 HTTPS 占位链接。
-- Plus 月付商品为 `com.trickostudio.videodesk.plus.monthly`，年付商品为 `com.trickostudio.videodesk.plus.yearly`。本地目录的参考价格分别为 USD 9.99 和 USD 99.99，会员页展示 StoreKit 返回的本地化价格和账期。App Store Connect 商品和后台 `rightsName` 映射使用同一对 ID。
-- 播放联调用 Clipo 的原测试短码，在首页手动输入。短码和广告配置见工具包的 [Clipo 基线](/Users/chengdupengyuyan/.codex/skills/toolkit/references/clipo-baseline.md) 第 1、5 节。Clipo 源工程位于 `/Users/chengdupengyuyan/Fun/Clipo`。
-- 用户确认本项目测试通过后，再收集尚未提供的正式 API 域名、广告 App ID 和广告位、官网、用户协议和隐私政策。上线前按工程的 Bundle ID 核对后台注册和签名，确认 `getV2.name` 为 `Tricko`，并核对正式月年商品与后台订单映射。
+- API 为 `https://lvtppgv.tricko.website`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。Bundle ID 为 `com.trickostudio.videodesk`，由 `Config/Tricko.xcconfig` 定义，并派生游客登录 `source` 和业务 `packageName`。
+- AdMob App ID 为 `ca-app-pub-4423220037289714~3524842188`。开屏和激励广告位由 `getV2.adList` 下发，分别对应 Google 的 `adType=1` 和 `adType=5`。公开入口采用 [官网](https://www.tricko.website)、[用户协议](https://www.tricko.website/terms.html) 和 [隐私政策](https://www.tricko.website/privacy.html)。
+- Plus 月付和年付暂用测试商品 `coins_1.99` 和 `conis_4.99`。正式商品 ID 分别为 `com.trickostudio.videodesk.plus.monthly` 和 `com.trickostudio.videodesk.plus.yearly`。会员页展示 StoreKit 返回的本地化价格和账期。
+- 播放联调使用当前 API 环境可用的链接或短码，在首页手动输入。接口与广告合同见工具包的 [Clipo 基线](/Users/chengdupengyuyan/.codex/skills/toolkit/references/clipo-baseline.md)。
+- 核对后台发布记录时使用 `getV2.name=Tricko` 与工程的 Bundle ID。待确认订单保留原订单的主机和账号归属。
 
 ## 本项目的原创界面
 
@@ -24,4 +24,4 @@
 ## 交付时的验证状态
 
 - 已静态核对本地视频入口、三个 Tab、账号入口、练习场景和课程返回路径。
-- 待运行验证的事项包括编译、模拟器和真机显示、Duo 布局、测试后台返回、短码播放、广告以及 Apple Sandbox 购买与恢复。按用户约定，默认只做静态核对，编译和测试在用户明确要求时执行。
+- 待运行验证的事项包括编译、模拟器和真机显示、Duo 布局、正式后台返回、短码播放、广告以及 Apple Sandbox 购买与恢复。按用户约定，默认只做静态核对，编译和测试在用户明确要求时执行。

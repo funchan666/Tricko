@@ -59,9 +59,16 @@ struct AccountDecisionDialog: View {
     let confirmTitle: String
     var showsPolicies = false
     var destructive = false
+    var dismissOnOutsideTap = false
     var cancel: (() -> Void)? = nil
     let confirm: () -> Void
     @AccessibilityFocusState private var titleFocused: Bool
+    @State private var panelBounds: CGRect?
+
+    private enum DialogSpace: Hashable {
+        case viewport
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -84,13 +91,28 @@ struct AccountDecisionDialog: View {
                     }
                 }.padding(20).frame(maxWidth: 360)
                     .background { StageSurface(tone: .velvet) }
+                    .onGeometryChange(for: CGRect.self) { proxy in
+                        proxy.frame(in: .named(DialogSpace.viewport))
+                    } action: { bounds in
+                        if dismissOnOutsideTap { panelBounds = bounds }
+                    }
                     .padding(24).frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
-        }.background(Color.black.opacity(0.68).ignoresSafeArea())
-            .trickoImmersiveChrome()
-            .accessibilityAddTraits(.isModal)
-            .interactiveDismissDisabled()
-            .onAppear { titleFocused = true }
+        }
+        .background(Color.black.opacity(0.68).ignoresSafeArea())
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            SpatialTapGesture(coordinateSpace: .named(DialogSpace.viewport)).onEnded { tap in
+                guard let panelBounds, !panelBounds.isEmpty, !panelBounds.contains(tap.location) else { return }
+                cancel?()
+            },
+            including: dismissOnOutsideTap ? .all : .subviews
+        )
+        .coordinateSpace(name: DialogSpace.viewport)
+        .trickoImmersiveChrome()
+        .accessibilityAddTraits(.isModal)
+        .interactiveDismissDisabled()
+        .onAppear { titleFocused = true }
     }
 }
 

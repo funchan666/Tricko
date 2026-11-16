@@ -717,6 +717,9 @@
 "Review video" = "영상 돌아보기";
 "Continue review" = "이어서 검토하기";
 "Video review" = "영상 검토";
+"Start over" = "처음부터";
+"Start over?" = "처음부터 다시 보시겠어요?";
+"The video goes back to the beginning and both lists return to the top. Your markers and review status are kept." = "영상은 처음으로, 두 목록은 맨 위로 돌아갑니다. 표시와 검토 상태는 그대로 유지됩니다.";
 "Mark this moment" = "이 순간 표시";
 "This video is unavailable for review." = "이 영상은 검토할 수 없습니다.";
 "Review markers" = "검토 표시";
@@ -735,6 +738,9 @@
 "Practice resources" = "연습 메뉴";
 "%@ pending review" = "검토 대기 %@개";
 "Pending review" = "검토 대기";
+"Pending review overview" = "검토 대기 목록";
+"No pending reviews" = "검토할 표시가 없습니다";
+"Add a marker while reviewing a video to see it here." = "영상을 검토하면서 표시를 추가하면 여기에 나타납니다.";
 "All markers reviewed." = "모든 표시를 검토했습니다.";
 "Previous marker" = "이전 표시";
 "Next marker" = "다음 표시";

@@ -717,6 +717,9 @@
 "Review video" = "Tinjau video";
 "Continue review" = "Lanjutkan tinjauan";
 "Video review" = "Tinjauan video";
+"Start over" = "Mulai dari awal";
+"Start over?" = "Mulai dari awal?";
+"The video goes back to the beginning and both lists return to the top. Your markers and review status are kept." = "Video akan kembali ke awal dan kedua daftar akan kembali ke bagian atas. Penanda dan status tinjauan tetap tersimpan.";
 "Mark this moment" = "Tandai momen ini";
 "This video is unavailable for review." = "Video ini tidak tersedia untuk ditinjau.";
 "Review markers" = "Penanda tinjauan";
@@ -735,6 +738,9 @@
 "Practice resources" = "Materi latihan";
 "%@ pending review" = "%@ menunggu tinjauan";
 "Pending review" = "Menunggu tinjauan";
+"Pending review overview" = "Daftar tinjauan tertunda";
+"No pending reviews" = "Tidak ada penanda yang menunggu tinjauan";
+"Add a marker while reviewing a video to see it here." = "Tambahkan penanda saat meninjau video agar muncul di sini.";
 "All markers reviewed." = "Semua penanda sudah ditinjau.";
 "Previous marker" = "Penanda sebelumnya";
 "Next marker" = "Penanda berikutnya";

@@ -717,6 +717,9 @@
 "Review video" = "Revisar vídeo";
 "Continue review" = "Continuar la revisión";
 "Video review" = "Revisión de vídeo";
+"Start over" = "Desde el inicio";
+"Start over?" = "¿Volver al inicio?";
+"The video goes back to the beginning and both lists return to the top. Your markers and review status are kept." = "El vídeo volverá al inicio y ambas listas se desplazarán hasta arriba. Se conservarán tus marcadores y su estado de revisión.";
 "Mark this moment" = "Marcar este momento";
 "This video is unavailable for review." = "Este vídeo no está disponible para su revisión.";
 "Review markers" = "Marcadores de revisión";
@@ -735,6 +738,9 @@
 "Practice resources" = "Recursos de práctica";
 "%@ pending review" = "%@ por revisar";
 "Pending review" = "Por revisar";
+"Pending review overview" = "Revisiones pendientes";
+"No pending reviews" = "No hay marcadores por revisar";
+"Add a marker while reviewing a video to see it here." = "Añade un marcador al revisar un vídeo para verlo aquí.";
 "All markers reviewed." = "Todos los marcadores están revisados.";
 "Previous marker" = "Marcador anterior";
 "Next marker" = "Marcador siguiente";
