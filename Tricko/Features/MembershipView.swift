@@ -53,7 +53,7 @@ struct PlusEntryButton: View {
     private var copy: some View {
         VStack(alignment: .leading, spacing: 3) {
             LocalizedText(title).font(.stage(.title3, weight: .bold, display: true))
-            LocalizedText(active ? "Plus active" : "Unlimited views, downloads and media exports.")
+            LocalizedText(active ? "Plus active" : "Video exports, editing presets and no opening ads.")
                 .font(.stage(.caption)).foregroundStyle(TrickoStyle.paperSecondary)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -71,6 +71,7 @@ struct PlusEntryButton: View {
 struct MembershipView: View {
     var rewardKind: AllowanceKind? = nil
     var exportRequired = false
+    var reviewPresetsRequired = false
     @Environment(\.locale) private var locale
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
@@ -103,9 +104,14 @@ struct MembershipView: View {
     }
     private var purchasing: Bool { commerce.preparingPurchase || commerce.busy || purchaseTask != nil }
     private var interactionLocked: Bool { purchasing || commerce.loadingPlans || ads.busy || ads.isPresenting }
+    private var entryMessage: String? {
+        if reviewPresetsRequired { return "Review presets are included with Plus." }
+        if exportRequired { return "Export is included with Plus." }
+        return nil
+    }
 
     var body: some View {
-        StagePage(asset: "PlusBackdrop", minHeight: 240, maxHeight: 282) { _ in
+        StagePage(asset: "PlusBackdrop", minHeight: 136, maxHeight: 164, photoOpacity: 0.24) { _ in
             membershipIntro
         } content: {
             subscriptionOptions
@@ -139,8 +145,8 @@ struct MembershipView: View {
 
     private var subscriptionOptions: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if exportRequired {
-                LocalizedText("Export is included with Plus.")
+            if let entryMessage, !commerce.premium {
+                LocalizedText(entryMessage)
                     .font(.stage(.subheadline, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -151,8 +157,8 @@ struct MembershipView: View {
                 if !plans.isEmpty { planPicker }
                 if let error = commerce.plansError {
                     ErrorNote(message: error)
-                    Button("Retry") { Task { await commerce.loadPlans() } }
-                        .buttonStyle(CompactActionStyle()).disabled(interactionLocked)
+                    Button { Task { await commerce.loadPlans() } } label: { LocalizedText("Retry loading plans") }
+                        .buttonStyle(EmptyStateActionStyle(primary: false)).disabled(interactionLocked)
                 }
             }
             renewalDisclosure
@@ -165,7 +171,9 @@ struct MembershipView: View {
                 }
             }
             PolicyLinks(compact: true)
-            if !exportRequired, !commerce.premium, api.session != nil { rewardOption }
+            if rewardKind == nil { plusBenefits }
+            if entryMessage == nil, !commerce.premium, api.session != nil { rewardOption }
+            if rewardKind != nil { plusBenefits }
         }
     }
 
@@ -191,6 +199,7 @@ struct MembershipView: View {
         if commerce.loadingProducts || commerce.loadingPlans { return "Checking with Apple…" }
         if commerce.preparingPurchase { return "Preparing your subscription…" }
         if commerce.busy { return "Confirming your purchase…" }
+        if selectedPlan == nil { return "Subscription unavailable" }
         return "Subscribe"
     }
 
@@ -200,12 +209,39 @@ struct MembershipView: View {
                 .font(.stage(.largeTitle, weight: .heavy))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            LocalizedText("Unlimited views, downloads and media exports.")
+            LocalizedText("Video exports, editing presets and no opening ads.")
                 .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.88))
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.top, 52)
+        .padding(.top, 44)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var plusBenefits: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            LocalizedText("Included with Plus").font(.stage(.title3, weight: .bold))
+                .accessibilityAddTraits(.isHeader)
+            benefit(.edit, "Video and audio exports", "Share edited videos as MP4 or save the audio as M4A.")
+            benefit(.settings, "Review presets", "Apply slow-motion presets or reuse your saved settings in the video editor.")
+            benefit(.exit, "Skip opening ads", "Open Tricko or return to it without an app-open ad.")
+            benefit(.play, "Unlimited lesson views", "Watch lessons without using a daily view allowance.")
+            benefit(.download, "Unlimited offline downloads", "Download supported lessons for offline viewing without a daily limit.")
+        }
+        .padding(.top, 10)
+    }
+
+    private func benefit(_ symbol: TrickoGlyph, _ title: String, _ description: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Glyph(symbol: symbol, size: 19, tint: TrickoStyle.accent)
+                .frame(width: 30, height: 28)
+            VStack(alignment: .leading, spacing: 4) {
+                LocalizedText(title).font(.stage(.subheadline, weight: .semibold))
+                LocalizedText(description).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private var activeMembership: some View {
@@ -213,7 +249,7 @@ struct MembershipView: View {
             LocalizedText("Your membership is active")
                 .font(.stage(.headline, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
             if let expiration = commerce.expiration {
-                LocalizedText("Access through \(expiration.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(locale))).")
+                LocalizedText("Access through %@.", expiration.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(locale)))
                     .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
             }
         }.fixedSize(horizontal: false, vertical: true)
@@ -265,8 +301,10 @@ struct MembershipView: View {
         VStack(alignment: alignment, spacing: 3) {
             Text(verbatim: price).environment(\.layoutDirection, .leftToRight)
                 .font(.stage(.title3, weight: .bold)).monospacedDigit()
-            LocalizedText("Billed every %@", period).font(.stage(.caption))
-                .foregroundStyle(TrickoStyle.secondary)
+            if !period.isEmpty {
+                LocalizedText("Billed every %@", period).font(.stage(.caption))
+                    .foregroundStyle(TrickoStyle.secondary)
+            }
         }.fixedSize(horizontal: intrinsicWidth, vertical: true)
     }
 
@@ -305,8 +343,7 @@ struct MembershipView: View {
             ForEach(rewardKind.map { [$0] } ?? AllowanceKind.allCases) { kind in
                 if quota.canRequestReward(for: kind, premium: commerce.premium) {
                     LocalizedText(quota.rewardSummary(for: kind)).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
-                    if quota.completedAds(kind) >= 3 { AllowanceResetText() }
-                    ActionButton(title: kind == .watch ? "Get more views" : "Get more downloads",
+                    ActionButton(title: kind == .watch ? "Watch an ad for views" : "Watch an ad for downloads",
                                  primary: false, busy: ads.busy || ads.isPresenting) {
                         requestedReward = true
                         rewardTask = Task { await ads.watch(commerce: commerce, quota: quota, kind: kind) }
@@ -367,6 +404,7 @@ struct MembershipView: View {
 
 struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
@@ -433,10 +471,11 @@ struct AccountView: View {
                 LocalizedText("Today").font(.stage(.headline))
                 Spacer()
                 if !commerce.premium {
-                    Button("Get more") { paywall = true }
+                    Button { paywall = true } label: { LocalizedText("View options") }
                         .font(.stage(.footnote, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
                         .frame(minHeight: 44).buttonStyle(PressStyle()).disabled(unavailable)
-                        .accessibilityLabel("Get more daily views and downloads")
+                        .accessibilityLabel(Text(verbatim: L10n.text("View options for more views and downloads",
+                                                                     language: AppLanguage.from(locale))))
                 }
             }
             HStack(alignment: .top, spacing: 20) {

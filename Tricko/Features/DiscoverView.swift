@@ -18,6 +18,7 @@ struct BrowserLessonSearch: Identifiable, Equatable {
 final class FeedStore: ObservableObject {
     @Published private(set) var entries: [PlaybackQueueEntry]
     @Published private(set) var loading = false
+    @Published private(set) var hasLoaded = false
     @Published private(set) var hasMore = true
     @Published var error: String?
     @Published private(set) var emptySearch: BrowserLessonSearch?
@@ -55,7 +56,12 @@ final class FeedStore: ObservableObject {
         let current = generation
         loading = true
         error = nil
-        defer { if generation == current { loading = false } }
+        defer {
+            if generation == current {
+                if !Task.isCancelled { hasLoaded = true }
+                loading = false
+            }
+        }
         do {
             // Skip a few duplicate/invalid pages, but never spin on an empty service.
             for _ in 0..<3 {
@@ -97,9 +103,8 @@ final class FeedStore: ObservableObject {
 }
 struct DiscoverView: View {
     @EnvironmentObject private var library: LibraryStore
-    private let onExit: (() -> Void)?
+    private let onExit: () -> Void
     private let onSearchResult: ((String, LessonClip) -> Void)?
-    private var isFullScreen: Bool { onExit != nil }
     @EnvironmentObject private var offline: OfflineStore
     private var displayEntries: [PlaybackQueueEntry] {
         feed.entries.map { PlaybackQueueEntry(id: $0.id, clip: offline.playable($0.clip)) }
@@ -115,7 +120,8 @@ struct DiscoverView: View {
     @State private var recordedQuery: String?
     @State private var openedBrowserSearchID: UUID?
     @State private var browserSearch: PolicyDocument?
-    init(initialSearch: String = "", onExit: (() -> Void)? = nil,
+    @State private var retry = 0
+    init(initialSearch: String, onExit: @escaping () -> Void,
          onSearchResult: ((String, LessonClip) -> Void)? = nil) {
         self.onExit = onExit
         self.onSearchResult = onSearchResult
@@ -124,25 +130,16 @@ struct DiscoverView: View {
     var body: some View {
         ZStack(alignment: .top) {
             if api.session == nil || feed.clips.isEmpty {
-                if isFullScreen {
-                    VStack(spacing: 0) {
-                        feedHeader
-                        ScrollView { feedStatus.trickoPage() }
-                    }
-                } else {
-                    StagePage(asset: "DiscoverBackdrop", minHeight: 256, topAligned: true) { _ in
-                        LocalizedText("Discover").font(.stage(.largeTitle, weight: .bold))
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityAddTraits(.isHeader)
-                    } content: {
-                        feedStatus
+                VStack(spacing: 0) {
+                    feedHeader
+                    ScrollView {
+                        feedStatus.trickoPage()
                     }
                 }
+                .trickoScreenBackground()
             } else {
                 GeometryReader { container in
-                    // The tab already lays out the feed inside its safe area.
-                    let controlInsets = isFullScreen ? container.safeAreaInsets : EdgeInsets()
+                    let controlInsets = container.safeAreaInsets
                     GeometryReader { geometry in
                         ScrollView(.vertical) {
                             LazyVStack(spacing: 0) {
@@ -172,19 +169,19 @@ struct DiscoverView: View {
                             .onChange(of: activeID) { _, id in
                                 players.update(entries: displayEntries, selectedID: id)
                             }
-                    }.ignoresSafeArea(.container, edges: isFullScreen ? .all : [])
+                    }.ignoresSafeArea(.container, edges: .all)
                 }
                 feedHeader
             }
-        }.trickoScreenBackground(isFullScreen ? .black : TrickoStyle.background)
+        }.trickoScreenBackground(feed.clips.isEmpty ? TrickoStyle.background : .black)
             .modifier(PlayerPagingAccess(entries: displayEntries, selectedID: $activeID, tailID: morePageID, players: players))
-            .overlay(alignment: .top) { DownloadCompletionNotice().padding(.top, isFullScreen ? 56 : 8) }
+            .overlay(alignment: .top) { DownloadCompletionNotice().padding(.top, 56) }
             .onChange(of: library.downloadsRequest) { _, request in
                 if request != nil { players.releaseAll() }
             }
             .onAppear { visible = true; players.update(entries: displayEntries, selectedID: activeID) }
-            .task(id: api.session?.userId.value) {
-                guard api.session != nil else { return }
+            .task(id: FeedRequest(ownerID: api.session?.userId.value, retry: retry)) {
+                guard api.session != nil, !Task.isCancelled else { return }
                 await feed.load(api: api, search: search)
                 guard !Task.isCancelled else { return }
                 activeID = feed.entries.first?.id
@@ -217,44 +214,36 @@ struct DiscoverView: View {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in players.trimMemory() }
     }
     private var feedStatus: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             if api.session == nil {
-                LocalizedText("Connecting your lesson feed…")
-                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
                 ConnectionPanel()
+            } else if feed.loading || !feed.hasLoaded {
+                AccountLoadingIndicator(title: "Finding your next lesson…")
+                    .frame(maxWidth: .infinity)
+            } else if let error = feed.error {
+                EmptyStateCopy(title: "Couldn’t load lessons", message: error)
+                retryButton
+            } else if let request = feed.emptySearch {
+                EmptyStateCopy(title: "No matching lessons", message: "Search the web with your original input.")
+                Button { openBrowserSearch(request) } label: { LocalizedText("Search in browser") }
+                    .buttonStyle(EmptyStateActionStyle(symbol: .search))
             } else {
-                feedStatusCopy
-                if !feed.loading {
-                    ActionButton(title: feed.emptySearch == nil ? "Try again" : "Search in browser",
-                                 primary: feed.emptySearch != nil) {
-                        if let request = feed.emptySearch { openBrowserSearch(request) }
-                        else { Task { await feed.load(api: api, search: search) } }
-                    }
-                }
+                EmptyStateCopy(title: "No lessons yet",
+                               message: "Open a lesson link or short code from Home.")
+                retryButton
             }
         }
+        .frame(maxWidth: 460, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var feedStatusCopy: some View {
-        let title =
-            if feed.loading { "Finding your next lesson…" }
-            else if feed.error != nil { "Couldn’t load lessons" }
-            else if feed.emptySearch != nil { "No matching lessons" }
-            else { "No lessons yet" }
-        let detail = feed.error ?? (feed.emptySearch == nil
-                                   ? "Open a lesson link or short code from Home."
-                                   : "Search the web with your original input.")
-        return VStack(alignment: .leading, spacing: 6) {
-            LocalizedText(title)
-                .font(.stage(.title2, weight: .semibold))
-                .accessibilityAddTraits(.isHeader)
-            if !feed.loading {
-                LocalizedText(detail)
-                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-            }
-        }
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
+    private var retryButton: some View {
+        Button(action: retryLessons) { LocalizedText("Try again") }
+            .buttonStyle(EmptyStateActionStyle(primary: false))
+    }
+
+    private func retryLessons() {
+        retry += 1
     }
 
     private func openPendingBrowserSearch() {
@@ -268,21 +257,23 @@ struct DiscoverView: View {
         players.suspend()
         browserSearch = PolicyDocument(title: "Web search", url: url)
     }
-    @ViewBuilder private var feedHeader: some View {
-        if isFullScreen {
-            HStack {
-                Spacer(minLength: 0)
-                PlayerExitButton(action: exitPlayer)
-            }.environment(\.layoutDirection, .leftToRight)
-                .padding(.horizontal, 12).padding(.top, 8)
-        }
+    private var feedHeader: some View {
+        HStack {
+            Spacer(minLength: 0)
+            PlayerExitButton(action: exitPlayer)
+        }.environment(\.layoutDirection, .leftToRight)
+            .padding(.horizontal, 12).padding(.top, 8)
     }
     private func exitPlayer() {
-        guard let onExit else { return }
         players.releaseAll()
         onExit()
     }
 
+}
+
+private struct FeedRequest: Equatable {
+    let ownerID: String?
+    let retry: Int
 }
 
 struct PlayerScreen: View {
@@ -616,8 +607,10 @@ struct ClipPage: View {
             if active, visible, !pagingGate, !gate, !options, !editor, !downloadPanel, !downloadReward {
                 if accessChecked, !allowed {
                     VStack(spacing: 16) {
-                        LocalizedText("Keep watching").font(.stage(.title3, weight: .semibold))
-                        ActionButton(title: "Get more views") { gate = true }
+                        LocalizedText(quota.canRequestReward(for: .watch, premium: commerce.premium)
+                                      ? "Out of views" : "Playback unavailable")
+                            .font(.stage(.title3, weight: .semibold))
+                        ActionButton(title: "View options") { gate = true }
                     }.padding(20).frame(maxWidth: 320)
                         .background { StageSurface(tone: .velvet) }.padding(24)
                 } else if let error = playback.error {
@@ -882,6 +875,7 @@ private struct PlayerCacheButton: View {
     let clip: LessonClip
     let action: () -> Void
     @EnvironmentObject private var offline: OfflineStore
+    @Environment(\.locale) private var locale
     private var cached: Bool { offline.cached(clip.id) != nil || clip.playbackURL.isFileURL }
     var body: some View {
         Button(action: action) {
@@ -892,12 +886,13 @@ private struct PlayerCacheButton: View {
                 else { LocalizedText("Download") }
             }
         }.buttonStyle(PressStyle())
-            .accessibilityLabel(LocalizedStringKey(cached ? "Available offline" : "Download for offline"))
+            .accessibilityLabel(Text(verbatim: L10n.text(cached ? "Available offline" : "Download for offline",
+                                                         language: AppLanguage.from(locale))))
             .accessibilityIdentifier("player.cacheVideo")
     }
 }
 
-private struct PlayerProgressControl: View {
+struct PlayerProgressControl: View {
     @ObservedObject var playback: PlaybackController
     @ObservedObject var timeline: PlaybackTimeline
     let enabled: Bool
@@ -1068,13 +1063,14 @@ private struct PlayerRailButton: View {
     let accessibilityTitle: String
     var selected = false
     let action: () -> Void
+    @Environment(\.locale) private var locale
     var body: some View {
         Button(action: action) {
             PlayerRailLabel(artwork: artwork, selected: selected) {
                 LocalizedText(title)
             }
         }.buttonStyle(PressStyle())
-            .accessibilityLabel(LocalizedStringKey(accessibilityTitle))
+            .accessibilityLabel(Text(verbatim: L10n.text(accessibilityTitle, language: AppLanguage.from(locale))))
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

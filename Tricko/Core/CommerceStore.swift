@@ -55,9 +55,10 @@ final class CommerceStore: NSObject, ObservableObject {
     private var rightsRefreshTask: Task<Void, Never>?
     private var refreshingOwner: String?
     var premium: Bool { expiration.map { $0 > Date() } ?? false }
-    var canExportMedia: Bool {
+    var hasVerifiedPlus: Bool {
         rightsVerified && premium && ownerID != nil && ownerID == api.session?.userId.value
     }
+    var canExportMedia: Bool { hasVerifiedPlus }
     func requireMediaExport() throws {
         guard rightsVerified, ownerID != nil, ownerID == api.session?.userId.value else {
             throw TrickoError.service("Connect to verify your Plus membership before exporting.")
@@ -399,7 +400,7 @@ final class CommerceStore: NSObject, ObservableObject {
                 let rights = try await api.rights()
                 if api.session?.userId.value == record.owner.userId.value { expiration = rights.expiration }
             }
-            message = "Purchase confirmed. Membership has been refreshed."
+            message = "Purchase confirmed."
         } catch { self.error = "Purchase is pending confirmation. \(error.localizedDescription)" }
     }
     private func refreshReceipt() async throws {

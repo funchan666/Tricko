@@ -207,11 +207,12 @@ final class OfflineStore: NSObject, ObservableObject {
             progress = 0
             if forExport, isHLS {
                 let destination = root.appendingPathComponent(transfer.id.uuidString).appendingPathExtension("mp4")
+                let reportProgress: @Sendable (Double) async -> Void = { [weak self] value in
+                    await self?.updateProgress(id: transfer.id, value: value)
+                }
                 let task = Task { @MainActor in
                     do {
-                        try await LessonStreamExport.Job().convert(source, destination: destination) { [weak self] value in
-                            await self?.updateProgress(id: transfer.id, value: value)
-                        }
+                        try await LessonStreamExport.Job().convert(source, destination: destination, progress: reportProgress)
                         try Task.checkCancellation()
                         guard self.index.transfer?.id == transfer.id else {
                             try? FileManager.default.removeItem(at: destination); return

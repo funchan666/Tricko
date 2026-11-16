@@ -7,7 +7,8 @@ struct LibraryView: View {
     @EnvironmentObject private var commerce: CommerceStore
     @State private var showingMembership = false
     @State private var showingExportMembership = false
-    var edit: (PracticeRecording) -> Void
+    let edit: (PracticeRecording) -> Void
+    let watchLessons: () -> Void
     @Binding var filter: String
     @State private var player: PlayerRoute?
     @State private var sharing: SharedFile?
@@ -15,17 +16,18 @@ struct LibraryView: View {
     @State private var removingDownload: OfflineVideo?
     @State private var sharingMovieID: UUID?
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
 
-    private var category: Category { Category(rawValue: filter) ?? .saved }
+    private var category: Category { Category(rawValue: filter) ?? .imports }
     private var localMovies: [PracticeRecording] {
         library.movies.filter { $0.isExport == (category == .exports) }
     }
 
     private enum Category: String, CaseIterable, Identifiable {
-        case saved = "Saved"
-        case offline = "Downloads"
         case imports = "Imports"
         case exports = "Exports"
+        case saved = "Saved"
+        case offline = "Downloads"
 
         var id: String { rawValue }
         var title: String {
@@ -43,17 +45,38 @@ struct LibraryView: View {
             case .exports: .edit
             }
         }
+
+        var emptyTitle: String {
+            switch self {
+            case .saved: "No favorites yet"
+            case .offline: "No offline videos yet"
+            case .imports: "No imported videos yet"
+            case .exports: "No exports yet"
+            }
+        }
+
+        var emptyMessage: String {
+            switch self {
+            case .saved: "Tap Favorite while watching a lesson to save it here."
+            case .offline: "Download a lesson from its playback options to watch without a connection."
+            case .imports: "Choose a video from Photos or Files to start editing."
+            case .exports: "Export a video or audio track from the editor to find it here."
+            }
+        }
     }
 
     var body: some View {
-        StagePage(asset: "LibraryBackdrop", minHeight: 254, topAligned: true) { _ in
-            libraryHeader
-        } content: {
-            VStack(alignment: .leading, spacing: 18) {
-                folioIndex
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
+                    .accessibilityIdentifier("library.membership")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                categoryIndex
+                if category == .imports { LocalVideoImportButtons(onImport: edit) }
                 librarySection
-            }
+            }.trickoPage()
         }
+            .trickoScreenBackground()
             .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
             .sheet(isPresented: $showingMembership) { MembershipView() }
             .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
@@ -85,96 +108,81 @@ struct LibraryView: View {
             }
     }
 
-    private var libraryHeader: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 8) {
-                libraryTitle.fixedSize(horizontal: true, vertical: false)
-                Spacer(minLength: 4)
-                libraryMembership(inline: true)
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                libraryTitle
-                libraryMembership(inline: false).frame(maxWidth: .infinity, alignment: .trailing)
-            }
-        }
-    }
-
-    private var libraryTitle: some View {
-        LocalizedText("Magic library").font(.stage(.largeTitle, weight: .bold))
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private func libraryMembership(inline: Bool) -> some View {
-        PlusEntryButton(active: commerce.premium, compact: true, inline: inline) { showingMembership = true }
-            .accessibilityIdentifier("library.membership")
-    }
-
-    private var folioIndex: some View {
-        VStack(spacing: 4) {
+    private var categoryIndex: some View {
+        let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 8),
+                            count: typeSize.isAccessibilitySize ? 1 : 2)
+        return LazyVGrid(columns: columns, spacing: 8) {
             ForEach(Category.allCases) { entry in
                 let selected = category == entry
                 Button { filter = entry.rawValue } label: {
-                    HStack(alignment: .center, spacing: 12) {
-                        Glyph(symbol: entry.glyph, size: 18, tint: selected ? TrickoStyle.accent : TrickoStyle.secondary)
-                            .frame(width: 28, height: 28)
-                        LocalizedText(entry.title).font(.stage(.subheadline, weight: selected ? .semibold : .medium))
+                    HStack(spacing: 7) {
+                        Glyph(symbol: entry.glyph, size: 16, tint: selected ? TrickoStyle.accent : TrickoStyle.secondary)
+                        LocalizedText(entry.title).font(.stage(.subheadline, weight: .semibold))
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(count(in: entry), format: .number.locale(locale)).font(.stage(.subheadline, weight: .semibold))
-                            .monospacedDigit()
+                        Text(count(in: entry), format: .number.locale(locale))
+                            .font(.stage(.footnote, weight: .medium).monospacedDigit())
                             .foregroundStyle(selected ? TrickoStyle.accent : TrickoStyle.secondary)
-                    }.padding(.horizontal, 8).padding(.vertical, 8)
-                        .frame(minHeight: 44)
-                        .foregroundStyle(TrickoStyle.paper)
-                        .background {
-                            if selected { StageSurface(tone: .velvet, radius: 10, border: TrickoStyle.accent.opacity(0.32)) }
-                        }
-                        .contentShape(Rectangle())
-                }.buttonStyle(PressStyle()).accessibilityAddTraits(selected ? .isSelected : [])
-                    .accessibilityLabel(LocalizedStringKey(entry.title))
-                    .accessibilityValue(Text(count(in: entry), format: .number.locale(locale)))
+                    }
+                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .frame(minHeight: 44)
+                    .background { StageSurface(tone: selected ? .velvet : .smoke, radius: 12,
+                                               border: selected ? TrickoStyle.accent.opacity(0.32) : nil) }
+                    .contentShape(.rect(cornerRadius: 12))
+                }
+                .buttonStyle(PressStyle())
+                .accessibilityLabel(Text(verbatim: L10n.text(entry.title, language: AppLanguage.from(locale))))
+                .accessibilityValue(Text(count(in: entry), format: .number.locale(locale)))
+                .accessibilityAddTraits(selected ? .isSelected : [])
             }
-        }.padding(6)
-            .background { StageSurface(tone: .smoke, radius: 16) }
+        }
     }
 
     private var librarySection: some View {
         let total = count(in: category)
         return VStack(alignment: .leading, spacing: 16) {
-            SectionLabel(title: category.title, detail: "\(total) \(total == 1 ? "item" : "items") · On this device")
-                .accessibilityAddTraits(.isHeader)
-            if category == .offline { DownloadAllowanceSummary() }
-            downloadStatus
-            switch category {
-            case .saved:
-                if library.favorites.isEmpty {
-                    LibraryEmptyState(title: "Build your lesson collection.", message: "Save lessons as you watch. Come back to the moves you want to practise.")
-                } else {
+            if total == 0 {
+                if category == .offline, offline.isRestoring {
+                    AccountLoadingIndicator(title: "Loading downloads…").frame(maxWidth: .infinity)
+                } else if category != .offline || offline.downloadingID == nil {
+                    emptyCategory
+                }
+                if category == .offline {
+                    downloadStatus
+                    DownloadAllowanceSummary()
+                }
+            } else {
+                switch category {
+                case .saved:
                     LazyVStack(spacing: 4) {
                         ForEach(library.favorites) { clip in favoriteRow(clip) }
                     }
-                }
-            case .offline:
-                if offline.videos.isEmpty {
-                    LibraryEmptyState(title: "Available offline",
-                                      message: "Download a lesson from its playback options to watch without a connection.")
-                } else {
+                case .offline:
+                    DownloadAllowanceSummary()
+                    downloadStatus
                     LazyVStack(spacing: 4) {
                         ForEach(offline.videos) { video in downloadRow(video) }
                     }
-                }
-            case .imports, .exports:
-                if localMovies.isEmpty {
-                    LibraryEmptyState(title: category == .exports ? "Ready for your next session." : "Your practice, in focus.",
-                                      message: category == .exports ? "Finish a video or extract its audio in Tools. Your exports will be collected here." : "Choose your practice footage in Tools to keep a local working copy.")
-                } else {
+                case .imports, .exports:
                     LazyVStack(spacing: 4) {
                         ForEach(localMovies) { movie in movieRow(movie) }
                     }
                 }
             }
         }
+    }
+
+    private var emptyCategory: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            EmptyStateCopy(title: category.emptyTitle, message: category.emptyMessage)
+            if category == .exports {
+                LocalVideoImportButtons(onImport: edit)
+            } else if category != .imports {
+                Button(action: watchLessons) { LocalizedText("Watch lessons") }
+                    .buttonStyle(EmptyStateActionStyle(symbol: .play))
+            }
+        }
+        .padding(.top, 6).padding(.bottom, 10)
     }
 
     private func count(in entry: Category) -> Int {
@@ -265,30 +273,54 @@ struct LibraryView: View {
     }
 
     private func movieRow(_ movie: PracticeRecording) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let isAudio = movie.filename.hasSuffix(".m4a")
+        return VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .center, spacing: 12) {
-                itemGlyph(movie.filename.hasSuffix("m4a") ? .sound : movie.isExport ? .download : .feed)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(verbatim: movie.title).font(.stage(.title3, display: true)).lineLimit(2)
-                    LocalizedDateText(date: movie.date).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                }.frame(maxWidth: .infinity, alignment: .leading)
+                if isAudio {
+                    movieLabel(movie, isAudio: true)
+                } else {
+                    Button { edit(movie) } label: { movieLabel(movie, isAudio: false) }
+                        .buttonStyle(PressStyle())
+                        .accessibilityHint(LocalizedStringKey("Full editor"))
+                }
                 removeButton(.close, title: "Delete local file") { removing = movie }
             }
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { movieActions(movie) }
-                VStack(alignment: .leading, spacing: 6) { movieActions(movie) }
-            }
+            Button(LocalizedStringKey(sharingMovieID == movie.id ? "Preparing export…" : "Share")) {
+                shareMovie(movie)
+            }.buttonStyle(LibraryActionStyle()).disabled(sharingMovieID != nil)
         }
         .modifier(LibraryRowSurface())
     }
 
-    @ViewBuilder private func movieActions(_ movie: PracticeRecording) -> some View {
-        if movie.filename.hasSuffix("m4a") == false {
-            Button("Edit") { edit(movie) }.buttonStyle(LibraryActionStyle())
+    private func movieLabel(_ movie: PracticeRecording, isAudio: Bool) -> some View {
+        HStack(spacing: 12) {
+            if isAudio {
+                itemGlyph(.sound)
+            } else {
+                LocalVideoCover(url: library.url(for: movie)).frame(width: 84, height: 52)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) {
+                        LocalizedDateText(date: movie.date).fixedSize()
+                        fileFormat(movie)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        LocalizedDateText(date: movie.date)
+                        fileFormat(movie)
+                    }
+                }.font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            if !isAudio {
+                Glyph(symbol: .back, size: 12, tint: TrickoStyle.secondary).rotationEffect(.degrees(180))
+            }
         }
-        Button(LocalizedStringKey(sharingMovieID == movie.id ? "Preparing export…" : "Export")) {
-            shareMovie(movie)
-        }.buttonStyle(LibraryActionStyle()).disabled(sharingMovieID != nil)
+        .contentShape(Rectangle())
+    }
+
+    private func fileFormat(_ movie: PracticeRecording) -> some View {
+        Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
     }
 
     private func itemGlyph(_ symbol: TrickoGlyph) -> some View {
@@ -304,7 +336,8 @@ struct LibraryView: View {
                 .frame(width: 36, height: 36)
                 .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 6))
                 .frame(width: 44, height: 44).contentShape(Rectangle())
-        }.buttonStyle(PressStyle()).accessibilityLabel(LocalizedStringKey(title))
+        }.buttonStyle(PressStyle())
+            .accessibilityLabel(Text(verbatim: L10n.text(title, language: AppLanguage.from(locale))))
     }
 
     private func playDownload(_ video: OfflineVideo) {
@@ -370,8 +403,7 @@ struct OfflineDownloadButton: View {
                 LocalizedText("Available offline").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.accent)
                 DownloadCompletionNotice()
             } else if starting || offline.preparingID == clip.id {
-                ActionButton(title: "Preparing download…", primary: false, busy: true) { }
-                LocalizedText("Preparing download…").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                LocalizedText("Preparing download…").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
             } else if offline.downloadingID == clip.id {
                 LocalizedText("Downloading · \(Int(offline.progress * 100))%").font(.stage(.caption))
                 ActionButton(title: "Cancel download", primary: false) { Task { await offline.cancel() } }
@@ -655,11 +687,11 @@ struct DownloadAllowanceSummary: View {
             LocalizedText("Downloads left").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
             LocalizedText(api.session == nil ? "Connect to refresh your allowance." :
                             commerce.premium || quota.downloadsUnlimited ? "Unlimited" :
-                            quota.usage == nil ? "Loading…" : "\(quota.downloadsLeft) downloads left today")
+                            quota.usage == nil ? "Checking your limits…" : "\(quota.downloadsLeft) downloads left today")
                 .font(.stage(.subheadline, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
             if quota.usage != nil, !commerce.premium { AllowanceResetText() }
             if quota.canRequestReward(for: .download, premium: commerce.premium) {
-                ActionButton(title: "Get more downloads", primary: false) { showingReward = true }
+                ActionButton(title: "Download options", primary: false) { showingReward = true }
             }
         }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
             .background { StageSurface(tone: .velvet) }
@@ -667,18 +699,5 @@ struct DownloadAllowanceSummary: View {
             .onAppear { quota.resetIfNeeded() }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in quota.resetIfNeeded() }
             .sheet(isPresented: $showingReward) { MembershipView(rewardKind: .download) }
-    }
-}
-
-private struct LibraryEmptyState: View {
-    let title: String
-    let message: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            LocalizedText(title).font(.stage(.headline))
-            LocalizedText(message).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
-            .background { StageSurface(tone: .smoke, radius: 16) }
     }
 }

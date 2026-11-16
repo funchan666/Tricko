@@ -1,13 +1,13 @@
 import AVFoundation
 import SwiftUI
 
-enum ExportQuality: String, CaseIterable, Identifiable {
+enum ExportQuality: String, CaseIterable, Identifiable, Codable {
     case full = "1080p", compact = "720p", small = "480p"
     var id: String { rawValue }
     var edge: CGFloat { self == .full ? 1920 : self == .compact ? 1280 : 854 }
     var shortEdge: CGFloat { self == .full ? 1080 : self == .compact ? 720 : 480 }
 }
-enum VideoFrame: String, CaseIterable, Identifiable {
+enum VideoFrame: String, CaseIterable, Identifiable, Codable {
     case original = "Original", portrait = "9:16", square = "1:1", landscape = "16:9"
     var id: String { rawValue }
     var ratio: CGFloat? { self == .original ? nil : self == .portrait ? 9 / 16 : self == .square ? 1 : 16 / 9 }
@@ -23,10 +23,39 @@ struct EditRecipe: Equatable {
     var quality: ExportQuality = .full
 }
 
+struct ReviewPreset: Codable {
+    private let speed: Double
+    private let quarterTurns: Int
+    private let mirrored: Bool
+    private let muted: Bool
+    private let frame: VideoFrame
+    private let quality: ExportQuality
+
+    init(_ recipe: EditRecipe) {
+        speed = recipe.speed
+        quarterTurns = recipe.quarterTurns
+        mirrored = recipe.mirrored
+        muted = recipe.muted
+        frame = recipe.frame
+        quality = recipe.quality
+    }
+
+    var isValid: Bool {
+        speed.isFinite && (0.25...4).contains(speed) && (0...3).contains(quarterTurns)
+    }
+
+    func applied(to recipe: EditRecipe) -> EditRecipe {
+        // Trim points belong to the current clip.
+        EditRecipe(start: recipe.start, end: recipe.end, speed: speed, quarterTurns: quarterTurns,
+                   mirrored: mirrored, muted: muted, frame: frame, quality: quality)
+    }
+}
+
 @MainActor
 final class VideoEditor: ObservableObject {
     @Published var recipe = EditRecipe()
     @Published private(set) var duration: Double = 0
+    @Published private(set) var previewAspectRatio: CGFloat = 16.0 / 9.0
     @Published private(set) var thumbnails: [UIImage] = []
     @Published private(set) var isLoading = false
     @Published private(set) var isExporting = false
@@ -60,7 +89,12 @@ final class VideoEditor: ObservableObject {
             let duration = try await asset.load(.duration).seconds
             let playable = try await asset.load(.isPlayable)
             let tracks = try await asset.loadTracks(withMediaType: .video)
-            guard playable, duration.isFinite, duration > 0.1, !tracks.isEmpty else { throw TrickoError.unsupportedMedia }
+            guard playable, duration.isFinite, duration > 0.1, let track = tracks.first else { throw TrickoError.unsupportedMedia }
+            if let size = try? await track.load(.naturalSize),
+               let transform = try? await track.load(.preferredTransform), revision == requestID {
+                updatePreviewAspectRatio(CGRect(origin: .zero, size: size).applying(transform).standardized.size)
+            }
+            try Task.checkCancellation()
             guard revision == requestID else { return }
             self.duration = duration
             recipe = EditRecipe(start: 0, end: duration)
@@ -70,7 +104,7 @@ final class VideoEditor: ObservableObject {
             generator.appliesPreferredTrackTransform = true
             generator.maximumSize = CGSize(width: 180, height: 180)
             for step in 0..<7 {
-                try Task.checkCancellation()
+                guard revision == requestID, !Task.isCancelled else { return }
                 let time = CMTime(seconds: duration * Double(step) / 7, preferredTimescale: 600)
                 if let result = try? await generator.image(at: time) {
                     guard revision == requestID else { return }
@@ -79,13 +113,13 @@ final class VideoEditor: ObservableObject {
             }
         } catch {
             guard revision == requestID else { return }
-            self.error = error.localizedDescription
+            if !(error is CancellationError) { self.error = error.localizedDescription }
             sourceURL = nil
             isLoading = false
         }
     }
 
-    func applyPreview() async {
+    func applyPreview(autoplay: Bool = true) async {
         guard let sourceURL, !isExporting, !isPreparingPreview else { return }
         let requestedRecipe = recipe
         let requestID = revision
@@ -124,10 +158,11 @@ final class VideoEditor: ObservableObject {
             guard session.status == .completed else {
                 throw session.error ?? TrickoError.service("Preview could not be prepared. Please try again.")
             }
+            updatePreviewAspectRatio(video.renderSize)
             let previousURL = previewURL
             preview.setMuted(false)
             preview.setSpeed(1)
-            preview.load(output, autoplay: true)
+            preview.load(output, autoplay: autoplay)
             previewURL = output
             retained = true
             if let previousURL { try? FileManager.default.removeItem(at: previousURL) }
@@ -190,7 +225,15 @@ final class VideoEditor: ObservableObject {
         }
     }
     func cancelExport() { cancelRequested = true; exporter?.cancelExport() }
-    func close() { revision = UUID(); clearRenderedPreview(); preview.release(); cancelExport() }
+    func close() {
+        revision = UUID()
+        sourceURL = nil
+        duration = 0
+        isLoading = false
+        previewAspectRatio = 16.0 / 9.0
+        clearRenderedPreview()
+        cancelExport()
+    }
 
     private func clearRenderedPreview() {
         previewRevision = UUID()
@@ -200,6 +243,11 @@ final class VideoEditor: ObservableObject {
         preview.release()
         if let previewURL { try? FileManager.default.removeItem(at: previewURL) }
         previewURL = nil
+    }
+
+    private func updatePreviewAspectRatio(_ size: CGSize) {
+        let ratio = size.height > 0 ? size.width / size.height : 0
+        previewAspectRatio = ratio.isFinite && ratio > 0 ? min(3, max(0.56, ratio)) : 16.0 / 9.0
     }
 
     private func compose(url: URL, recipe: EditRecipe) async throws -> (AVMutableComposition, AVMutableVideoComposition) {

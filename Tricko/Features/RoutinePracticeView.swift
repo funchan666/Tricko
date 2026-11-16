@@ -1,30 +1,5 @@
 import SwiftUI
 
-struct RoutinePracticeEntry: View {
-    let openJournal: () -> Void
-    var body: some View {
-        Button(action: openJournal) {
-            HStack(spacing: 12) {
-                Glyph(symbol: .edit, size: 22, tint: TrickoStyle.ink)
-                    .frame(width: 42, height: 42)
-                    .background(TrickoStyle.ink.opacity(0.09), in: Circle())
-                VStack(alignment: .leading, spacing: 4) {
-                    LocalizedText("Practice log").font(.stage(.title3, display: true))
-                    LocalizedText("Run a routine. Record every run. Review your notes.")
-                        .font(.stage(.caption)).foregroundStyle(TrickoStyle.paperSecondary)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 12, tint: TrickoStyle.ink).rotationEffect(.degrees(180))
-            }
-            .foregroundStyle(TrickoStyle.ink)
-            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-            .background { StageSurface(tone: .ivory, radius: 16) }
-            .contentShape(Rectangle())
-        }.buttonStyle(PressStyle()).accessibilityIdentifier("practice.openJournal")
-    }
-}
-
 struct RoutinePracticeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
@@ -42,7 +17,7 @@ struct RoutinePracticeView: View {
     }
 
     var body: some View {
-        StagePage(asset: "RoutinePracticeHero", minHeight: 220, maxHeight: 276, topAligned: true) { _ in
+        StagePage(asset: "RoutinePracticeHero", minHeight: 132, maxHeight: 164, topAligned: true, photoOpacity: 0.34) { _ in
             StageSheetHeader(title: "Practice log") { saveNotes(); dismiss() }
         } content: {
             VStack(alignment: .leading, spacing: 20) {
@@ -132,9 +107,16 @@ struct RoutinePracticeView: View {
 
     @ViewBuilder private var history: some View {
         if journal.completedSessions.isEmpty {
-            LocalizedText("Your first session starts here.").font(.stage(.title3, display: true))
-            LocalizedText("Finished sessions appear here with their results and notes.")
-                .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+            VStack(alignment: .leading, spacing: 16) {
+                EmptyStateCopy(title: "No finished sessions yet",
+                               message: "Finished sessions appear here with their results and notes.")
+                Button { showingHistory = false } label: {
+                    LocalizedText(journal.activeSession == nil ? "Go to practice" : "Continue practice")
+                }
+                .buttonStyle(EmptyStateActionStyle())
+                .disabled(!journal.available)
+            }
+            .padding(.vertical, 8)
         } else {
             ForEach(journal.completedSessions) { session in
                 Button { selectedSession = session } label: {
@@ -201,15 +183,19 @@ private struct RoutineSessionDetail: View {
     @FocusState private var editingNotes: Bool
     var body: some View {
         VStack(spacing: 0) {
-            SheetHeading(title: "Session results") { journal.updateNotes(notes, for: session.id); close() }
+            SheetHeading(title: nil) { journal.updateNotes(notes, for: session.id); close() }
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 6) {
-                        if let name = session.routineName.nilIfBlank {
-                            Text(verbatim: name).font(.stage(.title2, display: true))
-                        } else {
-                            LocalizedText("Untitled routine").font(.stage(.title2, display: true))
+                        Group {
+                            if let name = session.routineName.nilIfBlank {
+                                Text(verbatim: name)
+                            } else {
+                                LocalizedText("Untitled routine")
+                            }
                         }
+                        .font(.stage(.title2, display: true))
+                        .accessibilityAddTraits(.isHeader)
                         Text(session.startedAt, format: .dateTime.year().month().day().hour().minute().locale(locale))
                             .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
                     }

@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import CoreTransferable
 import UniformTypeIdentifiers
+import AVFoundation
 
 @MainActor
 final class LibraryStore: ObservableObject {
@@ -110,15 +111,31 @@ final class LibraryStore: ObservableObject {
                               title: title ?? source.deletingPathExtension().lastPathComponent,
                               date: Date(), isExport: exported)
         let destination = url(for: item)
-        try await Task.detached(priority: .userInitiated) {
-            let access = source.startAccessingSecurityScopedResource()
-            defer { if access { source.stopAccessingSecurityScopedResource() } }
-            try FileManager.default.copyItem(at: source, to: destination)
-        }.value
-        var next = snapshot
-        next.movies.insert(item, at: 0)
-        do { try persist(next) }
-        catch { try? FileManager.default.removeItem(at: destination); throw error }
+        do {
+            try Task.checkCancellation()
+            try await Task.detached(priority: .userInitiated) {
+                let access = source.startAccessingSecurityScopedResource()
+                defer { if access { source.stopAccessingSecurityScopedResource() } }
+                try FileManager.default.copyItem(at: source, to: destination)
+            }.value
+            try Task.checkCancellation()
+            if !exported {
+                let asset = AVURLAsset(url: destination)
+                let duration = try await asset.load(.duration).seconds
+                let playable = try await asset.load(.isPlayable)
+                let tracks = try await asset.loadTracks(withMediaType: .video)
+                guard playable, duration.isFinite, duration > 0.1, !tracks.isEmpty else {
+                    throw TrickoError.unsupportedMedia
+                }
+            }
+            try Task.checkCancellation()
+            var next = snapshot
+            next.movies.insert(item, at: 0)
+            try persist(next)
+        } catch {
+            try? FileManager.default.removeItem(at: destination)
+            throw error
+        }
         return item
     }
     func delete(_ movie: PracticeRecording) {

@@ -87,8 +87,8 @@ enum L10n {
         return (key, expression)
     }
 
+    // English also uses the table because keys are independent of displayed copy.
     static func display(_ value: String, language: AppLanguage = .current, depth: Int = 0) -> String {
-        guard language != .en else { return value }
         let exact = text(value, language: language)
         guard exact == value, depth < 3 else { return exact }
         let source = value as NSString
@@ -142,45 +142,42 @@ struct LanguagePicker: View {
         VStack(spacing: 0) {
             SheetHeading(title: "App language") { dismiss() }
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    LocalizedText("Choose your language").font(.stage(.title2, weight: .semibold))
-                        .fixedSize(horizontal: false, vertical: true)
-                    VStack(spacing: 0) {
-                        Button { languageCode = AppLanguage.systemSelection } label: {
+                VStack(spacing: 0) {
+                    Button { languageCode = AppLanguage.systemSelection } label: {
+                        HStack(spacing: 16) {
+                            LocalizedText("Follow system").font(.stage(.body, weight: .medium))
+                            Spacer(minLength: 8)
+                            if languageCode == AppLanguage.systemSelection {
+                                LocalizedText("Selected").font(.stage(.caption, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
+                            }
+                        }.padding(20).frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                            .background { StageSurface(tone: languageCode == AppLanguage.systemSelection ? .velvet : .smoke) }
+                            .contentShape(Rectangle())
+                    }.buttonStyle(PressStyle())
+                        .accessibilityAddTraits(languageCode == AppLanguage.systemSelection ? .isSelected : [])
+                        .accessibilityIdentifier("language.system")
+                    ForEach(AppLanguage.allCases) { language in
+                        Button {
+                            languageCode = language.rawValue
+                        } label: {
                             HStack(spacing: 16) {
-                                LocalizedText("Follow system").font(.stage(.body, weight: .medium))
+                                Text(verbatim: language.nativeName).font(.stage(.body, weight: .medium))
+                                    .environment(\.layoutDirection, language.direction)
                                 Spacer(minLength: 8)
-                                if languageCode == AppLanguage.systemSelection {
-                                    LocalizedText("Selected").font(.stage(.caption, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
+                                if languageCode == language.rawValue {
+                                    LocalizedText("Selected").font(.stage(.caption, weight: .semibold))
+                                        .foregroundStyle(TrickoStyle.accent)
                                 }
                             }.padding(20).frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-                                .background { StageSurface(tone: languageCode == AppLanguage.systemSelection ? .velvet : .smoke) }
+                                .background(languageCode == language.rawValue ? TrickoStyle.raised : Color.clear)
                                 .contentShape(Rectangle())
                         }.buttonStyle(PressStyle())
-                            .accessibilityAddTraits(languageCode == AppLanguage.systemSelection ? .isSelected : [])
-                            .accessibilityIdentifier("language.system")
-                        ForEach(AppLanguage.allCases) { language in
-                            Button {
-                                languageCode = language.rawValue
-                            } label: {
-                                HStack(spacing: 16) {
-                                    Text(verbatim: language.nativeName).font(.stage(.body, weight: .medium))
-                                        .environment(\.layoutDirection, language.direction)
-                                    Spacer(minLength: 8)
-                                    if languageCode == language.rawValue {
-                                        LocalizedText("Selected").font(.stage(.caption, weight: .semibold))
-                                            .foregroundStyle(TrickoStyle.accent)
-                                    }
-                                }.padding(20).frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-                                    .background(languageCode == language.rawValue ? TrickoStyle.raised : Color.clear)
-                                    .contentShape(Rectangle())
-                            }.buttonStyle(PressStyle())
-                                .accessibilityAddTraits(languageCode == language.rawValue ? .isSelected : [])
-                                .accessibilityIdentifier("language.\(language.rawValue)")
-                            if language != AppLanguage.allCases.last { Divider().overlay(TrickoStyle.line) }
-                        }
-                    }.background(TrickoStyle.surface).clipShape(RoundedRectangle(cornerRadius: 22))
-                }.trickoPage()
+                            .accessibilityAddTraits(languageCode == language.rawValue ? .isSelected : [])
+                            .accessibilityIdentifier("language.\(language.rawValue)")
+                        if language != AppLanguage.allCases.last { Divider().overlay(TrickoStyle.line) }
+                    }
+                }.background(TrickoStyle.surface).clipShape(RoundedRectangle(cornerRadius: 22))
+                    .trickoPage()
             }
         }.foregroundStyle(TrickoStyle.paper).trickoScreenBackground()
     }

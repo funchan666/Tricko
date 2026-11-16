@@ -91,31 +91,6 @@ private struct MagicNote: Identifiable {
     ]
 }
 
-// Shared entry point for Home and the practice tab.
-struct MagicGuideEntry: View {
-    let open: () -> Void
-    var body: some View {
-        Button(action: open) {
-            HStack(spacing: 14) {
-                Glyph(symbol: .library, size: 20, tint: TrickoStyle.accent)
-                    .frame(width: 40, height: 40)
-                    .background(TrickoStyle.accent.opacity(0.12), in: Circle())
-                VStack(alignment: .leading, spacing: 4) {
-                    LocalizedText("Magic field notes").font(.stage(.headline))
-                        .foregroundStyle(TrickoStyle.paper)
-                    LocalizedText("\(MagicNote.all.count) short reads · Available offline")
-                        .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                }.fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 14, tint: TrickoStyle.accent)
-                    .rotationEffect(.degrees(180)).frame(width: 20)
-            }.padding(.vertical, 12).frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(alignment: .top) { Divider().overlay(TrickoStyle.line).allowsHitTesting(false) }
-                .contentShape(Rectangle())
-        }.buttonStyle(PressStyle()).accessibilityIdentifier("magicGuide.open")
-    }
-}
-
 struct MagicGuideView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -126,7 +101,7 @@ struct MagicGuideView: View {
     }
     var body: some View {
         NavigationStack {
-            StagePage(asset: ScenePlate.Subject.handling.asset, minHeight: 228, maxHeight: 296, topAligned: true) { _ in
+            StagePage(asset: ScenePlate.Subject.handling.asset, minHeight: 156, maxHeight: 204, topAligned: true, photoOpacity: 0.56) { _ in
                 StageSheetHeader(title: "Magic field notes") { dismiss() }
             } content: {
                 VStack(alignment: .leading, spacing: 20) {
@@ -163,16 +138,18 @@ struct MagicGuideView: View {
 private struct MagicNoteReader: View {
     let note: MagicNote
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
     @State private var source: PolicyDocument?
     var body: some View {
-        StagePage(asset: note.cover.asset, minHeight: 256, topAligned: true) { height in
+        StagePage(asset: note.cover.asset, minHeight: 196, maxHeight: 252, topAligned: true, photoOpacity: 0.68) { height in
             VStack(alignment: .leading, spacing: 12) {
                 Button { dismiss() } label: {
                     Glyph(symbol: .back, size: 17, tint: TrickoStyle.paper)
                         .frame(width: 44, height: 44)
                         .trickoGlass(in: Circle())
                         .contentShape(Circle())
-                }.buttonStyle(PressStyle()).accessibilityLabel(LocalizedStringKey("Back to field notes"))
+                }.buttonStyle(PressStyle())
+                    .accessibilityLabel(Text(verbatim: L10n.text("Back to field notes", language: AppLanguage.from(locale))))
                 Spacer(minLength: 40)
                 VStack(alignment: .leading, spacing: 6) {
                     LocalizedText(note.category).font(.stage(.subheadline, weight: .semibold))

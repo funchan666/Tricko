@@ -40,7 +40,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Save the magic practice video you choose to export to your photo library.</string>
+	<string>Save an exported video to Photos when you choose Save Video.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

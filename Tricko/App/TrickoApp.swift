@@ -61,7 +61,7 @@ struct TrickoStartupHost: View {
         ZStack {
             // Mount once so local content and authentication prepare while the
             // bounded app-open opportunity runs, without rebuilding navigation.
-            TrickoRootView(startupFinished: finished)
+            TrickoRootView()
                 .allowsHitTesting(finished)
                 .accessibilityHidden(!finished)
             if !finished {
@@ -114,14 +114,28 @@ struct TrickoStartupView: View {
 }
 
 private enum TrickoTab: Int, CaseIterable, Hashable {
-    case home, discover, practice, library
+    // Keep the stored IDs for surviving tabs. The former Discover tab falls back to Home.
+    case home = 0
+    case library = 3
+    case tools = 2
 
-    var title: String { ["Home", "Discover", "Practice", "Library"][rawValue] }
-    var artwork: String { ["TabHome", "TabDiscover", "TabPractice", "TabLibrary"][rawValue] }
+    var title: String {
+        switch self {
+        case .home: "Home"
+        case .library: "Library"
+        case .tools: "Tools"
+        }
+    }
+    var glyph: TrickoGlyph {
+        switch self {
+        case .home: .feed
+        case .library: .folder
+        case .tools: .settings
+        }
+    }
 }
 
 struct TrickoRootView: View {
-    let startupFinished: Bool
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var commerce: CommerceStore
@@ -132,15 +146,12 @@ struct TrickoRootView: View {
     @SceneStorage("root.tab") private var tabRaw = TrickoTab.home.rawValue
     @SceneStorage("home.linkDraft") private var linkDraft = ""
     @State private var showingAccount = false
-    @State private var editing: PracticeRecording?
-    @State private var libraryFilter = "Saved"
+    @State private var showingLessonLink = false
+    @State private var libraryEditor: PracticeRecording?
+    @State private var libraryFilter = "Imports"
     @State private var channel: ChannelRoute?
     @State private var searchRequest: LessonSearch?
     @State private var downloadsAfterLesson = false
-
-    init(startupFinished: Bool) {
-        self.startupFinished = startupFinished
-    }
 
     private var tab: Binding<TrickoTab> {
         Binding(get: { TrickoTab(rawValue: tabRaw) ?? .home }, set: { tabRaw = $0.rawValue })
@@ -155,7 +166,7 @@ struct TrickoRootView: View {
                         LocalizedText(message).font(.stage(.subheadline))
                         IconButton(symbol: .close, label: "Dismiss message") { library.error = nil }
                     }.padding(14).background { StageSurface(tone: .velvet) }.padding()
-                } else if tab.wrappedValue != .discover, offline.completedDownloadID != nil {
+                } else if offline.completedDownloadID != nil {
                     DownloadCompletionNotice().padding(.top, 8)
                 }
             }
@@ -164,11 +175,12 @@ struct TrickoRootView: View {
                     .modifier(AccountBusyModifier())
             }
             .sheet(item: $channel, onDismiss: finishLessonDismissal) { ChannelView(route: $0) }
+            .sheet(item: $libraryEditor) { EditorSheet(initialMovie: $0) }
             .fullScreenCover(item: $searchRequest, onDismiss: finishLessonDismissal) { request in
-                DiscoverView(initialSearch: request.query, onExit: { searchRequest = nil }) { query, clip in
+                DiscoverView(initialSearch: request.query, onExit: { searchRequest = nil }, onSearchResult: { query, clip in
                     guard query.nilIfBlank != nil else { return }
                     library.record(link: query, title: clip.title)
-                }
+                })
             }
             .onChange(of: library.downloadsRequest) { _, request in
                 guard request != nil else { return }
@@ -206,7 +218,7 @@ struct TrickoRootView: View {
                 Tab(value: item) {
                     tabPage(item)
                 } label: {
-                    Image(item.artwork).renderingMode(.template)
+                    Image(item.glyph.asset).renderingMode(.template)
                 }
                 .accessibilityLabel(tabTitle(item))
                 .accessibilityIdentifier("tab.\(item.title.lowercased())")
@@ -221,7 +233,7 @@ struct TrickoRootView: View {
                 ForEach(TrickoTab.allCases, id: \.self) { item in
                     tabPage(item).tabItem {
                         Label { tabTitle(item) } icon: {
-                            Image(item.artwork).renderingMode(.template)
+                            Image(item.glyph.asset).renderingMode(.template)
                         }.accessibilityIdentifier("tab.\(item.title.lowercased())")
                     }.tag(item)
                 }
@@ -236,24 +248,24 @@ struct TrickoRootView: View {
     @ViewBuilder private func tabPage(_ item: TrickoTab) -> some View {
         switch item {
         case .home:
-            HomeView(openPractice: { tab.wrappedValue = .practice }, openAccount: { showingAccount = true },
-                     link: $linkDraft, channel: $channel, searchRequest: $searchRequest)
-        case .discover:
-            ZStack {
-                // Playback and view counting belong to the visible feed.
-                if startupFinished, tab.wrappedValue == .discover { DiscoverView() }
-                else { TrickoStyle.background }
-            }
-        case .practice:
+            HomeView(openAccount: { showingAccount = true }, openVideo: openVideo,
+                     showImports: showImports, link: $linkDraft, channel: $channel, searchRequest: $searchRequest,
+                     showingLink: $showingLessonLink)
+        case .tools:
             ToolsView()
         case .library:
-            LibraryView(edit: { editing = $0 }, filter: $libraryFilter)
-                .sheet(item: $editing) { EditorSheet(initialMovie: $0) }
+            LibraryView(edit: openVideo,
+                        watchLessons: { searchRequest = LessonSearch(query: "") }, filter: $libraryFilter)
         }
     }
 
     private func tabTitle(_ item: TrickoTab) -> Text {
         Text(verbatim: L10n.text(item.title, language: AppLanguage.from(locale)))
+    }
+
+    private func openVideo(_ movie: PracticeRecording) {
+        guard libraryEditor == nil else { return }
+        libraryEditor = movie
     }
 
     private func finishLessonDismissal() {
@@ -264,6 +276,11 @@ struct TrickoRootView: View {
 
     private func showDownloads() {
         libraryFilter = "Downloads"
+        tab.wrappedValue = .library
+    }
+
+    private func showImports() {
+        libraryFilter = "Imports"
         tab.wrappedValue = .library
     }
 }
@@ -277,8 +294,6 @@ struct ConnectionPanel: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            StagePhoto(asset: "ArtTopHat").frame(width: 112, height: 80)
-                .clipShape(.rect(cornerRadius: 12))
             if let error {
                 MessagePanel(title: "Let’s reconnect.", message: error)
                 ActionButton(title: "Try again", busy: connecting) { attempt += 1 }

@@ -1,19 +1,16 @@
 import SwiftUI
 import UIKit
 
-// Tricko — "the close-up table". Velvet-dark stage, candle-gold accent, ivory card
-// surfaces. Native code supplies layout, text, fills and touch handling; every
-// pictorial mark (glyphs, illustrations and plates) is an original raster
-// asset in Assets.xcassets.
 enum TrickoStyle {
-    static let background = Color(red: 0.071, green: 0.059, blue: 0.110)    // #120F1C velvet black
-    static let surface = Color(red: 0.114, green: 0.094, blue: 0.188)       // #1D1830
-    static let raised = Color(red: 0.165, green: 0.137, blue: 0.259)        // #2A2342
-    static let accent = Color(red: 0.910, green: 0.765, blue: 0.455)        // #E8C374 candle gold
-    static let ink = Color(red: 0.102, green: 0.078, blue: 0.141)           // #1A1424 text on gold/ivory
-    static let secondary = Color(red: 0.655, green: 0.624, blue: 0.722)     // #A79FB8
-    static let paper = Color(red: 0.957, green: 0.929, blue: 0.878)         // #F4EDE0 card ivory
-    static let paperSecondary = Color(red: 0.357, green: 0.314, blue: 0.408) // #5B5068 on ivory
+    static let background = Color(red: 0.051, green: 0.081, blue: 0.091)
+    static let surface = Color(red: 0.086, green: 0.129, blue: 0.141)
+    static let raised = Color(red: 0.125, green: 0.194, blue: 0.204)
+    static let accent = Color(red: 0.969, green: 0.795, blue: 0.575)
+    static let coolAccent = Color(red: 0.620, green: 0.820, blue: 0.800)
+    static let ink = Color(red: 0.065, green: 0.105, blue: 0.106)
+    static let secondary = Color(red: 0.647, green: 0.724, blue: 0.728)
+    static let paper = Color(red: 0.975, green: 0.947, blue: 0.892)
+    static let paperSecondary = Color(red: 0.293, green: 0.348, blue: 0.348)
     static let cardRed = Color(red: 0.761, green: 0.255, blue: 0.294)       // #C2414B pips, emphasis
     static let line = Color.white.opacity(0.10)
     static let danger = Color(red: 1, green: 0.612, blue: 0.561)            // #FF9C8F
@@ -40,15 +37,17 @@ struct StagePage<Header: View, Content: View>: View {
     private let minHeight: CGFloat
     private let maxHeight: CGFloat
     private let topAligned: Bool
+    private let photoOpacity: Double
     private let header: (CGFloat) -> Header
     private let content: Content
 
-    init(asset: String, minHeight: CGFloat, maxHeight: CGFloat = 372, topAligned: Bool = false,
+    init(asset: String, minHeight: CGFloat, maxHeight: CGFloat, topAligned: Bool = false, photoOpacity: Double,
          @ViewBuilder header: @escaping (CGFloat) -> Header, @ViewBuilder content: () -> Content) {
         self.asset = asset
         self.minHeight = minHeight
         self.maxHeight = maxHeight
         self.topAligned = topAligned
+        self.photoOpacity = photoOpacity
         self.header = header
         self.content = content()
     }
@@ -80,6 +79,7 @@ struct StagePage<Header: View, Content: View>: View {
 
     private var backdrop: some View {
         StagePhoto(asset: asset)
+            .opacity(photoOpacity)
             .overlay {
                 LinearGradient(stops: [
                     .init(color: TrickoStyle.background.opacity(0.74), location: 0),
@@ -99,7 +99,7 @@ struct StageSheetHeader: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            LocalizedText(title).font(.stage(.largeTitle, weight: .bold))
+            LocalizedText(title).font(.stage(.title2, weight: .bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
@@ -158,6 +158,7 @@ struct Glyph: View {
 }
 
 struct IconButton: View {
+    @Environment(\.locale) private var locale
     let symbol: TrickoGlyph
     let label: String
     var selected = false
@@ -169,7 +170,8 @@ struct IconButton: View {
                     if selected { StageSurface(tone: .velvet) }
                 }
                 .contentShape(.interaction, Rectangle())
-        }.buttonStyle(PressStyle()).accessibilityLabel(LocalizedStringKey(label))
+        }.buttonStyle(PressStyle())
+            .accessibilityLabel(Text(verbatim: L10n.text(label, language: AppLanguage.from(locale))))
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
@@ -244,6 +246,51 @@ struct ActionButton: View {
         }.buttonStyle(PressStyle()).disabled(busy)
     }
 }
+
+struct EmptyStateCopy: View {
+    let title: String
+    let message: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            LocalizedText(title).font(.stage(.title2, weight: .bold))
+                .foregroundStyle(TrickoStyle.paper)
+                .accessibilityAddTraits(.isHeader)
+            LocalizedText(message).font(.stage(.subheadline))
+                .foregroundStyle(TrickoStyle.secondary).lineSpacing(3)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct EmptyStateActionStyle: ButtonStyle {
+    var primary = true
+    var symbol: TrickoGlyph? = nil
+    var minHeight: CGFloat = 48
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        let foreground = primary ? TrickoStyle.ink : TrickoStyle.paper
+        let label = HStack(spacing: 8) {
+            if let symbol { Glyph(symbol: symbol, size: 17, tint: foreground) }
+            configuration.label
+                .font(.stage(.subheadline, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .frame(minWidth: 44, minHeight: minHeight)
+        .foregroundStyle(foreground)
+
+        return Group {
+            if primary { label.background(TrickoStyle.paper, in: Capsule()) }
+            else { label.trickoGlass(in: Capsule()) }
+        }
+        .contentShape(Capsule())
+        .opacity(!isEnabled ? 0.55 : (configuration.isPressed ? 0.72 : 1))
+    }
+}
+
 struct MessagePanel: View {
     let title: String
     let message: String
@@ -382,12 +429,14 @@ struct MediaCover: View {
     }
 }
 struct SheetHeading: View {
-    let title: String
+    let title: String?
     var close: () -> Void
     var body: some View {
         HStack {
-            LocalizedText(title).font(.stage(.title3, display: true)).lineLimit(2)
-                .accessibilityAddTraits(.isHeader)
+            if let title {
+                LocalizedText(title).font(.stage(.title3, display: true)).lineLimit(2)
+                    .accessibilityAddTraits(.isHeader)
+            }
             Spacer()
             IconButton(symbol: .close, label: "Close", action: close)
         }.pageHorizontalMargins().padding(.top, 8)
