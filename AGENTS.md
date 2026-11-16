@@ -5,9 +5,9 @@
 ## 业务与服务配置
 
 - 业务沿用 Clipo。首页保留课程链接和短码输入，通过 `search-check` 进入可纵向切换的全屏播放器。游客登录、推荐、收藏、离线播放、编辑导出、额度、开屏与激励广告、订阅和恢复购买继续走原有路径。订阅与媒体导出保留服务端权益校验。
-- API 为 `https://lvtppgv.tricko.website`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。Bundle ID 在 `Config/Tricko.xcconfig` 中暂设为 `im.seex.lobo` 供内购测试，并派生游客登录 `source` 和业务 `packageName`。正式 Bundle ID 为 `com.trickostudio.videodesk`。
+- API 为 `https://lvtppgv.tricko.website`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。Bundle ID 为 `com.trickostudio.videodesk`，由 `Config/Tricko.xcconfig` 定义，并派生游客登录 `source` 和业务 `packageName`。
 - AdMob App ID 为 `ca-app-pub-4423220037289714~3524842188`。开屏和激励广告位由 `getV2.adList` 下发，分别对应 Google 的 `adType=1` 和 `adType=5`。公开入口采用 [官网](https://www.tricko.website)、[用户协议](https://www.tricko.website/terms.html) 和 [隐私政策](https://www.tricko.website/privacy.html)。
-- Plus 月付和年付暂用测试商品 `coins_1.99` 和 `conis_4.99`。正式商品 ID 分别为 `com.trickostudio.videodesk.plus.monthly` 和 `com.trickostudio.videodesk.plus.yearly`。会员页展示 StoreKit 返回的本地化价格和账期。
+- Plus 月付商品为 `com.trickostudio.videodesk.plus.monthly`，年付商品为 `com.trickostudio.videodesk.plus.yearly`。会员页展示 StoreKit 返回的本地化价格和账期。
 - 播放联调使用当前 API 环境可用的链接或短码，在首页手动输入。接口与广告合同见工具包的 [Clipo 基线](/Users/chengdupengyuyan/.codex/skills/toolkit/references/clipo-baseline.md)。
 - 核对后台发布记录时使用 `getV2.name=Tricko` 与工程的 Bundle ID。待确认订单保留原订单的主机和账号归属。
 

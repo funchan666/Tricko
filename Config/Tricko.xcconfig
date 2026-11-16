@@ -1,4 +1,4 @@
-PRODUCT_BUNDLE_IDENTIFIER = im.seex.lobo
+PRODUCT_BUNDLE_IDENTIFIER = com.trickostudio.videodesk
 TRICKO_API_HOST = lvtppgv.tricko.website
 TRICKO_RELEASE_NAME = Tricko
 TRICKO_WEBSITE_URL = https:/$()/www.tricko.website
