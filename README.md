@@ -9,7 +9,7 @@ Open `Tricko.xcodeproj` and select the shared `Tricko` scheme. The minimum deplo
 ## Service configuration
 
 - API host `lvtppgv.tricko.website` and `getV2.name` `Tricko`.
-- Bundle ID `com.trickostudio.videodesk` in `Config/Tricko.xcconfig`. The guest login `source` and business `packageName` derive from this setting.
+- Xcode's effective `PRODUCT_BUNDLE_IDENTIFIER` sets the packaged Bundle ID. The guest login `source` and business `packageName` use `com.trickostudio.videodesk` from `TrickoConfiguration.servicePackageName`.
 - AdMob App ID `ca-app-pub-4423220037289714~3524842188`. App-open and rewarded placements use the Google entries with `adType` 1 and 5 in `getV2.adList`.
 - Plus requests `com.trickostudio.videodesk.plus.monthly` and `com.trickostudio.videodesk.plus.yearly`. The app displays prices and billing periods from StoreKit.
 - [Official website](https://www.tricko.website), [Privacy Policy](https://www.tricko.website/privacy.html) and [Terms of Service](https://www.tricko.website/terms.html).

@@ -298,7 +298,7 @@ final class CommerceStore: NSObject, ObservableObject {
         message = nil
         do {
             let payload: [String: Any] = ["rightsName": product.productIdentifier, "price": product.price.stringValue,
-                "usdPrice": entry.usdPrice, "packageName": api.configuration.bundleID,
+                "usdPrice": entry.usdPrice, "packageName": TrickoConfiguration.servicePackageName,
                 "versionCode": api.configuration.version, "payType": "1", "source": "ios"]
             let data = try await api.paymentRequest(path: "/app-api/flow/rights-order/buy", body: payload, owner: owner)
             let response = try JSONDecoder().decode(APIEnvelope<ServiceID>.self, from: data)

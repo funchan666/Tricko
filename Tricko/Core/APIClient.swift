@@ -6,6 +6,7 @@ import OSLog
 
 struct TrickoConfiguration {
     static let logSubsystem = Bundle.main.bundleIdentifier ?? "Tricko"
+    static let servicePackageName = "com.trickostudio.videodesk"
     let apiBaseURL: URL?
     let bundleID: String
     let releaseName: String
@@ -141,7 +142,9 @@ final class APIClient: ObservableObject {
             }
             let publicIPv4 = try await loginPublicIPv4()
             try Task.checkCancellation()
-            let body = try JSONSerialization.data(withJSONObject: ["deviceCode": device, "source": configuration.bundleID, "uniqueId": publicIPv4])
+            let body = try JSONSerialization.data(withJSONObject: [
+                "deviceCode": device, "source": TrickoConfiguration.servicePackageName, "uniqueId": publicIPv4
+            ])
             diagnostics.debug("Guest login payload: uniqueId IPv4 present \(!publicIPv4.isEmpty)")
             let result: VisitorSession = try await perform("/app-api/member/auth/app_tourist_login", method: "POST", body: body, authenticated: false)
             guard !result.accessToken.isEmpty, !result.userId.value.isEmpty else { throw TrickoError.invalidResponse }
@@ -214,22 +217,23 @@ final class APIClient: ObservableObject {
         let codes = links.compactMap { WebAddress.landingCode($0) }
         guard !codes.isEmpty else { return [] }
         let body = try JSONSerialization.data(withJSONObject: codes.map {
-            ["externalLinks": $0, "packageName": configuration.bundleID]
+            ["externalLinks": $0, "packageName": TrickoConfiguration.servicePackageName]
         })
         return try await perform("/app-api/flow/land-page/info_by_links_list", method: "POST", body: body, authenticated: false)
     }
     func resolve(_ link: String, password: String) async throws -> LandingInfo {
         try await perform("/app-api/flow/land-page/info_by_links", query: [
-            "externalLinks": link, "password": password, "packageName": configuration.bundleID],
+            "externalLinks": link, "password": password, "packageName": TrickoConfiguration.servicePackageName],
             missingDataMessage: "No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later.")
     }
     func channelPage(link: String, page: Int) async throws -> ChannelPage {
         try await perform("/app-api/flow/land-page/list_by_links_page", query: [
-            "externalLinks": link, "pageNo": String(max(1, page)), "pageSize": "20", "packageName": configuration.bundleID])
+            "externalLinks": link, "pageNo": String(max(1, page)), "pageSize": "20",
+            "packageName": TrickoConfiguration.servicePackageName])
     }
     func feed(query: String, feedID: String?, cursor: String?) async throws -> LessonFeedPage {
         guard let session else { throw TrickoError.unauthorized }
-        var queryItems = ["userId": session.userId.value, "packageName": configuration.bundleID, "pageSize": "10"]
+        var queryItems = ["userId": session.userId.value, "packageName": TrickoConfiguration.servicePackageName, "pageSize": "10"]
         if let feedID = feedID?.nilIfBlank { queryItems["feedId"] = feedID }
         if let cursor = cursor?.nilIfBlank { queryItems["cursor"] = cursor }
         if let query = query.nilIfBlank { queryItems["query"] = query }
