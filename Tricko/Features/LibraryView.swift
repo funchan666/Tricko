@@ -11,6 +11,7 @@ struct LibraryView: View {
     let watchLessons: () -> Void
     @Binding var filter: String
     @State private var player: PlayerRoute?
+    @State private var reviewingVideo: PracticeRecording?
     @State private var sharing: SharedFile?
     @State private var removing: PracticeRecording?
     @State private var removingDownload: OfflineVideo?
@@ -79,6 +80,7 @@ struct LibraryView: View {
         }
             .trickoScreenBackground()
             .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
+            .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0) }
             .sheet(isPresented: $showingMembership) { MembershipView() }
             .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
@@ -336,6 +338,11 @@ struct LibraryView: View {
                 Button { edit(movie) } label: { movieLabel(movie, isAudio: false) }
                     .buttonStyle(PressStyle())
                     .accessibilityHint(LocalizedStringKey("Full editor"))
+                if !movie.isExport {
+                    VideoReviewButton(movie: movie) { reviewingVideo = movie }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 6)
+                }
             }
             HStack(spacing: 2) {
                 Button { shareMovie(movie) } label: {
@@ -460,7 +467,6 @@ private struct LibraryActionStyle: ButtonStyle {
     }
 }
 
-// Uses the existing original bitmap action surfaces; no new system artwork.
 struct OfflineDownloadButton: View {
     let clip: LessonClip
     var starting = false
@@ -503,7 +509,6 @@ struct OfflineDownloadButton: View {
     }
 }
 
-// A separate, always-visible workflow; users need not visit the cache panel.
 struct VideoExportEntry: View {
     let clip: LessonClip
     var compact = false
@@ -541,7 +546,6 @@ private struct OfflineExportSheet: View {
     }
 }
 
-// One owner for the close button, explicit cancel and interactive dismissal.
 @MainActor
 final class ExportDeparture: ObservableObject {
     @Published private(set) var running = false
@@ -619,8 +623,6 @@ struct DownloadCompletionNotice: View {
     }
 }
 
-// Uncached exports use the same download admission and completion journal.
-// Export is a Plus benefit; cached copies still pass the membership check.
 private struct OfflineExportButton: View {
     let clip: LessonClip
     @EnvironmentObject private var departure: ExportDeparture
@@ -680,9 +682,6 @@ private struct OfflineExportButton: View {
                 var source = clip.playbackURL
                 if !source.isFileURL || offline.cached(clip.id)?.isHLS == true {
                     preparingSource = true
-                    // A cache request may already be finishing for this clip.
-                    // Let it finish, then decide whether its result is a file
-                    // or whether the original-file download is still needed.
                     if offline.downloadingID == clip.id {
                         for await downloadID in offline.$downloadingID.values {
                             try Task.checkCancellation()
@@ -695,8 +694,6 @@ private struct OfflineExportButton: View {
                         ownsDownload = true
                         await offline.download(clip, forExport: true)
                     }
-                    // Subscribe to the shared download state, including its
-                    // current value, so a very fast completion is not missed.
                     for await downloadID in offline.$downloadingID.values {
                         try Task.checkCancellation()
                         if let cached = offline.cached(clip.id), !cached.isHLS { source = cached.url; break }
@@ -748,7 +745,6 @@ private struct OfflineExportButton: View {
     }
 }
 
-// Shared, live allowance display at the download decision and in the offline library.
 struct DownloadAllowanceSummary: View {
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var quota: QuotaStore

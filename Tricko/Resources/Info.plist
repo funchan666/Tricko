@@ -60,12 +60,6 @@
 	<string>$(TRICKO_TERMS_URL)</string>
 	<key>TrickoWebsiteURL</key>
 	<string>$(TRICKO_WEBSITE_URL)</string>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Fonts/CormorantGaramond-SemiBold.ttf</string>
-		<string>Fonts/CormorantGaramond-Bold.ttf</string>
-		<string>Fonts/CormorantGaramond-SemiBoldItalic.ttf</string>
-	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

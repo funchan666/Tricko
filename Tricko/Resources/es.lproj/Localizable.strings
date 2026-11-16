@@ -1,4 +1,3 @@
-// App-owned copy. Remote content and prices are not translated.
 "%@ item · On this device" = "%@ elemento · En este dispositivo";
 "%@ items · On this device" = "%@ elementos · En este dispositivo";
 "%@ more saves have been added. Your unlimited viewing stays active." = "Se añadieron %@ guardados. Tus visualizaciones ilimitadas siguen activas.";
@@ -311,7 +310,7 @@
 "Trim end" = "Fin del recorte";
 "Trim start" = "Inicio del recorte";
 "Trim the timing, crop the frame, change the pace." = "Recorta la duración y el encuadre, cambia la velocidad.";
-"Trim, rotate and combine your changes." = "Recorta, gira o ajusta la velocidad de un vídeo de práctica.";
+"Review moments, trim clips or adjust playback speed." = "Revisa momentos, recorta clips o ajusta la velocidad de reproducción.";
 "Try again" = "Reintentar";
 "Turn together" = "Gira en conjunto";
 "Two hard-court majors, one clay-court major and one grass-court major." = "Dos grandes en pista dura, uno en tierra batida y uno en hierba.";
@@ -498,7 +497,6 @@
 
 "Clear link" = "Borrar enlace";
 
-/* Playback and local library feedback */
 "Favorites" = "Favoritos";
 "Favorite" = "Favorito";
 "Favorited" = "Guardado";
@@ -521,7 +519,6 @@
 "Finish this ad for unlimited downloads today." = "Mira el anuncio completo para descargar sin límite hasta que se restablezca la cuota.";
 "Connect to refresh your allowance." = "Conéctate para ver cuántas descargas te quedan.";
 
-// Tricko lesson link entry.
 "Paste" = "Pegar";
 "Open lesson" = "Buscar vídeo";
 "Use the lesson link or code you received." = "Usa el enlace o el código del vídeo que recibiste.";
@@ -570,7 +567,6 @@
 "Open a lesson link or short code from Home." = "Pega el enlace del vídeo o escribe su código en Inicio.";
 "Search the web with your original input." = "Puedes buscar en internet lo que has escrito.";
 
-/* Empty states */
 "No favorites yet" = "Aún no hay favoritos";
 "No offline videos yet" = "Aún no hay descargas";
 "No imported videos yet" = "Aún no hay vídeos importados";
@@ -584,7 +580,6 @@
 "Continue practice" = "Continuar la práctica";
 "Go to practice" = "Ir a la práctica";
 
-/* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "No se pudieron cargar las colecciones";
 "Setting up your table…" = "Conectando…";
 "Slow down a move to check every frame." = "Ralentiza un movimiento para ver cómo queda.";
@@ -682,7 +677,6 @@
 "View options for more views and downloads" = "Ver opciones para más visualizaciones y descargas";
 "Retry loading plans" = "Volver a cargar los planes";
 
-/* Plus benefits and review presets */
 "Included with Plus" = "Incluido en Plus";
 "Unlimited lesson views" = "Visualización ilimitada";
 "Watch lessons without using a daily view allowance." = "Ve vídeos sin límite diario de visualizaciones.";
@@ -709,7 +703,6 @@
 "Couldn’t save the preset." = "No se pudo guardar el preajuste.";
 "Preset saved on this device." = "El preajuste se ha guardado en este dispositivo.";
 
-/* Local video workspace */
 "Files" = "Archivos";
 "Photos" = "Fotos";
 "Open a video" = "Abrir un vídeo";
@@ -720,3 +713,29 @@
 "Crop, rotate or flip a video." = "Recorta el encuadre, gira o voltea un vídeo.";
 "Video exports, editing presets and no opening ads." = "Exportación de vídeo, preajustes de edición y sin anuncios al abrir.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Aplica preajustes de cámara lenta o reutiliza tus ajustes guardados en el editor.";
+
+"Review video" = "Revisar vídeo";
+"Continue review" = "Continuar la revisión";
+"Video review" = "Revisión de vídeo";
+"Mark this moment" = "Marcar este momento";
+"This video is unavailable for review." = "Este vídeo no está disponible para su revisión.";
+"Review markers" = "Marcadores de revisión";
+"Mark a moment to revisit it later." = "Marca un momento para volver a verlo más tarde.";
+"Edit marker" = "Editar marcador";
+"General note" = "Nota general";
+"Add a note (optional)" = "Añade una nota (opcional)";
+"Remove marker" = "Eliminar marcador";
+"Mark as reviewed" = "Marcar como revisado";
+"Reopen marker" = "Volver a abrir el marcador";
+"Reviewed" = "Revisado";
+"Visuals" = "Imagen";
+"Pacing" = "Ritmo";
+"Edit point" = "Punto de edición";
+"Highlight" = "Momento destacado";
+"Practice resources" = "Recursos de práctica";
+"%@ pending review" = "%@ por revisar";
+"Pending review" = "Por revisar";
+"All markers reviewed." = "Todos los marcadores están revisados.";
+"Previous marker" = "Marcador anterior";
+"Next marker" = "Marcador siguiente";
+"Marker %@ of %@" = "Marcador %@ de %@";

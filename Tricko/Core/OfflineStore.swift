@@ -3,8 +3,6 @@ import AVFoundation
 import Combine
 import OSLog
 
-// Persist paths within the app relative to its container: iOS can relocate it
-// on an update. AVFoundation may prepend /.nofollow to its callback URL.
 enum OfflineAssetLocation {
     static func canonical(_ url: URL) -> URL {
         let path = url.path
@@ -20,8 +18,6 @@ enum OfflineAssetLocation {
     static func restoredHLSURL(_ stored: URL, home: URL = URL(fileURLWithPath: NSHomeDirectory())) -> URL {
         let original = canonical(stored)
         if FileManager.default.fileExists(atPath: original.path) { return original }
-        // Migrate the old absolute AVFoundation location only when the same
-        // system-managed package actually exists inside this app's new home.
         let parts = original.pathComponents
         guard original.pathExtension == "movpkg", let library = parts.lastIndex(of: "Library"),
               library >= 5, library + 2 == parts.count - 1,
@@ -38,8 +34,6 @@ struct OfflineVideo: Codable, Identifiable {
     let relativePath: String
     let isHLS: Bool
     let owner: String
-    // AVFoundation owns HLS storage. Its file URL need not be inside our home
-    // directory. Older indexes only contain relativePath and remain readable.
     var systemAssetURL: URL? = nil
     var id: String { clip.id }
     var url: URL {
@@ -68,8 +62,6 @@ private struct OfflineIndex: Codable {
     var transfer: OfflineTransfer?
 }
 
-// One admitted download at a time, independent of streaming/preloading and favorites.
-// The persisted transfer is a completion journal: file -> quota -> visible library.
 @MainActor
 final class OfflineStore: NSObject, ObservableObject {
     @Published private(set) var videos: [OfflineVideo] = []
@@ -114,7 +106,6 @@ final class OfflineStore: NSObject, ObservableObject {
         indexURL = root.appendingPathComponent("index.json")
         super.init()
         ownerObservation = api.$offlineOwnerID.removeDuplicates().sink { [weak self] owner in
-            // Use the emitted value: @Published delivers before its property changes.
             self?.videos = self?.index.videos.filter { $0.owner == owner } ?? []
         }
         do {
@@ -142,7 +133,7 @@ final class OfflineStore: NSObject, ObservableObject {
         restored = true
         restoring = true
         defer { restoring = false }
-        publish() // The index was initially read before guest authentication finished.
+        publish()
         let hlsTasks = await hlsSession.allTasks
         let fileTasks = await fileSession.allTasks
         let tasks = hlsTasks + fileTasks
@@ -180,7 +171,6 @@ final class OfflineStore: NSObject, ObservableObject {
         guard quota.mayDownload(clip.id, premium: commerce.premium) else {
             error = "Your download allowance is used up."; return
         }
-        // Expired/missing local files may be re-downloaded. QuotaStore remembers paid IDs.
         let isHLS: Bool
         let source: URL
         do {
@@ -196,8 +186,6 @@ final class OfflineStore: NSObject, ObservableObject {
             do { try commerce.requireMediaExport() }
             catch { self.error = error.localizedDescription; return }
         }
-        // A player may hand us its local playback copy. Keep the remote identity
-        // in the index so a removed cache can still be downloaded/exported again.
         let originalClip = clip.playbackURL.isFileURL ? (cached(clip.id)?.clip ?? clip) : clip
         let transfer = OfflineTransfer(id: UUID(), clip: originalClip, owner: owner, premium: commerce.premium,
                                        isHLS: isHLS && !forExport, forExport: forExport)
@@ -263,11 +251,7 @@ final class OfflineStore: NSObject, ObservableObject {
             return nil
         }
         if let url = try await selectFile(candidates) { return url }
-        // The backend may only supply HLS. Repackage the actual stream on the
-        // client rather than requiring an unavailable MP4 URL from the service.
         if let streamSource { return streamSource }
-        // Resolve only this video's short link. A folder or a different video
-        // must never be exported under the currently playing video's title.
         if let link = (clip.shortLink ?? original.shortLink).flatMap({ WebAddress.landingCode($0) }) {
             do {
                 let info = try await api.resolve(link, password: "")
@@ -292,8 +276,6 @@ final class OfflineStore: NSObject, ObservableObject {
         let extensionName = url.pathExtension.lowercased()
         if extensionName == "m3u8" { return true }
         if ["mp4", "mov", "m4v"].contains(extensionName) { return false }
-        // Signed/extensionless sources may reject HEAD. Probe only a small GET
-        // prefix, then cancel the session even when the server ignores Range.
         let session = URLSession(configuration: .ephemeral)
         defer { session.invalidateAndCancel() }
         var request = URLRequest(url: url, timeoutInterval: 15)
@@ -334,8 +316,6 @@ final class OfflineStore: NSObject, ObservableObject {
     }
     private func receiveLocation(id: UUID, url: URL, systemManaged: Bool = false) {
         guard var transfer = index.transfer, transfer.id == id else {
-            // A late HLS callback may arrive while AVFoundation is still writing.
-            // Never remove its package in a willDownloadTo callback.
             guard !systemManaged else { return }
             let resolved = url.resolvingSymlinksInPath()
             if !index.videos.contains(where: { $0.url.resolvingSymlinksInPath() == resolved }) {
@@ -346,9 +326,6 @@ final class OfflineStore: NSObject, ObservableObject {
         guard url.isFileURL, transfer.isHLS == systemManaged else {
             fail(id, message: "Download location is unavailable. Please try again."); return
         }
-        // Ordinary downloads belong to our container. HLS locations come only
-        // from AVAssetDownloadDelegate, and must be retained wherever the OS put
-        // them. Do not apply an application-container restriction to those URLs.
         let home = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
         if let relative = OfflineAssetLocation.relativePath(url, home: home) {
             transfer.relativePath = relative
@@ -366,8 +343,6 @@ final class OfflineStore: NSObject, ObservableObject {
             try persist(next)
             Task { await finishIfReady() }
         } catch {
-            // Keep the location in memory if disk space prevents journaling; Retry
-            // persists it before charging. A process loss may orphan a file, not a charge.
             index.transfer = transfer
             publish()
             self.error = "Download is waiting to be saved. Tap Retry."
@@ -420,8 +395,6 @@ final class OfflineStore: NSObject, ObservableObject {
             progress = 1
             if transfer.forExport != true { completedDownloadID = UUID() }
         } catch {
-            // Keep completed file + journal; retry can finish the quota/index commit
-            // idempotently without starting another transfer or charging twice.
             self.error = "Download is waiting to be saved. Tap Retry."
         }
     }
@@ -441,8 +414,6 @@ final class OfflineStore: NSObject, ObservableObject {
             if let url = transfer.savedURL {
                 try? FileManager.default.removeItem(at: url)
             } else if !transfer.isHLS {
-                // Also clean a converter output left by termination before its
-                // completion callback could journal the finished file location.
                 try? FileManager.default.removeItem(at: root.appendingPathComponent(transfer.id.uuidString).appendingPathExtension("mp4"))
             }
             error = message
@@ -485,10 +456,7 @@ extension OfflineStore: AVAssetDownloadDelegate, URLSessionDownloadDelegate {
         guard let response = downloadTask.response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
             Task { @MainActor in self.fail(id, message: "Download failed. No download allowance was used.") }; return
         }
-        // URLSession's temporary file must be moved before this delegate returns.
         do {
-            // Use the same directory as the durable journal. Recreate it if the
-            // system or a prior interrupted transfer removed the directory.
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             let ext = downloadTask.originalRequest?.url?.pathExtension.lowercased() ?? ""
             let destination = root.appendingPathComponent(id.uuidString).appendingPathExtension(["mp4", "mov", "m4v"].contains(ext) ? ext : "mp4")

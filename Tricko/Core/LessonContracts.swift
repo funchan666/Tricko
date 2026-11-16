@@ -6,7 +6,6 @@ struct APIEnvelope<Value: Decodable>: Decodable {
     let data: Value?
 }
 
-// The service returns some identifiers as either JSON numbers or strings.
 struct ServiceID: Codable, Hashable {
     let value: String
     init(_ value: String) { self.value = value }
@@ -80,7 +79,6 @@ struct RemoteLessonFile: Decodable, Identifiable {
         length = try values.decodeMediaNumber(forKey: .length)
         fileSize = try values.decodeMediaNumber(forKey: .fileSize)
         isFolder = try values.decodeIfPresent(Bool.self, forKey: .isFolder)
-        // The contract allows folder counts at either level. Prefer the direct value.
         struct ExtraInfo: Decodable { let childrenFileNum: Int? }
         childrenFileNum = try values.decodeIfPresent(Int.self, forKey: .childrenFileNum)
             ?? values.decodeIfPresent(ExtraInfo.self, forKey: .extraInfo)?.childrenFileNum
@@ -96,7 +94,6 @@ struct RemoteLessonFile: Decodable, Identifiable {
     }
 }
 private extension KeyedDecodingContainer {
-    // The live media API uses both JSON numbers and numeric strings (e.g. length: "50").
     func decodeMediaNumber(forKey key: Key) throws -> Double? {
         guard contains(key) else { return nil }
         if try decodeNil(forKey: key) { return nil }
@@ -122,7 +119,6 @@ struct RecommendedLesson: Decodable {
     let m3u8Url: String
     let videoName: String?
     let coverUrl: String?
-    // Optional original-file fields, when supplied. HLS remains the playback source.
     let fileUrl: String?
     let originUrl: String?
     var clip: LessonClip? {
@@ -140,7 +136,6 @@ struct LessonClip: Codable, Identifiable, Hashable {
     let shortLink: String?
     let channel: String
     let duration: Double?
-    // Optional for compatibility with existing favorites and offline indexes.
     var exportSources: [URL]? = nil
 }
 struct LessonLinkVisit: Codable, Identifiable {
@@ -155,6 +150,69 @@ struct PracticeRecording: Codable, Identifiable, Hashable {
     var title: String
     let date: Date
     let isExport: Bool
+    var reviewPoints: [VideoReviewPoint]? = nil
+
+    var pendingReviewCount: Int {
+        reviewPoints?.lazy.filter(\.isPendingReview).count ?? 0
+    }
+
+    var latestPendingReviewPoint: VideoReviewPoint? {
+        reviewPoints?.lazy.filter(\.isPendingReview).max { $0.updatedAt < $1.updatedAt }
+    }
+}
+enum VideoReviewCategory: String, Codable, CaseIterable, Hashable {
+    case visuals, audio, pacing, editPoint, highlight
+
+    var label: String {
+        switch self {
+        case .visuals: "Visuals"
+        case .audio: "Audio"
+        case .pacing: "Pacing"
+        case .editPoint: "Edit point"
+        case .highlight: "Highlight"
+        }
+    }
+}
+
+struct VideoReviewPoint: Codable, Identifiable, Hashable {
+    let id: UUID
+    let seconds: Double
+    var note: String
+    var updatedAt: Date
+    var reviewedAt: Date? = nil
+    private var storedCategory: VideoReviewCategory? = nil
+    private var legacyResult: String? = nil
+
+    var isPendingReview: Bool { reviewedAt == nil }
+
+    var category: VideoReviewCategory? {
+        get {
+            if let storedCategory { return storedCategory }
+            return switch legacyResult {
+            case "clean": .highlight
+            case "flashed", "fumbled": .visuals
+            case "lostTiming": .pacing
+            default: nil
+            }
+        }
+        set {
+            storedCategory = newValue
+            legacyResult = nil
+        }
+    }
+
+    init(seconds: Double) {
+        id = UUID()
+        self.seconds = seconds
+        note = ""
+        updatedAt = .now
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, seconds, note, updatedAt, reviewedAt
+        case storedCategory = "category"
+        case legacyResult = "result"
+    }
 }
 struct LessonLibrarySnapshot: Codable {
     var favorites: [LessonClip] = []
@@ -166,8 +224,6 @@ struct ChannelRoute: Identifiable, Hashable {
     let title: String
     var id: String { link }
 }
-// Separate scroll occurrence from video identity: a new recommendation round may
-// repeat a lesson without sharing AVPlayer state or charging it again.
 struct PlaybackQueueEntry: Identifiable, Equatable {
     let id: String
     let clip: LessonClip
@@ -179,9 +235,6 @@ struct PlayerRoute: Identifiable {
     var continuesRecommendations = false
 }
 enum WebAddress {
-    // Collection lookup accepts a code, whereas search-check accepts raw input.
-    // Parse URLs structurally so query strings, fragments and trailing slashes
-    // cannot leak into the collection's externalLinks field.
     static func landingCode(_ raw: String) -> String? {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return nil }
@@ -217,7 +270,6 @@ struct IOSBillingConfiguration: Codable {
 }
 struct QuotaConfiguration: Decodable {
     let dailyWatchLimit: Int?
-    // Backend field names are misleading; the confirmed API comments define their roles.
     let dailyDownloadLimit: Int?
     let downloadRewardCount: Int?
     let firstAdRewardWatchCount: Int?
@@ -246,7 +298,6 @@ struct AdConfiguration: Decodable {
 }
 
 enum AppOpenTiming {
-    // Server interval is in minutes. Missing/negative configuration is not permission to show.
     static func isDue(intervalMinutes: Double?, lastShown: Date?, now: Date = Date()) -> Bool {
         guard let minutes = intervalMinutes, minutes.isFinite, minutes >= 0,
               (minutes * 60).isFinite else { return false }
@@ -262,7 +313,6 @@ struct GoogleAdPlacement {
     let isOfficialDemo: Bool
 }
 enum GoogleDemoInventory {
-    // Google's published iOS sample identifiers. https://developers.google.com/admob/ios/test-ads
     static let appID = "ca-app-pub-3940256099942544~1458002511"
     static let appOpenUnitID = "ca-app-pub-3940256099942544/5575463023"
     static let rewardedUnitID = "ca-app-pub-3940256099942544/1712485313"
@@ -275,10 +325,6 @@ enum GoogleDemoInventory {
     }
 }
 extension ReleaseConfiguration {
-    // Test builds (TRICKO_ADS_TEST_MODE = YES) use only Google's official sample
-    // App ID and units; getV2 is still requested, but its ad units are ignored.
-    // Production: the App ID comes from getV2 and must agree with the packaged identity.
-    // Never substitute a sample ad unit for a missing or invalid server value.
     func googlePlacement(for type: Int, packagedAppID: String?, testMode: Bool) -> GoogleAdPlacement? {
         if testMode {
             return GoogleDemoInventory.placement(for: type, packagedAppID: packagedAppID)
@@ -293,7 +339,6 @@ extension ReleaseConfiguration {
               appID.range(of: #"^ca-app-pub-[0-9]{16}~[0-9]{10}$"#, options: .regularExpression) != nil,
               unitID.range(of: #"^ca-app-pub-[0-9]{16}/[0-9]{10}$"#, options: .regularExpression) != nil,
               appID.split(separator: "~").first == unitID.split(separator: "/").first else { return nil }
-        // A production build never serves the sample publisher's inventory.
         guard appID != GoogleDemoInventory.appID else { return nil }
         return GoogleAdPlacement(appID: appID, unitID: unitID, isOfficialDemo: false)
     }
@@ -321,9 +366,8 @@ struct CommerceConfiguration: Decodable {
     struct Product: Decodable, Identifiable {
         enum BillingPeriod: String, Decodable { case month, year }
         let id: String
-        let usdPrice: String // Fixed USD plan value (999 / 9999); send unchanged, no currency conversion.
+        let usdPrice: String
         let label: String
-        // Reference display values are separate from the backend's usdPrice contract.
         let displayPriceUSD: String
         let period: BillingPeriod
     }

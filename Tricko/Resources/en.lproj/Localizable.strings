@@ -1,4 +1,3 @@
-// App-owned copy. Remote content and prices are not translated.
 "%@ item · On this device" = "%@ item · On this device";
 "%@ items · On this device" = "%@ items · On this device";
 "%@ more saves have been added. Your unlimited viewing stays active." = "%@ more saves have been added. Your unlimited viewing stays active.";
@@ -311,7 +310,7 @@
 "Trim end" = "Trim end";
 "Trim start" = "Trim start";
 "Trim the timing, crop the frame, change the pace." = "Trim the timing, crop the frame, change the pace.";
-"Trim, rotate and combine your changes." = "Trim, rotate or adjust the speed of a practice video.";
+"Review moments, trim clips or adjust playback speed." = "Review moments, trim clips or adjust playback speed.";
 "Try again" = "Try again";
 "Turn together" = "Turn together";
 "Two hard-court majors, one clay-court major and one grass-court major." = "Two hard-court majors, one clay-court major and one grass-court major.";
@@ -498,7 +497,6 @@
 
 "Clear link" = "Clear link";
 
-/* Playback and local library feedback */
 "Favorites" = "Favorites";
 "Favorite" = "Favorite";
 "Favorited" = "Favorited";
@@ -521,7 +519,6 @@
 "Finish this ad for unlimited downloads today." = "Watch the full ad for unlimited downloads until the next reset.";
 "Connect to refresh your allowance." = "Connect to see how many downloads you have left.";
 
-// Tricko lesson link entry.
 "Paste" = "Paste";
 "Open lesson" = "Find video";
 "Use the lesson link or code you received." = "Use the video link or code you received.";
@@ -570,7 +567,6 @@
 "Open a lesson link or short code from Home." = "Paste a video link or enter its code on Home.";
 "Search the web with your original input." = "You can search the web for what you entered.";
 
-/* Empty states */
 "No favorites yet" = "No favorites yet";
 "No offline videos yet" = "No downloads yet";
 "No imported videos yet" = "No imports yet";
@@ -584,7 +580,6 @@
 "Continue practice" = "Continue practice";
 "Go to practice" = "Go to practice";
 
-/* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "Couldn’t load collections";
 "Setting up your table…" = "Connecting…";
 "Slow down a move to check every frame." = "Slow down a move to see how it looks.";
@@ -682,7 +677,6 @@
 "View options for more views and downloads" = "View options for more views and downloads";
 "Retry loading plans" = "Retry loading plans";
 
-/* Plus benefits and review presets */
 "Included with Plus" = "Included with Plus";
 "Unlimited lesson views" = "Unlimited viewing";
 "Watch lessons without using a daily view allowance." = "Watch videos without a daily view limit.";
@@ -709,7 +703,6 @@
 "Couldn’t save the preset." = "Couldn’t save the preset.";
 "Preset saved on this device." = "Preset saved on this device.";
 
-/* Local video workspace */
 "Files" = "Files";
 "Photos" = "Photos";
 "Open a video" = "Open a video";
@@ -720,3 +713,29 @@
 "Crop, rotate or flip a video." = "Crop, rotate or flip a video.";
 "Video exports, editing presets and no opening ads." = "Video exports, editing presets and no opening ads.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Apply slow-motion presets or reuse your saved settings in the video editor.";
+
+"Review video" = "Review video";
+"Continue review" = "Continue review";
+"Video review" = "Video review";
+"Mark this moment" = "Mark this moment";
+"This video is unavailable for review." = "This video is unavailable for review.";
+"Review markers" = "Review markers";
+"Mark a moment to revisit it later." = "Mark a moment to revisit it later.";
+"Edit marker" = "Edit marker";
+"General note" = "General note";
+"Add a note (optional)" = "Add a note (optional)";
+"Remove marker" = "Remove marker";
+"Mark as reviewed" = "Mark as reviewed";
+"Reopen marker" = "Reopen marker";
+"Reviewed" = "Reviewed";
+"Visuals" = "Visuals";
+"Pacing" = "Pacing";
+"Edit point" = "Edit point";
+"Highlight" = "Highlight";
+"Practice resources" = "Practice resources";
+"%@ pending review" = "%@ pending review";
+"Pending review" = "Pending review";
+"All markers reviewed." = "All markers reviewed.";
+"Previous marker" = "Previous marker";
+"Next marker" = "Next marker";
+"Marker %@ of %@" = "Marker %@ of %@";

@@ -7,20 +7,18 @@ import OSLog
 struct TrickoConfiguration {
     static let logSubsystem = Bundle.main.bundleIdentifier ?? "Tricko"
     let apiBaseURL: URL?
-    let bundleID: String // Installed identity, login `source`, and business `packageName`.
-    let releaseName: String // getV2 `name`: this app's name, original capitalisation.
+    let bundleID: String
+    let releaseName: String
     let version: String
     let websiteURL: URL?
     let privacyURL: URL?
     let termsURL: URL?
-    // Build-controlled Google demo inventory. Never enabled by a server response.
     let adsTestMode: Bool
     static var current: Self {
         let bundle = Bundle.main
         func value(_ key: String) -> String {
             (bundle.object(forInfoDictionaryKey: key) as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        // Accept a bare host (devapi.io-jp.com) or a full https:// value.
         let rawHost = value("TrickoAPIHost")
         let host = rawHost.replacingOccurrences(of: "https://", with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let base = host.isEmpty || host.contains("$(") || host.contains("/") ? nil : URL(string: "https://" + host)
@@ -79,18 +77,13 @@ enum InstallationIdentity {
         var marker = support.appendingPathComponent("TrickoInstallation")
         let existing = try? String(contentsOf: marker, encoding: .utf8)
         if existing == "ready" { return }
-        // Older versions always created this sandbox directory. Preserve their UUID on
-        // upgrade; an uninstall removes it. Keychain alone is not evidence of an install.
         let legacyLibrary = files.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("TrickoMedia", isDirectory: true)
         if existing == "reset" || !files.fileExists(atPath: legacyLibrary.path) {
-            // Persist reset intent before touching Keychain so an interrupted reset
-            // cannot be mistaken for a legacy upgrade on the next launch.
             try Data("reset".utf8).write(to: marker, options: .atomic)
             try SecureStorage.remove("visitor")
             try SecureStorage.remove("installation")
         }
-        // Purchase ledgers deliberately survive: unpaid/undelivered orders retain owners.
         try Data("ready".utf8).write(to: marker, options: .atomic)
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
@@ -102,7 +95,6 @@ enum InstallationIdentity {
 final class APIClient: ObservableObject {
     private let diagnostics = Logger(subsystem: TrickoConfiguration.logSubsystem, category: "API")
     @Published private(set) var session: VisitorSession?
-    // Local ownership only: never use this as authentication or purchase entitlement.
     @Published private(set) var offlineOwnerID: String?
     let configuration: TrickoConfiguration
     private let transport: URLSession
@@ -123,17 +115,12 @@ final class APIClient: ObservableObject {
                let visitor = try? JSONDecoder().decode(VisitorSession.self, from: data) {
                 offlineOwnerID = visitor.userId.value.nilIfBlank
             }
-            // A persisted token is not a completed login for this process. Every cold
-            // start authenticates again with the existing installation UUID. Keep the
-            // stored credentials and purchase ledger intact for recovery ownership.
         } catch {
             session = nil
             storageFailure = error
         }
     }
 
-    // Once per process after success; concurrent startup/retry callers share loginTask.
-    // Background returns and view/layout changes reuse this process's live session.
     func prepareVisitor() async throws {
         guard session == nil else { return }
         _ = try await signIn()
@@ -155,7 +142,6 @@ final class APIClient: ObservableObject {
             let publicIPv4 = try await loginPublicIPv4()
             try Task.checkCancellation()
             let body = try JSONSerialization.data(withJSONObject: ["deviceCode": device, "source": configuration.bundleID, "uniqueId": publicIPv4])
-            // Diagnose the wire payload without logging the IP, UUID or credentials.
             diagnostics.debug("Guest login payload: uniqueId IPv4 present \(!publicIPv4.isEmpty)")
             let result: VisitorSession = try await perform("/app-api/member/auth/app_tourist_login", method: "POST", body: body, authenticated: false)
             guard !result.accessToken.isEmpty, !result.userId.value.isEmpty else { throw TrickoError.invalidResponse }
@@ -172,8 +158,6 @@ final class APIClient: ObservableObject {
     }
 
     private func loginPublicIPv4() async throws -> String {
-        // These public services receive no account credentials or installation ID.
-        // A fresh, uncached lookup follows the current connection on each login.
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 2
         config.timeoutIntervalForResource = 2
@@ -183,8 +167,6 @@ final class APIClient: ObservableObject {
         config.urlCredentialStorage = nil
         let lookup = URLSession(configuration: config)
         defer { lookup.invalidateAndCancel() }
-        // Race independent providers: a slow primary must not add its timeout
-        // to the fallback. Only a valid response wins; cancel the other request.
         return try await withThrowingTaskGroup(of: String.self) { group in
             for address in ["https://ipv4.icanhazip.com", "https://api.ipify.org/"] {
                 group.addTask { try await Self.readPublicIPv4(address, using: lookup) }
@@ -194,7 +176,7 @@ final class APIClient: ObservableObject {
                 return candidate
             }
             try Task.checkCancellation()
-            return "" // Both failed; the login contract permits an empty value.
+            return ""
         }
     }
 
@@ -257,7 +239,6 @@ final class APIClient: ObservableObject {
     func rights() async throws -> UserRights {
         try await perform("/app-api/member/user/get")
     }
-    // Payment requests use the immutable order owner. They never silently rebind to a renewed guest.
     func paymentRequest(path: String, body: [String: Any], owner: VisitorSession) async throws -> Data {
         guard configuration.isReady, let base = configuration.apiBaseURL else { throw TrickoError.configuration }
         var request = URLRequest(url: base.appendingPathComponent(path))
@@ -282,12 +263,10 @@ final class APIClient: ObservableObject {
         guard configuration.isReady, let base = configuration.apiBaseURL,
               var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false) else { throw TrickoError.configuration }
         var effectiveQuery = query
-        // A renewed visitor can have a different user ID.
         if authenticated, effectiveQuery["userId"] != nil { effectiveQuery["userId"] = session?.userId.value }
         components.queryItems = effectiveQuery.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         guard let url = components.url else { throw TrickoError.configuration }
         #if DEBUG
-        // Targeted request diagnostics: never emit credentials or the entered search text.
         if path == "/app-api/flow/release-package/getV2" {
             diagnostics.debug("Release configuration name: \(effectiveQuery["name"] ?? "", privacy: .public)")
         } else if path == "/app-api/flow/search-check" {
@@ -310,7 +289,6 @@ final class APIClient: ObservableObject {
         if authenticated, generation != sessionGeneration { throw CancellationError() }
         guard let response = response as? HTTPURLResponse else { throw TrickoError.invalidResponse }
         #if DEBUG
-        // Never log tokens, passwords, query values, user IDs or response bodies.
         diagnostics.debug("\(method, privacy: .public) \(path, privacy: .public) HTTP \(response.statusCode)")
         #endif
         if response.statusCode == 401, authenticated {

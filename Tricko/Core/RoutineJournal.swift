@@ -1,8 +1,6 @@
 import Foundation
 import Combine
 
-// Manual practice log for magic routines. Results are the performer's own entries,
-// never automatic video analysis. Stored only on this device.
 enum MagicDiscipline: String, Codable, CaseIterable, Identifiable {
     case cards, coins, rope, mentalism, other
     var id: String { rawValue }
@@ -25,7 +23,7 @@ enum PracticeSetting: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum RunResult: String, Codable, CaseIterable, Identifiable {
+enum RunResult: String, Codable, CaseIterable, Hashable, Identifiable {
     case clean, flashed, fumbled, lostTiming
     var id: String { rawValue }
     var label: String {
@@ -145,12 +143,9 @@ final class RoutineJournal: ObservableObject {
         commit(next)
     }
 
-    // Stable English column names and raw values for spreadsheet interoperability.
-    // This is a practice record, not media, so it is not gated by Plus.
     func exportSession(_ session: RoutineSession) -> URL? {
         let dates = ISO8601DateFormatter()
         func field(_ text: String) -> String {
-            // Quote user text; neutralise spreadsheet formula prefixes.
             var value = text.replacingOccurrences(of: "\"", with: "\"\"")
             if let first = value.first, "=+-@".contains(first) { value = "'" + value }
             return "\"\(value)\""

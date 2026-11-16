@@ -1,7 +1,6 @@
 import AVFoundation
 import SwiftUI
 
-// Progress ticks belong to the scrubber, not the entire video/control hierarchy.
 @MainActor
 final class PlaybackTimeline: ObservableObject {
     @Published var elapsed: Double = 0
@@ -13,6 +12,7 @@ final class PlaybackController: ObservableObject {
     let player = AVPlayer()
     @Published var isPlaying = false
     @Published var isLoading = true
+    @Published private(set) var isSeeking = false
     @Published var error: String?
     let timeline = PlaybackTimeline()
     @Published var muted = false
@@ -29,7 +29,6 @@ final class PlaybackController: ObservableObject {
     private var warming = false
     private var generation = UUID()
     private var pendingSeek: Double?
-    private var seeking = false
     private var loadingDeadline: Task<Void, Never>?
 
     init() {
@@ -37,12 +36,11 @@ final class PlaybackController: ObservableObject {
         timer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, let item = self.player.currentItem else { return }
-                // Read current state, rather than a time captured before an item switch.
                 let seconds = self.player.currentTime().seconds
                 let length = item.duration.seconds
                 let elapsed = seconds.isFinite ? max(0, seconds) : 0
                 let duration = length.isFinite ? max(0, length) : 0
-                if !self.seeking, self.timeline.elapsed != elapsed { self.timeline.elapsed = elapsed }
+                if !self.isSeeking, self.timeline.elapsed != elapsed { self.timeline.elapsed = elapsed }
                 if self.timeline.duration != duration { self.timeline.duration = duration }
             }
         }
@@ -63,7 +61,6 @@ final class PlaybackController: ObservableObject {
         error = nil
         isLoading = true
         if wantsPlayback != autoplay { wantsPlayback = autoplay }
-        // Zero leaves buffering/variant selection to AVFoundation for the active video.
         item.preferredForwardBufferDuration = 0
         player.replaceCurrentItem(with: item)
         let token = generation
@@ -83,7 +80,6 @@ final class PlaybackController: ObservableObject {
         endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == token else { return }
-                // Seek completion resumes only if this page still intends to play.
                 self.seek(0)
             }
         }
@@ -105,7 +101,6 @@ final class PlaybackController: ObservableObject {
         guard warming, !wantsPlayback, player.rate == 0,
               player.status == .readyToPlay, player.currentItem?.status == .readyToPlay else { return }
         warming = false
-        // Silent, bounded next-video warmup; never calls play or consumes an allowance.
         player.preroll(atRate: 1) { _ in }
     }
     func play() {
@@ -114,7 +109,7 @@ final class PlaybackController: ObservableObject {
         warming = false
         player.cancelPendingPrerolls()
         player.currentItem?.preferredForwardBufferDuration = 0
-        guard player.currentItem?.status == .readyToPlay, !seeking else {
+        guard player.currentItem?.status == .readyToPlay, !isSeeking else {
             updatePlaybackState()
             return
         }
@@ -125,7 +120,6 @@ final class PlaybackController: ObservableObject {
             }
             try audio.setActive(true)
         } catch { fail("Audio playback is unavailable."); return }
-        // Unlike playImmediately, this respects automaticallyWaitsToMinimizeStalling.
         player.rate = speed
         updatePlaybackState()
     }
@@ -153,15 +147,15 @@ final class PlaybackController: ObservableObject {
         performPendingSeek()
     }
     private func performPendingSeek() {
-        guard !seeking, player.currentItem?.status == .readyToPlay, let target = pendingSeek else { return }
+        guard !isSeeking, player.currentItem?.status == .readyToPlay, let target = pendingSeek else { return }
         pendingSeek = nil
-        seeking = true
+        isSeeking = true
         let token = generation
         player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
                     toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == token else { return }
-                self.seeking = false
+                self.isSeeking = false
                 if self.pendingSeek != nil { self.performPendingSeek() }
                 else {
                     if finished { self.timeline.elapsed = target }
@@ -202,7 +196,7 @@ final class PlaybackController: ObservableObject {
         endObserver = nil
         failureObserver = nil
         pendingSeek = nil
-        seeking = false
+        if isSeeking { isSeeking = false }
         player.currentItem?.cancelPendingSeeks()
         player.replaceCurrentItem(with: nil)
         loadedURL = nil
@@ -218,7 +212,6 @@ final class PlaybackController: ObservableObject {
     }
 }
 
-// Screen-owned: current, previous and next only. No disk download/cache or quota writes.
 @MainActor
 final class PlaybackPool: ObservableObject {
     @Published private(set) var controllers: [String: PlaybackController] = [:]
@@ -252,7 +245,6 @@ final class PlaybackPool: ObservableObject {
         }
         guard let current = retained[selectedID] else { return }
         if current.loadedURL == nil { current.load(entries[index].clip.playbackURL, autoplay: false) }
-        // Appending a feed batch should not invalidate every visible video page.
         if controllers.count != retained.count || retained.contains(where: { controllers[$0.key] !== $0.value }) {
             controllers = retained
         }
@@ -266,8 +258,6 @@ final class PlaybackPool: ObservableObject {
         cancelWarmup()
         warmupID = nextEntry.id
         warmupTask = Task { [weak self] in
-            // Let the current stream establish its buffer before competing for bandwidth.
-            // These thresholds are app policy, not guarantees from AVFoundation.
             for _ in 0..<24 {
                 do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
                 guard let self, self.selectedID == id, self.nextEntry?.id == nextEntry.id,
@@ -297,7 +287,6 @@ final class PlaybackPool: ObservableObject {
     }
     func suspend() {
         cancelWarmup()
-        // The active page records its resume intent before pausing itself.
         for (id, controller) in controllers where id != selectedID { controller.pause() }
     }
     func trimMemory() {

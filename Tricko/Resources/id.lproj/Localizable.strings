@@ -1,4 +1,3 @@
-// App-owned copy. Remote content and prices are not translated.
 "%@ item · On this device" = "%@ item · Di perangkat ini";
 "%@ items · On this device" = "%@ item · Di perangkat ini";
 "%@ more saves have been added. Your unlimited viewing stays active." = "%@ simpan ditambahkan. Tonton tanpa batas tetap aktif.";
@@ -311,7 +310,7 @@
 "Trim end" = "Akhir potongan";
 "Trim start" = "Awal potongan";
 "Trim the timing, crop the frame, change the pace." = "Potong durasi, atur bingkai, ubah kecepatan.";
-"Trim, rotate and combine your changes." = "Potong, putar, atau atur kecepatan video latihan.";
+"Review moments, trim clips or adjust playback speed." = "Tinjau momen, potong klip, atau atur kecepatan pemutaran.";
 "Try again" = "Coba lagi";
 "Turn together" = "Putar tubuh bersama";
 "Two hard-court majors, one clay-court major and one grass-court major." = "Dua major di lapangan keras, satu tanah liat, dan satu rumput.";
@@ -498,7 +497,6 @@
 
 "Clear link" = "Hapus tautan";
 
-/* Playback and local library feedback */
 "Favorites" = "Favorit";
 "Favorite" = "Favorit";
 "Favorited" = "Tersimpan";
@@ -521,7 +519,6 @@
 "Finish this ad for unlimited downloads today." = "Tonton iklan sampai selesai untuk mengunduh tanpa batas hingga kuota direset.";
 "Connect to refresh your allowance." = "Sambungkan untuk melihat sisa unduhanmu.";
 
-// Tricko lesson link entry.
 "Paste" = "Tempel";
 "Open lesson" = "Cari video";
 "Use the lesson link or code you received." = "Gunakan tautan atau kode video yang kamu terima.";
@@ -570,7 +567,6 @@
 "Open a lesson link or short code from Home." = "Di Beranda, tempel tautan video atau masukkan kodenya.";
 "Search the web with your original input." = "Kamu bisa mencari di web dengan teks yang kamu masukkan.";
 
-/* Empty states */
 "No favorites yet" = "Belum ada favorit";
 "No offline videos yet" = "Belum ada unduhan";
 "No imported videos yet" = "Belum ada video yang diimpor";
@@ -584,7 +580,6 @@
 "Continue practice" = "Lanjutkan latihan";
 "Go to practice" = "Ke latihan";
 
-/* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "Koleksi tidak dapat dimuat";
 "Setting up your table…" = "Menyambungkan…";
 "Slow down a move to check every frame." = "Perlambat gerakan untuk melihatnya lebih jelas.";
@@ -682,7 +677,6 @@
 "View options for more views and downloads" = "Lihat pilihan untuk menambah kuota tonton dan unduhan";
 "Retry loading plans" = "Muat ulang paket";
 
-/* Plus benefits and review presets */
 "Included with Plus" = "Termasuk dalam Plus";
 "Unlimited lesson views" = "Tonton tanpa batas";
 "Watch lessons without using a daily view allowance." = "Tonton video tanpa batas tayangan harian.";
@@ -709,7 +703,6 @@
 "Couldn’t save the preset." = "Preset tidak dapat disimpan.";
 "Preset saved on this device." = "Preset disimpan di perangkat ini.";
 
-/* Local video workspace */
 "Files" = "File";
 "Photos" = "Foto";
 "Open a video" = "Buka video";
@@ -720,3 +713,29 @@
 "Crop, rotate or flip a video." = "Pangkas bingkai, putar, atau balik video.";
 "Video exports, editing presets and no opening ads." = "Ekspor video, preset pengeditan, dan bebas iklan saat membuka aplikasi.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Terapkan preset gerak lambat atau gunakan kembali pengaturan tersimpan di editor video.";
+
+"Review video" = "Tinjau video";
+"Continue review" = "Lanjutkan tinjauan";
+"Video review" = "Tinjauan video";
+"Mark this moment" = "Tandai momen ini";
+"This video is unavailable for review." = "Video ini tidak tersedia untuk ditinjau.";
+"Review markers" = "Penanda tinjauan";
+"Mark a moment to revisit it later." = "Tandai momen agar bisa dilihat lagi nanti.";
+"Edit marker" = "Edit penanda";
+"General note" = "Catatan umum";
+"Add a note (optional)" = "Tambahkan catatan (opsional)";
+"Remove marker" = "Hapus penanda";
+"Mark as reviewed" = "Tandai selesai ditinjau";
+"Reopen marker" = "Buka kembali penanda";
+"Reviewed" = "Sudah ditinjau";
+"Visuals" = "Visual";
+"Pacing" = "Tempo";
+"Edit point" = "Titik edit";
+"Highlight" = "Sorotan";
+"Practice resources" = "Materi latihan";
+"%@ pending review" = "%@ menunggu tinjauan";
+"Pending review" = "Menunggu tinjauan";
+"All markers reviewed." = "Semua penanda sudah ditinjau.";
+"Previous marker" = "Penanda sebelumnya";
+"Next marker" = "Penanda berikutnya";
+"Marker %@ of %@" = "Penanda %@ dari %@";

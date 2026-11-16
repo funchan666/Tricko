@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// Follows the system by default; explicit overrides never rebuild business stores.
 enum AppLanguage: String, CaseIterable, Identifiable {
     case en, ko, ja, id, pt, ar, es
-    // A new key migrates the former fixed-English default to Follow system once.
     static let preferenceKey = "tricko.language.selection"
     static let systemSelection = "system"
     static func systemLanguage(preferredLanguages: [String] = Locale.preferredLanguages) -> AppLanguage {
@@ -45,8 +43,6 @@ enum L10n {
     }
 
 
-    // Existing service/store contracts return String messages. Translate their known templates
-    // at display time so a language switch also updates a visible error or quota message.
     private static let messagePatterns: [(String, NSRegularExpression)] = [
         "Error: %@",
         "Downloading · %@%",
@@ -87,7 +83,6 @@ enum L10n {
         return (key, expression)
     }
 
-    // English also uses the table because keys are independent of displayed copy.
     static func display(_ value: String, language: AppLanguage = .current, depth: Int = 0) -> String {
         let exact = text(value, language: language)
         guard exact == value, depth < 3 else { return exact }
@@ -102,7 +97,6 @@ enum L10n {
         return value
     }
 
-    /// Explicit arguments keep amounts, file names and server content out of translation lookup.
     static func format(_ key: String, _ arguments: [String], language: AppLanguage = .current) -> String {
         let template = text(key, language: language)
         let pattern = #"%(?:(\d+)\$)?@"#
@@ -122,8 +116,6 @@ enum L10n {
     }
 }
 
-/// Localizes owned copy at display time, including String-valued labels from existing models.
-/// Use Text(verbatim:) for remote titles, user file names and monetary amounts.
 struct LocalizedText: View {
     let key: String
     var arguments: [String] = []

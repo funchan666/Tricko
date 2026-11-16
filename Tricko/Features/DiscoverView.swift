@@ -6,7 +6,6 @@ struct BrowserLessonSearch: Identifiable, Equatable {
     var url: URL? {
         var address = URLComponents(string: "https://www.google.com/search")
         address?.queryItems = [URLQueryItem(name: "q", value: query)]
-        // Search engines treat an unescaped plus sign as a space.
         if let encoded = address?.percentEncodedQuery {
             address?.percentEncodedQuery = encoded.replacingOccurrences(of: "+", with: "%2B")
         }
@@ -63,13 +62,11 @@ final class FeedStore: ObservableObject {
             }
         }
         do {
-            // Skip a few duplicate/invalid pages, but never spin on an empty service.
             for _ in 0..<3 {
                 if !hasMore {
-                    // Do not replace an unmatched explicit query with recommendations.
                     if entries.isEmpty, requestQuery.nilIfBlank != nil { break }
                     feedID = nil; cursor = nil; roundVideoIDs = []
-                    requestQuery = "" // Finished search/collection -> fresh recommendation round.
+                    requestQuery = ""
                     hasMore = true
                 }
                 let previousCursor = cursor
@@ -95,7 +92,6 @@ final class FeedStore: ObservableObject {
             }
             if !entries.isEmpty { error = "No more lessons are available right now. Try again." }
         } catch is CancellationError {
-            // Leaving a screen/search is not a service failure.
         } catch {
             if current == generation, !Task.isCancelled { self.error = error.localizedDescription }
         }
@@ -375,8 +371,6 @@ private extension EnvironmentValues {
     }
 }
 
-// Enforce admission at the paging boundary, so denied pages cannot strand the
-// user on a succession of unplayable videos. Returning to admitted clips is free.
 private struct PlayerPagingAccess: ViewModifier {
     let entries: [PlaybackQueueEntry]
     @Binding var selectedID: String?
@@ -432,7 +426,6 @@ private struct PlayerPagingAccess: ViewModifier {
         players.controllers.values.forEach { $0.pause() }
         players.suspend()
         if let admittedID, admittedID != id {
-            // A new deliberate swipe may prompt again; dismissal itself never does.
             showingReward = true
             selectedID = admittedID
         } else {
@@ -446,8 +439,6 @@ private struct PlayerPagingAccess: ViewModifier {
     }
 }
 
-// Count the cue only after an uninterrupted presentation. The old flag could
-// be consumed by buffering or a sheet before the user had time to read it.
 private struct PlayerSwipeHint: View {
     let eligible: Bool
     @AppStorage("tricko.player.completedSwipeHint.v6") private var alreadyShown = false
@@ -455,11 +446,7 @@ private struct PlayerSwipeHint: View {
     @Environment(\.scenePhase) private var phase
     @State private var showing = false
     var body: some View {
-        // A persistent host is essential: a task on an empty conditional Group
-        // has no rendered child to start it. Buffering must not gate this cue.
         GeometryReader { container in
-            // The parent reserves the exit, action rail and bottom captions.
-            // Size the artwork from the remaining viewport, not a device model.
             let width = max(0, container.size.width)
             let height = max(0, container.size.height)
             let artworkHeight = min(width * 1.18, height * 0.64, 520)
@@ -531,7 +518,6 @@ struct ClipPage: View {
     let clip: LessonClip
     let active: Bool
     var supportsPaging = true
-    // Read from the enclosing safe container; video fills the expanded viewport.
     var controlInsets = EdgeInsets()
     @ObservedObject var playback: PlaybackController
     var didStartPlaying: () -> Void = {}
@@ -555,8 +541,6 @@ struct ClipPage: View {
     var body: some View {
         ZStack {
             Color.black
-            // Fill a tall page; fit on wide or near-square containers (inner display of
-            // iPhone Duo, landscape) so the performer's hands are never cropped away.
             GeometryReader { page in
                 VideoSurface(player: playback.player, fill: page.size.height >= page.size.width * 1.4,
                              onReadyForDisplay: { firstFrameReady = $0 })
@@ -570,9 +554,6 @@ struct ClipPage: View {
                 guard active, phase == .active, !ads.isPresenting else { return }
                 if allowed, firstFrameReady { playback.toggle() }
             }
-            // Only the video backdrop owns this gesture; controls and the
-            // scrubber above it keep their own touches. Vertical paging wins
-            // unless the completed gesture is decisively leftward.
             .simultaneousGesture(DragGesture(minimumDistance: 32).onEnded { value in
                 guard active, visible, phase == .active, !ads.isPresenting,
                       !pagingGate, !gate, !options, !editor, !downloadPanel,
@@ -581,7 +562,6 @@ struct ClipPage: View {
                       abs(value.translation.width) > abs(value.translation.height) * 1.7 else { return }
                 onSwipeExit()
             })
-            // Preserve contrast for captions and playback actions over moving footage.
             LinearGradient(stops: [.init(color: .black.opacity(0.38), location: 0),
                                    .init(color: .clear, location: 0.2),
                                    .init(color: .clear, location: 0.53),
@@ -751,8 +731,6 @@ struct ClipPage: View {
                    width: max(0, size.width - insets.leading - insets.trailing),
                    height: max(0, size.height - insets.top - insets.bottom))
         }
-        // The default query returns frames in the layout's logical direction,
-        // matching the leading and trailing padding used by the controls.
         for region in viewport.reservedRegions(kind: .division) where region.isActive {
             let bounds = usableBounds()
             let split = region.frame.intersection(bounds)
@@ -798,7 +776,6 @@ struct ClipPage: View {
         allowed = clip.playbackURL.isFileURL || quota.mayWatch(clip.id, premium: commerce.premium)
         if !allowed {
             playback.pause()
-            // Paging owns automatic prompts; this page retains the explicit reward action.
             return
         }
         if playback.loadedURL != clip.playbackURL || reload {
@@ -825,8 +802,6 @@ struct ClipPage: View {
         activate()
     }
     private func cacheVideo() {
-        // Acknowledge every tap before starting asynchronous preparation. The
-        // presented panel observes the store through completion and late errors.
         if downloadStarting || offline.cached(clip.id) != nil || offline.busy || clip.playbackURL.isFileURL {
             showDownloadPanel()
         } else if !quota.mayDownload(clip.id, premium: commerce.premium) {
@@ -850,7 +825,7 @@ struct ClipPage: View {
         favoriteError = nil
         if !library.toggle(offline.cached(clip.id)?.clip ?? clip) {
             favoriteError = "Favorites could not be updated. Please try again."
-            library.error = nil // This full-screen surface owns the feedback.
+            library.error = nil
         }
     }
 }
@@ -905,7 +880,6 @@ struct PlayerProgressControl: View {
                 get: { scrubbing ? scrubPosition : timeline.elapsed },
                 set: {
                     scrubPosition = $0
-                    // During a drag, move the UI only. Seek once on release.
                     if !scrubbing { playback.seek($0) }
                 }
             ), range: 0...max(1, timeline.duration), label: "Playback position",
@@ -1031,7 +1005,6 @@ private enum PlayerArtwork: CaseIterable, Hashable {
     }
 }
 
-// Shared geometry for every rail action, including the changing cache status.
 private struct PlayerRailLabel<Label: View>: View {
     let artwork: PlayerArtwork
     let selected: Bool

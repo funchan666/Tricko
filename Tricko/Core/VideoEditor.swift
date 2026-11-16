@@ -45,7 +45,6 @@ struct ReviewPreset: Codable {
     }
 
     func applied(to recipe: EditRecipe) -> EditRecipe {
-        // Trim points belong to the current clip.
         EditRecipe(start: recipe.start, end: recipe.end, speed: speed, quarterTurns: quarterTurns,
                    mirrored: mirrored, muted: muted, frame: frame, quality: quality)
     }
@@ -135,8 +134,6 @@ final class VideoEditor: ObservableObject {
             if previewRevision == previewID { isPreparingPreview = false; previewExporter = nil }
         }
         do {
-            // Materialize a bounded-resolution preview. Some simulator runtimes cannot
-            // play AVVideoComposition directly even when the same composition exports.
             var previewRecipe = requestedRecipe
             previewRecipe.quality = .compact
             let (composition, video) = try await compose(url: sourceURL, recipe: previewRecipe)

@@ -1,4 +1,3 @@
-// App-owned copy. Remote content and prices are not translated.
 "%@ item · On this device" = "عدد العناصر: %@ · على هذا الجهاز";
 "%@ items · On this device" = "عدد العناصر: %@ · على هذا الجهاز";
 "%@ more saves have been added. Your unlimited viewing stays active." = "أُضيفت %@ عملية حفظ. تبقى المشاهدة بلا حدود مفعّلة.";
@@ -311,7 +310,7 @@
 "Trim end" = "نهاية القص";
 "Trim start" = "بداية القص";
 "Trim the timing, crop the frame, change the pace." = "قص المدة واضبط الإطار وغيّر السرعة.";
-"Trim, rotate and combine your changes." = "قصّ فيديو التدريب أو دوّره أو اضبط سرعته.";
+"Review moments, trim clips or adjust playback speed." = "راجع لحظات محددة أو قصّ المقاطع أو اضبط سرعة التشغيل.";
 "Try again" = "إعادة المحاولة";
 "Turn together" = "أدر الجسم معًا";
 "Two hard-court majors, one clay-court major and one grass-court major." = "بطولتان على أرضية صلبة، وواحدة ترابية، وواحدة عشبية.";
@@ -498,7 +497,6 @@
 
 "Clear link" = "مسح الرابط";
 
-/* Playback and local library feedback */
 "Favorites" = "المفضلة";
 "Favorite" = "تفضيل";
 "Favorited" = "مفضّل";
@@ -521,7 +519,6 @@
 "Finish this ad for unlimited downloads today." = "شاهد الإعلان كاملًا لتحصل على تنزيلات غير محدودة حتى تجديد الحصة.";
 "Connect to refresh your allowance." = "اتصل بالإنترنت لمعرفة عدد التنزيلات المتبقية.";
 
-// Tricko lesson link entry.
 "Paste" = "لصق";
 "Open lesson" = "البحث عن فيديو";
 "Use the lesson link or code you received." = "استخدم رابط الفيديو أو الرمز الذي وصلك.";
@@ -570,7 +567,6 @@
 "Open a lesson link or short code from Home." = "ألصق رابط الفيديو أو أدخل رمزه في الصفحة الرئيسية.";
 "Search the web with your original input." = "يمكنك البحث على الويب عمّا أدخلته.";
 
-/* Empty states */
 "No favorites yet" = "لا توجد فيديوهات في المفضّلة بعد";
 "No offline videos yet" = "لا توجد تنزيلات بعد";
 "No imported videos yet" = "لا توجد فيديوهات مستوردة بعد";
@@ -584,7 +580,6 @@
 "Continue practice" = "متابعة التدريب";
 "Go to practice" = "الانتقال إلى التدريب";
 
-/* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "تعذّر تحميل المجموعات";
 "Setting up your table…" = "جارٍ الاتصال…";
 "Slow down a move to check every frame." = "أبطئ الحركة لترى كيف تبدو.";
@@ -682,7 +677,6 @@
 "View options for more views and downloads" = "عرض خيارات الحصول على مزيد من المشاهدات والتنزيلات";
 "Retry loading plans" = "إعادة تحميل الخطط";
 
-/* Plus benefits and review presets */
 "Included with Plus" = "مزايا Plus";
 "Unlimited lesson views" = "مشاهدة بلا حدود";
 "Watch lessons without using a daily view allowance." = "شاهد الفيديوهات دون حد يومي للمشاهدة.";
@@ -709,7 +703,6 @@
 "Couldn’t save the preset." = "تعذّر حفظ الإعداد المسبق.";
 "Preset saved on this device." = "حُفظ الإعداد المسبق على هذا الجهاز.";
 
-/* Local video workspace */
 "Files" = "الملفات";
 "Photos" = "الصور";
 "Open a video" = "فتح فيديو";
@@ -720,3 +713,29 @@
 "Crop, rotate or flip a video." = "اقتصّ إطار الفيديو أو دوّره أو اعكسه.";
 "Video exports, editing presets and no opening ads." = "تصدير الفيديو، وإعدادات تحرير مسبقة، وفتح التطبيق بلا إعلانات.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "طبّق إعدادات الحركة البطيئة أو أعد استخدام إعداداتك المحفوظة في محرّر الفيديو.";
+
+"Review video" = "مراجعة الفيديو";
+"Continue review" = "متابعة المراجعة";
+"Video review" = "مراجعة الفيديو";
+"Mark this moment" = "وضع علامة عند هذه اللحظة";
+"This video is unavailable for review." = "هذا الفيديو غير متاح للمراجعة.";
+"Review markers" = "علامات المراجعة";
+"Mark a moment to revisit it later." = "ضع علامة عند لحظة للعودة إليها لاحقًا.";
+"Edit marker" = "تعديل العلامة";
+"General note" = "ملاحظة عامة";
+"Add a note (optional)" = "أضف ملاحظة (اختياري)";
+"Remove marker" = "إزالة العلامة";
+"Mark as reviewed" = "وضع علامة تمت المراجعة";
+"Reopen marker" = "إعادة فتح العلامة";
+"Reviewed" = "تمت المراجعة";
+"Visuals" = "الصورة";
+"Pacing" = "الإيقاع";
+"Edit point" = "نقطة مونتاج";
+"Highlight" = "لحظة مميزة";
+"Practice resources" = "موارد التدريب";
+"%@ pending review" = "%@ بانتظار المراجعة";
+"Pending review" = "بانتظار المراجعة";
+"All markers reviewed." = "تمت مراجعة كل العلامات.";
+"Previous marker" = "العلامة السابقة";
+"Next marker" = "العلامة التالية";
+"Marker %@ of %@" = "العلامة %@ من %@";

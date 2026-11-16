@@ -19,7 +19,7 @@ enum VideoTool: String, Identifiable, CaseIterable {
         case .audio: return "Keep the sound as an M4A file."
         case .speed: return "Play a clip slower or faster."
         case .frame: return "Crop, rotate or flip a video."
-        case .studio: return "Trim, rotate and combine your changes."
+        case .studio: return "Review moments, trim clips or adjust playback speed."
         }
     }
     var editorTab: String {
@@ -43,8 +43,7 @@ enum VideoTool: String, Identifiable, CaseIterable {
 struct ToolsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selectedTool: VideoTool?
-    @State private var showingGuide = false
-    @State private var showingRoutinePractice = false
+    @State private var showingPracticeResources = false
 
     var body: some View {
         GeometryReader { viewport in
@@ -70,12 +69,13 @@ struct ToolsView: View {
         }
         .trickoScreenBackground()
         .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
-        .sheet(isPresented: $showingGuide) { MagicGuideView() }
-        .sheet(isPresented: $showingRoutinePractice) { RoutinePracticeView() }
+        .sheet(isPresented: $showingPracticeResources) {
+            PracticeResourcesSheet()
+                .presentationDetents([.medium, .large])
+        }
     }
 
     private var studioPhoto: some View {
-        // The dial sits on the right side of the original artwork.
         StagePhoto(asset: "VideoToolsPhoto", alignment: .trailing)
             .environment(\.layoutDirection, .leftToRight)
             .overlay {
@@ -166,31 +166,79 @@ struct ToolsView: View {
     }
 
     private var practiceResources: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             Divider().overlay(TrickoStyle.line)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    practiceLogButton.fixedSize(horizontal: true, vertical: false)
-                    guideButton.fixedSize(horizontal: true, vertical: false)
+            Button { showingPracticeResources = true } label: {
+                HStack(spacing: 10) {
+                    Glyph(symbol: .library, size: 17, tint: TrickoStyle.secondary)
+                    LocalizedText("Practice resources")
+                        .font(.stage(.subheadline, weight: .medium))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Glyph(symbol: .back, size: 10, tint: TrickoStyle.secondary)
+                        .rotationEffect(.degrees(180))
                 }
-                VStack(alignment: .leading, spacing: 8) {
-                    practiceLogButton
-                    guideButton
+                .foregroundStyle(TrickoStyle.secondary)
+                .padding(.vertical, 6)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .accessibilityIdentifier("tools.practiceResources")
+        }
+    }
+}
+
+private struct PracticeResourcesSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedResource: Resource?
+
+    private enum Resource: String, Identifiable {
+        case journal, notes
+        var id: String { rawValue }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SheetHeading(title: "Practice resources") { dismiss() }
+            ScrollView {
+                VStack(spacing: 0) {
+                    resourceRow("Practice log", symbol: .edit) { selectedResource = .journal }
+                        .accessibilityIdentifier("practice.openJournal")
+                    Divider().overlay(TrickoStyle.line)
+                    resourceRow("Magic field notes", symbol: .library) { selectedResource = .notes }
+                        .accessibilityIdentifier("magicGuide.open")
                 }
+                .trickoPage()
+            }
+        }
+        .trickoScreenBackground()
+        .sheet(item: $selectedResource) { resource in
+            switch resource {
+            case .journal: RoutinePracticeView()
+            case .notes: MagicGuideView()
             }
         }
     }
 
-    private var practiceLogButton: some View {
-        Button { showingRoutinePractice = true } label: { LocalizedText("Practice log") }
-            .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .edit))
-            .accessibilityIdentifier("practice.openJournal")
-    }
-
-    private var guideButton: some View {
-        Button { showingGuide = true } label: { LocalizedText("Magic field notes") }
-            .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .library))
-            .accessibilityIdentifier("magicGuide.open")
+    private func resourceRow(_ title: String, symbol: TrickoGlyph, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Glyph(symbol: symbol, size: 19, tint: TrickoStyle.coolAccent)
+                    .frame(width: 28)
+                LocalizedText(title)
+                    .font(.stage(.headline))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent)
+                    .rotationEffect(.degrees(180))
+            }
+            .foregroundStyle(TrickoStyle.paper)
+            .padding(.vertical, 10)
+            .frame(minHeight: 52)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
     }
 }
 
@@ -366,6 +414,7 @@ private struct EditorWorkspace: View {
     let initialTool: VideoTool
     @StateObject private var editor = VideoEditor()
     @State private var selected: PracticeRecording?
+    @State private var reviewingVideo: VideoReviewRoute?
     @State private var error: String?
     @State private var shareURL: SharedFile?
     @State private var tool = "Trim"
@@ -400,6 +449,7 @@ private struct EditorWorkspace: View {
                 if let message { editor.error = "Preview could not play. \(message)" }
             }
             .sheet(item: $shareURL) { ShareSheet(items: [$0.url]) }
+            .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0.movie, startingAt: $0.startingAt) }
             .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
             .sheet(isPresented: $showingPresetMembership, onDismiss: {
                 showingPresets = commerce.hasVerifiedPlus && selected != nil
@@ -424,6 +474,14 @@ private struct EditorWorkspace: View {
             if let error = editor.error { ErrorNote(message: error) }
             if editor.isPreparingPreview { AccountLoadingIndicator(title: "Preparing preview…").frame(maxWidth: .infinity) }
             if initialTool == .studio {
+                ActionButton(title: "Review video", primary: false) {
+                    editor.preview.pause()
+                    let time = editor.preview.player.currentTime().seconds
+                    let isAtSourceTime = editor.preview.loadedURL == library.url(for: selected) && !editor.preview.isSeeking
+                    reviewingVideo = VideoReviewRoute(movie: selected, startingAt: isAtSourceTime && time.isFinite ? time : nil)
+                }
+                .disabled(!canChangeReviewSettings)
+
                 StageFilter(values: tools, selected: tool) { tool = $0 }
                     .disabled(departure.running || editor.isPreparingPreview)
             }
@@ -715,25 +773,30 @@ private struct ReviewPresetControls: View {
     }
 }
 
-private struct EditorPlaybackBar: View {
+struct EditorPlaybackBar: View {
     @ObservedObject var playback: PlaybackController
     @ObservedObject var timeline: PlaybackTimeline
     let disabled: Bool
+    var compact = false
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var scrubbing = false
 
     var body: some View {
-        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 4)) : AnyLayout(HStackLayout(spacing: 8))
+        let layout = typeSize.isAccessibilitySize && !compact
+            ? AnyLayout(VStackLayout(spacing: 4))
+            : AnyLayout(HStackLayout(spacing: 8))
         layout {
             IconButton(symbol: playback.isPlaying ? .pause : .play,
                        label: playback.isPlaying ? "Pause preview" : "Play preview") { playback.toggle() }
                 .trickoGlass(in: Circle())
             PlayerProgressControl(playback: playback, timeline: timeline, enabled: !disabled,
                                   canResume: !disabled, scrubbing: $scrubbing)
-            Text(verbatim: "\(durationLabel(timeline.elapsed)) / \(durationLabel(timeline.duration))")
-                .font(.stage(.caption, weight: .medium).monospacedDigit())
-                .foregroundStyle(TrickoStyle.secondary)
-                .environment(\.layoutDirection, .leftToRight)
+            if !compact {
+                Text(verbatim: "\(durationLabel(timeline.elapsed)) / \(durationLabel(timeline.duration))")
+                    .font(.stage(.caption, weight: .medium).monospacedDigit())
+                    .foregroundStyle(TrickoStyle.secondary)
+                    .environment(\.layoutDirection, .leftToRight)
+            }
         }
         .disabled(disabled || timeline.duration <= 0 || playback.error != nil)
     }

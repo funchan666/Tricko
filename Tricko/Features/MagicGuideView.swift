@@ -1,8 +1,5 @@
 import SwiftUI
 
-// Bundled editorial content. Reading never calls video, quota or advertising APIs.
-// Original summaries of general performance craft. They describe practice and
-// presentation principles only; they do not expose the method of any trick.
 private struct MagicNote: Identifiable {
     struct Section {
         let title: String

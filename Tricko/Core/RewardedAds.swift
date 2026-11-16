@@ -76,8 +76,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
                 self.grantUnavailableReward(attemptID, owner: owner, commerce: commerce, quota: quota, kind: kind)
             }
         }
-        // Include SDK preparation in the wait budget. Only the real privacy
-        // consent surface may pause it; loading can always be cancelled.
         armDeadline()
         defer { timeout?.cancel() }
         do {
@@ -112,8 +110,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
             guard rewardAttempt == attemptID else { return }
             isPresenting = false
             let failure = error as NSError
-            // Preparation, consent configuration and load failures all mean no ad.
-            // Explicit cancellation never earns a gift or bypasses consent.
             if Task.isCancelled || error is CancellationError ||
                 (failure.domain == NSURLErrorDomain && failure.code == NSURLErrorCancelled) { return }
             appOpenLog.error("Rewarded ad unavailable; domain=\(failure.domain, privacy: .public), code=\(failure.code)")
@@ -163,8 +159,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
             }
             guard ConsentInformation.shared.canRequestAds else { throw TrickoError.service("Ads are unavailable with your current privacy choices.") }
         } else {
-            // Google's demo app has no Tricko-owned UMP message configuration.
-            // This branch uses the packaged Google demo App ID and its official test units.
             privacyOptionsRequired = false
         }
         try Task.checkCancellation()
@@ -175,8 +169,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
     private func startSDKIfNeeded() {
         guard !started else { return }
         started = true
-        // Google-only integration: start once, then request ads immediately, as
-        // in Google's quick start. Adapter completion must not block the app.
         MobileAds.shared.start { [weak self] _ in
             self?.appOpenLog.info("Google Mobile Ads initialization callback received")
         }
@@ -199,7 +191,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
         preloadUnitID = unitID
         let requestID = UUID()
         preloadRequestID = requestID
-        // Preload may outlast the splash deadline. The ad stays on the main actor.
         let task = Task<Void, Error> { @MainActor [weak self] in
             let began = ContinuousClock.now
             do {
@@ -228,7 +219,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
         try await task.value
     }
 
-    // Cold start includes pre-login guest preparation. Foreground returns use the same gate.
     func beginStartup(commerce: CommerceStore, accountAccess: AccountAccessFlow) {
         guard !startupStarted else { return }
         startupStarted = true
@@ -236,7 +226,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
     }
 
     func didEnterBackground() {
-        // An ad or SDK consent browser returning to the app must not recursively trigger an ad.
         returnedFromBackground = startupFinished && !isPresenting && !busy && !appOpenConsentPresented
         if isPreparingAppOpen, !appOpenConsentPresented { finishAppOpen(reason: "background", preservePreparation: true) }
     }
@@ -256,8 +245,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
         let attempt = UUID()
         appOpenAttempt = attempt
         isPreparingAppOpen = true
-        // Bound only this presentation opportunity. A slow network must not keep
-        // the home screen locked or discard inventory for the next foreground.
         let testMode = commerce.api.configuration.adsTestMode
         let waitingBudget: Double
         if coldStart { waitingBudget = testMode ? 5 : 2 }
@@ -269,8 +256,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
             guard let self else { return }
             let packagedAppID = Bundle.main.object(forInfoDictionaryKey: "GADApplicationIdentifier") as? String
             let demoPlacement = testMode ? GoogleDemoInventory.placement(for: 1, packagedAppID: packagedAppID) : nil
-            // Demo inventory is known locally and can load alongside guest login.
-            // Presentation still requires the current account's verified rights.
             if let demoPlacement {
                 self.startSDKIfNeeded()
                 Task { try? await self.preloadAppOpen(unitID: demoPlacement.unitID) }
@@ -305,7 +290,6 @@ final class RewardedAds: NSObject, ObservableObject, FullScreenContentDelegate {
                 let key = "tricko.app-open.last-impression.\(commerce.api.configuration.bundleID).\(commerce.api.configuration.apiBaseURL?.host ?? "none").\(placement.isOfficialDemo ? "demo" : "production")"
                 self.appOpenLog.info("App-open rights/configuration ready; intervalMinutes=\(interval ?? -1)")
                 if self.appOpenAttempt == attempt { self.appOpenStage = "ad-preparation" }
-                // Late inventory may be retained, but consent/presentation may not interrupt Home.
                 let mayPresentConsent = self.appOpenAttempt == attempt
                 try await self.prepareSDK(demoMode: placement.isOfficialDemo,
                     mayPresentConsent: mayPresentConsent,

@@ -1,4 +1,3 @@
-// App-owned copy. Remote content and prices are not translated.
 "%@ item · On this device" = "%@項目 · この端末内";
 "%@ items · On this device" = "%@項目 · この端末内";
 "%@ more saves have been added. Your unlimited viewing stays active." = "保存%@回を追加しました。視聴無制限は引き続き有効です。";
@@ -311,7 +310,7 @@
 "Trim end" = "トリミング終了位置";
 "Trim start" = "トリミング開始位置";
 "Trim the timing, crop the frame, change the pace." = "長さ、フレーム、速度を調整。";
-"Trim, rotate and combine your changes." = "練習動画をトリミングしたり、回転や速度調整をしたりできます。";
+"Review moments, trim clips or adjust playback speed." = "気になる場面の確認、動画のトリミング、再生速度の調整ができます。";
 "Try again" = "再試行";
 "Turn together" = "体を一緒に回す";
 "Two hard-court majors, one clay-court major and one grass-court major." = "ハードが2大会、クレーが1大会、芝が1大会。";
@@ -498,7 +497,6 @@
 
 "Clear link" = "リンクを消去";
 
-/* Playback and local library feedback */
 "Favorites" = "お気に入り";
 "Favorite" = "お気に入り";
 "Favorited" = "登録済み";
@@ -521,7 +519,6 @@
 "Finish this ad for unlimited downloads today." = "広告を最後まで見ると、次のリセットまでダウンロードが無制限になります。";
 "Connect to refresh your allowance." = "接続すると残りのダウンロード回数を確認できます。";
 
-// Tricko lesson link entry.
 "Paste" = "ペースト";
 "Open lesson" = "動画を探す";
 "Use the lesson link or code you received." = "受け取った動画のリンクやコードを使います。";
@@ -570,7 +567,6 @@
 "Open a lesson link or short code from Home." = "ホームで動画のリンクを貼り付けるか、コードを入力してください。";
 "Search the web with your original input." = "入力した内容でウェブ検索できます。";
 
-/* Empty states */
 "No favorites yet" = "お気に入りはまだありません";
 "No offline videos yet" = "ダウンロード済みの動画はありません";
 "No imported videos yet" = "読み込んだ動画はまだありません";
@@ -584,7 +580,6 @@
 "Continue practice" = "練習を続ける";
 "Go to practice" = "練習に移動";
 
-/* Lesson, practice, and subscription copy */
 "Couldn’t load lesson collections" = "コレクションを読み込めませんでした";
 "Setting up your table…" = "接続中…";
 "Slow down a move to check every frame." = "動きをゆっくり再生して、見え方を確認できます。";
@@ -682,7 +677,6 @@
 "View options for more views and downloads" = "視聴とダウンロードの回数を増やす方法を見る";
 "Retry loading plans" = "プランを再読み込み";
 
-/* Plus benefits and review presets */
 "Included with Plus" = "Plusに含まれる機能";
 "Unlimited lesson views" = "動画を視聴し放題";
 "Watch lessons without using a daily view allowance." = "1日の視聴回数を気にせず動画を見られます。";
@@ -709,7 +703,6 @@
 "Couldn’t save the preset." = "プリセットを保存できませんでした。";
 "Preset saved on this device." = "この端末にプリセットを保存しました。";
 
-/* Local video workspace */
 "Files" = "ファイル";
 "Photos" = "写真";
 "Open a video" = "動画を開く";
@@ -720,3 +713,29 @@
 "Crop, rotate or flip a video." = "動画の切り抜き、回転、左右反転ができます。";
 "Video exports, editing presets and no opening ads." = "動画の書き出し、編集プリセット、起動時の広告なし。";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "動画エディタでスロー再生のプリセットや保存済みの設定を適用できます。";
+
+"Review video" = "動画を振り返る";
+"Continue review" = "振り返りを再開";
+"Video review" = "動画の振り返り";
+"Mark this moment" = "この場面にマーク";
+"This video is unavailable for review." = "この動画は振り返りに使用できません。";
+"Review markers" = "振り返りマーカー";
+"Mark a moment to revisit it later." = "見返したい場面にマークを付けましょう。";
+"Edit marker" = "マーカーを編集";
+"General note" = "メモ";
+"Add a note (optional)" = "メモを追加（任意）";
+"Remove marker" = "マーカーを削除";
+"Mark as reviewed" = "確認済みにする";
+"Reopen marker" = "未確認に戻す";
+"Reviewed" = "確認済み";
+"Visuals" = "映像";
+"Pacing" = "テンポ";
+"Edit point" = "編集ポイント";
+"Highlight" = "見どころ";
+"Practice resources" = "練習メニュー";
+"%@ pending review" = "未確認%@件";
+"Pending review" = "未確認";
+"All markers reviewed." = "すべてのマーカーが確認済みです。";
+"Previous marker" = "前のマーカー";
+"Next marker" = "次のマーカー";
+"Marker %@ of %@" = "%2$@件中%1$@件目";

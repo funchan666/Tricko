@@ -31,7 +31,6 @@ final class LibraryStore: ObservableObject {
     var favorites: [LessonClip] { snapshot.favorites }
     var history: [LessonLinkVisit] { snapshot.history }
     func url(for movie: PracticeRecording) -> URL { root.appendingPathComponent(movie.filename) }
-    // Internal IDs stay stable; only the user-facing shared copy gets a readable name.
     func shareFile(for movie: PracticeRecording, commerce: CommerceStore) async throws -> URL {
         try commerce.requireMediaExport()
         let exportOwner = commerce.api.session?.userId.value
@@ -42,7 +41,6 @@ final class LibraryStore: ObservableObject {
             let fm = FileManager.default
             let root = fm.temporaryDirectory.appendingPathComponent("TrickoSharedVideos", isDirectory: true)
             try fm.createDirectory(at: root, withIntermediateDirectories: true)
-            // Expired staged copies are disposable; never touch the media library.
             for old in (try? fm.contentsOfDirectory(at: root, includingPropertiesForKeys: [.creationDateKey])) ?? [] {
                 if let created = try? old.resourceValues(forKeys: [.creationDateKey]).creationDate,
                    created < Date().addingTimeInterval(-7 * 86_400) { try? fm.removeItem(at: old) }
@@ -139,8 +137,28 @@ final class LibraryStore: ObservableObject {
         }
         return item
     }
+    func saveReviewPoint(_ point: VideoReviewPoint, for movieID: UUID) throws {
+        guard point.seconds.isFinite, point.seconds >= 0 else { throw TrickoError.storage }
+        try updateReviewPoints(for: movieID) { points in
+            if let index = points.firstIndex(where: { $0.id == point.id }) {
+                points[index] = point
+            } else {
+                points.append(point)
+            }
+        }
+    }
+    func removeReviewPoint(_ pointID: UUID, from movieID: UUID) throws {
+        try updateReviewPoints(for: movieID) { $0.removeAll { $0.id == pointID } }
+    }
+    private func updateReviewPoints(for movieID: UUID, _ update: (inout [VideoReviewPoint]) -> Void) throws {
+        var next = snapshot
+        guard let index = next.movies.firstIndex(where: { $0.id == movieID }) else { throw TrickoError.storage }
+        var points = next.movies[index].reviewPoints ?? []
+        update(&points)
+        next.movies[index].reviewPoints = points.isEmpty ? nil : points
+        try persist(next)
+    }
     func delete(_ movie: PracticeRecording) {
-        // Commit index removal first; a failed file deletion leaves an orphan, not a broken library entry.
         var next = snapshot
         next.movies.removeAll { $0.id == movie.id }
         do {

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Read getV2 and sync its AdMob App ID before Archive; never invent an ID."""
 import argparse
 import json
 import os
@@ -10,7 +9,9 @@ import tempfile
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description='Read getV2 and sync its AdMob App ID before Archive; never invent an ID.'
+    )
     parser.add_argument('--user-id', required=True, help='userId returned by the current visitor login')
     parser.add_argument('--lang', default='en')
     parser.add_argument('--time-zone', default='Asia/Shanghai')
@@ -68,10 +69,6 @@ def main():
                             'TRICKO_GOOGLE_ADS_APP_ID = ' + app_id, source, flags=re.M)
     if count != 1:
         raise ValueError('Expected one App ID build setting; no files changed')
-    updated = updated.replace('// Pending: getV2 currently omits adList. Retain the existing SDK identity only;\n'
-                              '// runtime never falls back to sample ads when remote configuration is absent.',
-                              '// Runtime validates this App ID against getV2 and uses its ad unit IDs.')
-    # Write only after both placements have passed validation.
     with tempfile.NamedTemporaryFile(mode='w', dir=config.parent, delete=False) as temporary:
         temporary.write(updated)
         pending = Path(temporary.name)

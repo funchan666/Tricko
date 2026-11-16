@@ -59,7 +59,6 @@ struct RoutinePracticeView: View {
             }
             summary(session)
             LocalizedText("How did this run go?").font(.stage(.title3, display: true))
-            // Two columns split evenly on wide or folded displays.
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(RunResult.allCases) { result in
                     ActionButton(title: result.label, primary: result.isClean) {

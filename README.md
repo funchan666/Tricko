@@ -1,6 +1,8 @@
 # Tricko
 
-Close-up magic video lessons in a native SwiftUI iPhone app. Routine rehearsal by discipline and setting, with performance notes.
+Tricko is a native SwiftUI app for importing, reviewing and editing local videos. Open **Review video** in the editor to mark a moment in the original footage, then tap its timecode to revisit it and mark it as reviewed. Markers stay with the local video, and **Continue review** on Home opens the latest pending marker.
+
+Use the marker categories to track visuals, audio, pacing, edit points and highlights. The practice log and magic notes are under **Tools → Practice resources**.
 
 Open `Tricko.xcodeproj` and select the shared `Tricko` scheme. The minimum deployment target is iOS 17. The Duo layout paths use the iOS 27.1 SDK, which is available in Xcode 27.1.
 

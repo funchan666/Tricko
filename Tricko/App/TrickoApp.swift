@@ -44,10 +44,6 @@ struct TrickoApp: App {
     }
 }
 
-// Keeps the splash visible during the bounded cold-start ad opportunity.
-// Guest authentication prepares configuration and opens the app directly.
-// Fold/unfold and display changes resize this one scene: they never restart
-// login, re-count views or trigger another app-open opportunity.
 struct TrickoStartupHost: View {
     @EnvironmentObject private var ads: RewardedAds
     @EnvironmentObject private var commerce: CommerceStore
@@ -59,8 +55,6 @@ struct TrickoStartupHost: View {
 
     var body: some View {
         ZStack {
-            // Mount once so local content and authentication prepare while the
-            // bounded app-open opportunity runs, without rebuilding navigation.
             TrickoRootView()
                 .allowsHitTesting(finished)
                 .accessibilityHidden(!finished)
@@ -114,7 +108,6 @@ struct TrickoStartupView: View {
 }
 
 private enum TrickoTab: Int, CaseIterable, Hashable {
-    // Keep the stored IDs for surviving tabs. The former Discover tab falls back to Home.
     case home = 0
     case library = 3
     case tools = 2
@@ -283,7 +276,6 @@ struct TrickoRootView: View {
     }
 }
 
-// A network recovery surface, not a second login or consent gate.
 struct ConnectionPanel: View {
     @EnvironmentObject private var api: APIClient
     @State private var error: String?

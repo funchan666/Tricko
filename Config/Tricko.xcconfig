@@ -1,9 +1,6 @@
-// Tricko bundle identifier and test service settings (Clipo 0d55c2d baseline).
 PRODUCT_BUNDLE_IDENTIFIER = com.trickostudio.videodesk
 TRICKO_API_HOST = devapi.io-jp.com
-// getV2 `name`: the app name, original capitalisation.
 TRICKO_RELEASE_NAME = Tricko
-// Empty expansion preserves // in xcconfig URL values. HTTPS placeholders until production.
 TRICKO_WEBSITE_URL = https:/$()/example.com/
 TRICKO_PRIVACY_URL = https:/$()/example.com/
 TRICKO_TERMS_URL = https:/$()/example.com/
@@ -12,8 +9,6 @@ SWIFT_VERSION = 5.0
 TARGETED_DEVICE_FAMILY = 1
 MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
-// Google official iOS demo configuration (App ID + official app-open/rewarded units).
-// Production: set NO and use the App ID that getV2.adList returns for this app.
 TRICKO_ADS_TEST_MODE = YES
 TRICKO_GOOGLE_ADS_APP_ID = ca-app-pub-3940256099942544~1458002511
 OTHER_LDFLAGS = $(inherited) -ObjC

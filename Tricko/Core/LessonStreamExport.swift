@@ -2,8 +2,6 @@ import Foundation
 import AVFoundation
 import AudioToolbox
 
-/// Repackages the service's unencrypted H.264/AAC transport streams without
-/// re-encoding. The OS-managed offline package is never modified or renamed.
 enum LessonStreamExport {
     enum Failure: LocalizedError {
         case unsupported, damaged, tooLarge, network, writing
@@ -18,7 +16,6 @@ enum LessonStreamExport {
         }
     }
 
-    // Runs on its own actor, not the main actor that renders/plays the video.
     actor Job {
         private let session: URLSession
         init() {
@@ -49,7 +46,6 @@ enum LessonStreamExport {
                 guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw Failure.network }
                 let size = try temporary.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
                 downloaded += Int64(size)
-                // Bound disk and per-segment memory; malformed/live streams cannot grow forever.
                 guard size > 0, size <= 32 * 1_024 * 1_024, downloaded <= 1_024 * 1_024 * 1_024 else { throw Failure.tooLarge }
                 try transport.consume(Data(contentsOf: temporary, options: .mappedIfSafe))
                 await progress(Double(index + 1) / Double(playlist.segments.count) * 0.8)
@@ -87,8 +83,6 @@ enum LessonStreamExport {
             }
             var variants: [(Int, URL)] = []
             for (index, line) in lines.enumerated() where line.hasPrefix("#EXT-X-STREAM-INF:") {
-                // This converter handles muxed AVC/AAC variants. Alternate audio,
-                // HEVC, byte-range/fMP4, live and encrypted streams stay offline-only.
                 guard index + 1 < lines.count, !lines[index + 1].hasPrefix("#"),
                       !line.contains("AUDIO="), !line.contains("hvc1"), !line.contains("hev1") else { continue }
                 let rate = line.components(separatedBy: "BANDWIDTH=").dropFirst().first?
@@ -136,9 +130,6 @@ enum LessonStreamExport {
                 writer.add(audio); tracks.append((audio, audioFormat, transport.audioSamples))
             }
             guard writer.startWriting() else { throw writer.error ?? Failure.writing }
-            // Start at the first presentation time. AVC B-frame decode times
-            // may be earlier; retaining that negative decode offset avoids an
-            // artificial leading audio edit that repeats AAC priming packets.
             let origin = tracks.flatMap { $0.2.prefix(1) }.map(\.pts).min() ?? 0
             writer.startSession(atSourceTime: .zero)
             let reader = try FileHandle(forReadingFrom: spool)
@@ -165,8 +156,6 @@ enum LessonStreamExport {
                     let buffer = try LessonStreamExport.sampleBuffer(data, format: format, pts: sample.pts - origin,
                                                   dts: sample.dts - origin, duration: duration, sync: sample.sync)
                     if input.mediaType == .audio {
-                        // These are already encoded AAC packets, with no new
-                        // encoder priming/trailing frames to infer or discard.
                         if index == 0 {
                             CMSetAttachment(buffer, key: kCMSampleBufferAttachmentKey_TrimDurationAtStart,
                                             value: CMTimeCopyAsDictionary(.zero, allocator: kCFAllocatorDefault),
@@ -202,8 +191,6 @@ enum LessonStreamExport {
         let offset: UInt64, size: Int, pts: Int64, dts: Int64, duration: Int64, sync: Bool
     }
 
-    /// PID/PES assembly survives segment boundaries; sample payloads are spooled
-    /// to disk so a long lesson does not accumulate in memory.
     private final class Transport {
         let sink: FileHandle
         var videoFormat: CMFormatDescription?, audioFormat: CMFormatDescription?
@@ -232,7 +219,7 @@ enum LessonStreamExport {
                 if payload == start + 188 { continue }
                 let count = Int(bytes[start + 3] & 15)
                 if let previous = counters[pid] {
-                    if count == previous { continue } // repeated transport packet
+                    if count == previous { continue }
                     guard count == (previous + 1) % 16 else { throw Failure.damaged }
                 }
                 counters[pid] = count
@@ -268,7 +255,6 @@ enum LessonStreamExport {
             var body = bytes
             if begins {
                 guard let pointer = body.first, Int(pointer) + 1 <= body.count else { throw Failure.damaged }
-                // PAT/PMT tables in the service stream are each a single section.
                 body = Array(body.dropFirst(Int(pointer) + 1)); sections[pid] = []
             }
             guard sections[pid] != nil else { return }
@@ -295,7 +281,7 @@ enum LessonStreamExport {
                     case 0x0f:
                         guard audioPID == nil || audioPID == streamPID else { throw Failure.unsupported }; audioPID = streamPID
                     case 0x24, 0x03, 0x04, 0x11, 0x81: throw Failure.unsupported
-                    default: break // metadata streams do not become movie tracks
+                    default: break
                     }
                     i += 5 + (Int(table[i + 3] & 15) << 8 | Int(table[i + 4]))
                 }
@@ -387,10 +373,6 @@ enum LessonStreamExport {
                     var description = AudioStreamBasicDescription(mSampleRate: Double(rates[rateIndex]), mFormatID: kAudioFormatMPEG4AAC,
                         mFormatFlags: UInt32(profile), mBytesPerPacket: 0, mFramesPerPacket: 1_024, mBytesPerFrame: 0,
                         mChannelsPerFrame: UInt32(channels), mBitsPerChannel: 0, mReserved: 0)
-                    // Core Audio expects an MPEG-4 elementary stream descriptor
-                    // as the AAC magic cookie, not the two-byte AudioSpecificConfig
-                    // alone. A bare ASC lets writing finish but produces an invalid
-                    // esds atom whose audio track AVFoundation cannot open.
                     let decoderSpecific: [UInt8] = [0x05, UInt8(cookie.count)] + cookie
                     let decoderPayload: [UInt8] = [0x40, 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] + decoderSpecific
                     let decoderDescriptor: [UInt8] = [0x04, UInt8(decoderPayload.count)] + decoderPayload

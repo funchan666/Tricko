@@ -11,13 +11,12 @@ enum TrickoStyle {
     static let secondary = Color(red: 0.647, green: 0.724, blue: 0.728)
     static let paper = Color(red: 0.975, green: 0.947, blue: 0.892)
     static let paperSecondary = Color(red: 0.293, green: 0.348, blue: 0.348)
-    static let cardRed = Color(red: 0.761, green: 0.255, blue: 0.294)       // #C2414B pips, emphasis
+    static let cardRed = Color(red: 0.761, green: 0.255, blue: 0.294)
     static let line = Color.white.opacity(0.10)
-    static let danger = Color(red: 1, green: 0.612, blue: 0.561)            // #FF9C8F
+    static let danger = Color(red: 1, green: 0.612, blue: 0.561)
     static let radius: CGFloat = 16
 }
 
-// MARK: - Original raster illustrations
 
 struct StagePhoto: View {
     let asset: String
@@ -114,7 +113,6 @@ struct StageSheetHeader: View {
     }
 }
 
-/// Editorial plates for the guide and tools (square, full-bleed).
 struct ScenePlate: View {
     enum Subject: String {
         case handling = "PlateHandling"
@@ -122,10 +120,6 @@ struct ScenePlate: View {
         case patter = "PlatePatter"
         case practice = "PlatePractice"
         case ethics = "PlateEthics"
-        case review = "PlateReview"
-        case speed = "PlateSpeed"
-        case frame = "PlateFrame"
-        case audio = "PlateAudio"
 
         var asset: String { rawValue }
     }
@@ -135,11 +129,10 @@ struct ScenePlate: View {
     }
 }
 
-// MARK: - Glyphs (original single-colour PNGs rendered as templates)
 
 enum TrickoGlyph: String, CaseIterable {
-    case home, feed, edit, library, link, search, bookmark, download
-    case play, pause, close, back, sound, mute, folder, settings
+    case feed, edit, library, link, search, bookmark, download
+    case play, pause, close, back, sound, folder, settings
     case saved, more, exit
     var asset: String { "Glyph" + rawValue.prefix(1).uppercased() + rawValue.dropFirst() }
 }
@@ -177,10 +170,7 @@ struct IconButton: View {
     }
 }
 
-// MARK: - Surfaces and buttons
 
-/// Native fills. Tones: gold (primary), velvet (dark control), ivory (card),
-/// smoke (quiet panel), ink (dark control on ivory), mist (muted control on ivory).
 struct StageSurface: View {
     enum Tone { case gold, velvet, ivory, smoke, ink, mist }
     let tone: Tone
@@ -215,8 +205,6 @@ struct PressStyle: ButtonStyle {
         configuration.label.opacity(!isEnabled ? disabledOpacity : (configuration.isPressed ? 0.7 : 1))
     }
 }
-// Compact controls retain their full localized label; enclosing layouts can scroll
-// or use ViewThatFits instead of splitting words into multiple lines.
 struct CompactActionStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
@@ -269,6 +257,7 @@ struct EmptyStateActionStyle: ButtonStyle {
     var primary = true
     var symbol: TrickoGlyph? = nil
     var minHeight: CGFloat = 48
+    var horizontalPadding: CGFloat = 16
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -279,7 +268,7 @@ struct EmptyStateActionStyle: ButtonStyle {
                 .font(.stage(.subheadline, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
+        .padding(.horizontal, horizontalPadding).padding(.vertical, 10)
         .frame(minWidth: 44, minHeight: minHeight)
         .foregroundStyle(foreground)
 
@@ -325,10 +314,7 @@ struct FieldStyle: ViewModifier {
     }
 }
 
-// MARK: - Keyboard
 
-// Measure in the owning screen, so scrolling, keyboard avoidance and resizing
-// keep the input exclusion region aligned. No global window or focus broadcast.
 private struct KeyboardInputBounds: PreferenceKey {
     static var defaultValue: [String: CGRect] { [:] }
     static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
@@ -341,7 +327,7 @@ private struct OutsideInputTap: ViewModifier {
     @State private var inputBounds: CGRect?
     func body(content: Content) -> some View {
         content
-            .contentShape(Rectangle()) // Hit area only, no visible artwork.
+            .contentShape(Rectangle())
             .simultaneousGesture(SpatialTapGesture(coordinateSpace: .named(scope)).onEnded { tap in
                 guard focus.wrappedValue, let inputBounds, !inputBounds.contains(tap.location) else { return }
                 focus.wrappedValue = false
@@ -375,8 +361,6 @@ extension View {
         }
     }
 
-    // Only the backdrop extends past the container insets. Foreground controls
-    // retain the camera, bar and keyboard layout supplied by their host.
     func trickoScreenBackground(_ color: Color = TrickoStyle.background) -> some View {
         background { color.ignoresSafeArea(.container) }
             .trickoImmersiveChrome()
@@ -391,8 +375,6 @@ extension View {
         }
     }
 
-    // A readable column follows the available container (outer or inner display,
-    // split view) without resetting page state.
     func trickoPage() -> some View {
         pageHorizontalMargins().padding(.top, 12).padding(.bottom, 20)
             .frame(maxWidth: 680).frame(maxWidth: .infinity, alignment: .top)
@@ -407,7 +389,6 @@ extension View {
     }
 }
 
-// MARK: - Shared building blocks
 
 struct MediaCover: View {
     let url: URL?
@@ -462,7 +443,6 @@ struct SectionLabel: View {
     }
 }
 
-// Original raster artwork. Its layout never participates in navigation hit testing.
 struct TrickoIllustration: View {
     let name: String
     var height: CGFloat = 180
@@ -512,26 +492,51 @@ struct QuietActionStyle: ButtonStyle {
     }
 }
 
-/// Horizontal segmented chips. Selection is shown by fill and by the selected trait.
+struct CountBadge: View {
+    let text: String
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.stage(.caption2, weight: .semibold).monospacedDigit())
+            .foregroundStyle(TrickoStyle.accent)
+            .padding(.horizontal, 6)
+            .frame(minWidth: 24, minHeight: 24)
+            .background(TrickoStyle.accent.opacity(0.16), in: Capsule())
+            .fixedSize(horizontal: true, vertical: false)
+    }
+}
+
 struct StageFilter: View {
+    @Environment(\.locale) private var locale
     let values: [String]
     let selected: String
+    var counts: [String: Int] = [:]
     let select: (String) -> Void
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(values, id: \.self) { value in
+                    let count = counts[value, default: 0]
+                    let countText = count > 0 ? count.formatted(.number.locale(locale)) : nil
                     Button { select(value) } label: {
-                        LocalizedText(value).font(.stage(.footnote, weight: .semibold))
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                            .padding(.horizontal, 16).padding(.vertical, 10)
-                            .frame(minHeight: 44)
-                            .foregroundStyle(selected == value ? TrickoStyle.ink : TrickoStyle.paper)
-                            .background { StageSurface(tone: selected == value ? .gold : .velvet, radius: 22) }
-                            .contentShape(Rectangle())
+                        HStack(spacing: 6) {
+                            LocalizedText(value).font(.stage(.footnote, weight: .semibold))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .padding(.horizontal, 16).padding(.vertical, 10)
+                                .frame(minHeight: 44)
+                                .foregroundStyle(selected == value ? TrickoStyle.ink : TrickoStyle.paper)
+                                .background { StageSurface(tone: selected == value ? .gold : .velvet, radius: 22) }
+                            if let countText {
+                                CountBadge(text: countText)
+                                    .accessibilityHidden(true)
+                                    .allowsHitTesting(false)
+                            }
+                        }
+                        .contentShape(Rectangle())
                     }.buttonStyle(PressStyle())
                         .accessibilityAddTraits(selected == value ? .isSelected : [])
+                        .accessibilityValue(Text(verbatim: countText ?? ""))
                 }
             }
         }

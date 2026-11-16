@@ -53,7 +53,6 @@ struct AccountBusyModifier: ViewModifier {
     }
 }
 
-// Native text/layout over the app's existing surfaces; no rendered text artwork.
 struct AccountDecisionDialog: View {
     let title: String
     let message: String
@@ -220,7 +219,6 @@ struct PolicyWebView: UIViewRepresentable {
             state.retryURL = request.url
             webView.load(request)
         }
-        // Documents and search results have no camera or microphone use case.
         func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin,
                      initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType,
                      decisionHandler: @escaping (WKPermissionDecision) -> Void) {
@@ -259,7 +257,6 @@ struct PolicyWebView: UIViewRepresentable {
             } else if url.scheme == "https" || (webSearch && url.scheme == "http") || url.absoluteString == "about:blank" {
                 if navigationAction.targetFrame?.isMainFrame != false { state.retryURL = url }
                 if webSearch, navigationAction.targetFrame?.isMainFrame != false {
-                    // Reissue page navigations as app loads so web links stay in this view.
                     if navigationAction.navigationType == .backForward ||
                         (navigationAction.targetFrame != nil && appNavigationURL == url) {
                         appNavigationURL = nil
@@ -354,7 +351,6 @@ struct AccountSettingsSection: View {
 
 }
 
-// Plain native rows with the original raster navigation glyph.
 private struct AccountMenuRow: View {
     let title: String
     var detail: String? = nil

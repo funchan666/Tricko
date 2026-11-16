@@ -23,12 +23,14 @@ struct HomeView: View {
     @State private var showingCollections = true
     @State private var loadingCollections = true
     @State private var composerError: String?
+    @State private var reviewingVideo: PracticeRecording?
     @FocusState private var focused: Bool
 
     var body: some View {
         homePage
             .sheet(isPresented: $showingLinkGuide) { LinkGuideSheet() }
             .sheet(isPresented: $paywall) { MembershipView() }
+            .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0) }
     }
 
     private var homePage: some View {
@@ -46,8 +48,9 @@ struct HomeView: View {
                     .frame(minHeight: max(0, photoHeight - topInset), alignment: .top)
 
                     VStack(alignment: .leading, spacing: 24) {
-                        lessonAccess
+                        continueReview
                         recentVideos
+                        lessonAccess
                         lessonResources
                     }
                     .trickoPage()
@@ -68,7 +71,6 @@ struct HomeView: View {
     }
 
     private var homePhoto: some View {
-        // Keep the camera in the crop in both reading directions.
         StagePhoto(asset: "VideoHomePhoto", alignment: .trailing)
             .environment(\.layoutDirection, .leftToRight)
             .overlay {
@@ -118,6 +120,35 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    @ViewBuilder private var continueReview: some View {
+        let recent = library.movies.compactMap { movie in
+            movie.latestPendingReviewPoint.map { (movie: movie, point: $0) }
+        }.max { $0.point.updatedAt < $1.point.updatedAt }
+        if let recent {
+            let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+            Button { openReview(recent.movie) } label: {
+                HStack(spacing: 12) {
+                    Glyph(symbol: .bookmark, size: 18, tint: TrickoStyle.ink)
+                        .frame(width: 36, height: 36)
+                        .background(TrickoStyle.accent, in: Circle())
+                    VStack(alignment: .leading, spacing: 4) {
+                        LocalizedText("Continue review").font(.stage(.headline, weight: .semibold))
+                        Text(verbatim: recent.movie.title)
+                            .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Glyph(symbol: .back, size: 11, tint: TrickoStyle.accent).rotationEffect(.degrees(180))
+                }
+                .padding(14)
+                .frame(minHeight: 60)
+                .trickoGlass(in: shape)
+                .contentShape(.interaction, shape)
+            }
+            .buttonStyle(PressStyle())
+        }
+    }
+
     @ViewBuilder private var recentVideos: some View {
         let videos = Array(library.movies.lazy.filter { !$0.isExport }.prefix(3))
         if !videos.isEmpty {
@@ -155,18 +186,28 @@ struct HomeView: View {
     }
 
     private func recentVideo(_ movie: PracticeRecording) -> some View {
-        Button { openVideo(movie) } label: {
-            VStack(alignment: .leading, spacing: 7) {
-                LocalVideoCover(url: library.url(for: movie), cornerRadius: 12, maximumPixelSize: 640)
-                    .aspectRatio(1.52, contentMode: .fit)
-                Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)
-                LocalizedDateText(date: movie.date).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            Button { openVideo(movie) } label: {
+                VStack(alignment: .leading, spacing: 7) {
+                    LocalVideoCover(url: library.url(for: movie), cornerRadius: 12, maximumPixelSize: 640)
+                        .aspectRatio(1.52, contentMode: .fit)
+                    Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)
+                    LocalizedDateText(date: movie.date).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .frame(width: typeSize.isAccessibilitySize ? 250 : 168, alignment: .leading)
-            .contentShape(Rectangle())
+            .buttonStyle(PressStyle())
+            .accessibilityHint(LocalizedStringKey("Full editor"))
+
+            VideoReviewButton(movie: movie) { openReview(movie) }
         }
-        .buttonStyle(PressStyle())
-        .accessibilityHint(LocalizedStringKey("Full editor"))
+        .frame(width: typeSize.isAccessibilitySize ? 250 : 168, alignment: .leading)
+    }
+
+    private func openReview(_ movie: PracticeRecording) {
+        focused = false
+        reviewingVideo = movie
     }
 
     private var recentVideosTitle: some View {

@@ -9,7 +9,6 @@ enum AllowanceKind: String, Codable, CaseIterable, Identifiable {
 struct DailyUsage: Codable {
     var day: Date
     var watched: Set<String> = []
-    // Legacy keys remain decodable. Favorites no longer consume any allowance.
     var favoritesUsed = 0
     var completedRewardIDs: Set<UUID> = []
     var extraWatches = 0
@@ -22,7 +21,6 @@ struct DailyUsage: Codable {
     var downloadsUsed: Int?
     var completedDownloadRewardIDs: Set<UUID>?
     var extraDownloads: Int?
-    // Today's admitted base is independent of live per-ad reward configuration.
     var watchBaseForDay: Int?
     var downloadBaseForDay: Int?
     var nextWatchBase: Int?
@@ -37,8 +35,6 @@ final class QuotaStore: ObservableObject {
     private var policy: CommerceConfiguration?
     private var remote: QuotaConfiguration?
     private var storageOK = true
-    // Shared by all player pages, so lazy-page recycling and swiping cannot
-    // reopen a dismissed prompt during the same exhausted-allowance period.
     private var watchLimitPromptClaimed = false
     var unlimited: Bool { isUnlimited(.watch) }
     var downloadsUnlimited: Bool { isUnlimited(.download) }
@@ -80,8 +76,6 @@ final class QuotaStore: ObservableObject {
             if let data = try SecureStorage.read(key) {
                 var saved = try JSONDecoder().decode(DailyUsage.self, from: data)
                 if saved.schemaVersion != 2 {
-                    // Preserve existing viewing spend/rewards during the one-time UTC migration.
-                    // The old favorite ledger never represented a downloaded file.
                     saved.day = boundary()
                     saved.schemaVersion = 2
                     saved.watchSpend = saved.watched.count
@@ -98,8 +92,6 @@ final class QuotaStore: ObservableObject {
     }
     private func updateDailyBases() {
         guard storageOK, var next = usage else { return }
-        // A startup refresh may temporarily have no remote configuration. Keep the
-        // last persisted next-day values until a real configuration arrives.
         let watchBase = max(0, remote?.dailyWatchLimit ?? (remote == nil ? next.nextWatchBase : nil) ?? policy?.dailyWatchLimit ?? 0)
         let downloadBase = max(0, remote?.dailyDownloadLimit ?? (remote == nil ? next.nextDownloadBase : nil) ?? policy?.dailyFavoriteLimit ?? 0)
         next.nextWatchBase = watchBase
@@ -134,8 +126,6 @@ final class QuotaStore: ObservableObject {
         resetIfNeeded()
         return storageOK && userID != nil && (premium || downloadsUnlimited || usage?.downloaded?.contains(id) == true || downloadsLeft > 0)
     }
-    // Called only after a complete, durable offline file exists. The lifetime ID set
-    // also makes recovery after an interrupted index write and re-download idempotent.
     func recordDownload(_ id: String, owner: String, premium: Bool) throws {
         guard owner == userID, mayDownload(id, premium: premium), var next = usage else { throw TrickoError.storage }
         guard next.downloaded?.contains(id) != true else { return }
@@ -173,8 +163,6 @@ final class QuotaStore: ObservableObject {
         guard var next = usage, policy != nil else { throw TrickoError.configuration }
         guard !isUnlimited(kind), remaining(kind) == 0, next.luckyRewardIDs?.contains(id) != true else { return nil }
         guard (kind == .watch ? nextWatchReward : downloadReward) > 0 else { return nil }
-        // No cooldown; no-fill gifts never advance either completed-ad counter.
-        // At stage four nextWatchReward remains the third-stage amount.
         if kind == .watch { next.extraWatches += nextWatchReward }
         else { next.extraDownloads = (next.extraDownloads ?? 0) + downloadReward }
         next.luckyRewardIDs = (next.luckyRewardIDs ?? []).union([id])

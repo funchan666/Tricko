@@ -49,6 +49,7 @@ final class CommerceStore: NSObject, ObservableObject {
     private var receiptContinuation: CheckedContinuation<Void, Error>?
     private var processing: Set<String> = []
     private var processingFailures: Set<String> = []
+    private var receivedRestoreTransaction: Bool?
     private var ownerID: String?
     private var refreshID = UUID()
     private var refreshTask: Task<Void, Never>?
@@ -113,7 +114,6 @@ final class CommerceStore: NSObject, ObservableObject {
             if self.api.session?.userId.value == owner { self.retryPending() }
         }
         refreshTask = configuration
-        // The test ad uses packaged inventory, so it needs only the verified rights.
         if waitForConfiguration { await configuration.value }
         else { await rights.value }
     }
@@ -144,7 +144,6 @@ final class CommerceStore: NSObject, ObservableObject {
             }
         }
     }
-    // Fetch metadata when the paywall opens; this never creates an order or payment.
     func loadPlans() async {
         guard !loadingPlans, !preparingPurchase, !busy else { return }
         loadingPlans = true
@@ -153,7 +152,7 @@ final class CommerceStore: NSObject, ObservableObject {
         defer { loadingPlans = false }
         for entry in policy?.products ?? [] {
             do {
-                let product = try await requestProduct(entry.id)
+                let product = try await requestProduct(entry)
                 try Task.checkCancellation()
                 products.append(product)
             } catch is CancellationError { return }
@@ -164,13 +163,12 @@ final class CommerceStore: NSObject, ObservableObject {
         }
     }
 
-    // Payment still requires an explicit action after Apple terms are visible.
     func purchase(planID: String) async {
         guard !busy, !preparingPurchase, !loadingPlans else { return }
         error = nil
         message = nil
         guard let owner = api.session else { error = "Your connection is not ready. Please try again shortly."; return }
-        guard ledgerAvailable, policy?.products.contains(where: { $0.id == planID }) == true,
+        guard ledgerAvailable, let entry = policy?.products.first(where: { $0.id == planID }),
               let displayedProduct = products.first(where: { $0.productIdentifier == planID }) else {
             error = "Purchases are temporarily unavailable. Please try again later."; return
         }
@@ -178,12 +176,11 @@ final class CommerceStore: NSObject, ObservableObject {
         preparingPurchase = true
         defer { preparingPurchase = false }
         do {
-            let product = try await requestProduct(planID)
+            let product = try await requestProduct(entry)
             try Task.checkCancellation()
             guard api.session?.userId.value == owner.userId.value else { throw TrickoError.unauthorized }
             products.removeAll { $0.productIdentifier == product.productIdentifier }
             products.append(product)
-            // If Apple changed the offer after display, show it before another purchase tap.
             guard displayedProduct.price == product.price,
                   displayedProduct.priceLocale == product.priceLocale,
                   displayedProduct.subscriptionPeriod?.unit == product.subscriptionPeriod?.unit,
@@ -196,17 +193,16 @@ final class CommerceStore: NSObject, ObservableObject {
             guard !premium else { message = "Your membership is already active."; return }
             await buy(product)
         } catch is CancellationError {
-            // No order or payment is created when preparation is cancelled.
         } catch { self.error = error.localizedDescription }
     }
-    private func requestProduct(_ id: String) async throws -> SKProduct {
+    private func requestProduct(_ entry: CommerceConfiguration.Product) async throws -> SKProduct {
         guard productsRequest == nil else { throw TrickoError.service("An Apple request is already in progress.") }
-        let request = SKProductsRequest(productIdentifiers: [id])
-        return try await withTaskCancellationHandler(operation: {
+        let request = SKProductsRequest(productIdentifiers: [entry.id])
+        let product: SKProduct = try await withTaskCancellationHandler(operation: {
             try Task.checkCancellation()
             return try await withCheckedThrowingContinuation { continuation in
                 productsRequest = request
-                requestedProductID = id
+                requestedProductID = entry.id
                 productContinuation = continuation
                 loadingProducts = true
                 request.delegate = self
@@ -222,6 +218,11 @@ final class CommerceStore: NSObject, ObservableObject {
                 self?.finishProductRequest(request, result: .failure(CancellationError()))
             }
         })
+        let expectedUnit: SKProduct.PeriodUnit = entry.period == .month ? .month : .year
+        guard let period = product.subscriptionPeriod, period.unit == expectedUnit, period.numberOfUnits == 1 else {
+            throw TrickoError.service("This plan isn’t available from Apple yet. Please try again later.")
+        }
+        return product
     }
     private func finishProductRequest(_ request: SKRequest, result: Result<SKProduct, Error>) {
         guard request === productsRequest else { return }
@@ -270,8 +271,6 @@ final class CommerceStore: NSObject, ObservableObject {
         guard ledgerAvailable else {
             error = "Purchase recovery storage is unavailable. Purchases are paused to protect existing orders."; return
         }
-        // Preserve a failed getV2 response instead of hiding it behind a generic purchase error.
-        // A previous configuration cannot authorize a new charge after refresh failed.
         if let releaseConfigurationError { error = releaseConfigurationError; return }
         guard let release else {
             error = "Purchase configuration could not be loaded. Please try again."; return
@@ -318,6 +317,7 @@ final class CommerceStore: NSObject, ObservableObject {
     func restore() {
         guard !busy, !preparingPurchase, !loadingPlans else { return }
         guard api.session != nil, ledgerAvailable else { error = "Your connection or purchase records are not ready. Please try again shortly."; return }
+        receivedRestoreTransaction = false
         busy = true
         error = nil
         message = "Checking your Apple purchases…"
@@ -332,8 +332,6 @@ final class CommerceStore: NSObject, ObservableObject {
             Task { await confirm(transaction) }
         }
     }
-    // A durable outbox allows cancellation/error reporting to retry after network loss
-    // or a relaunch, without retaining a failed StoreKit transaction in the queue.
     private func reportFailure(recordID: String) async {
         guard !processingFailures.contains(recordID),
               let record = records.first(where: { $0.id == recordID }),
@@ -353,14 +351,20 @@ final class CommerceStore: NSObject, ObservableObject {
             next[index].failure = nil
             try save(next)
         } catch {
-            // Keep the original status/owner and retry on refresh. Never report success.
             self.error = "Purchase status is waiting to sync. Please try again when connected."
         }
     }
     private func confirm(_ transaction: SKPaymentTransaction) async {
+        if receivedRestoreTransaction != nil, transaction.transactionState == .restored {
+            receivedRestoreTransaction = true
+        }
         guard ledgerAvailable, let transactionID = transaction.transactionIdentifier, !processing.contains(transactionID) else { return }
         processing.insert(transactionID)
-        defer { processing.remove(transactionID); busy = false }
+        busy = true
+        defer {
+            processing.remove(transactionID)
+            if receivedRestoreTransaction == nil, processing.isEmpty { busy = false }
+        }
         let binding = transaction.payment.applicationUsername ?? transaction.original?.payment.applicationUsername
         let original = transaction.original?.transactionIdentifier ?? transactionID
         guard let index = records.firstIndex(where: {
@@ -386,7 +390,6 @@ final class CommerceStore: NSObject, ObservableObject {
             guard let receiptURL = Bundle.main.appStoreReceiptURL, let receipt = try? Data(contentsOf: receiptURL), !receipt.isEmpty else {
                 throw TrickoError.service("Apple’s receipt is unavailable. Retry confirmation when connected.")
             }
-            // A refreshed credential is accepted only for the same original user.
             let owner = api.session?.userId.value == record.owner.userId.value ? (api.session ?? record.owner) : record.owner
             let body: [String: Any] = ["verificationData": receipt.base64EncodedString(), "purchaseID": record.orderID,
                 "status": "purchased", "transactionId": transactionID]
@@ -394,7 +397,7 @@ final class CommerceStore: NSObject, ObservableObject {
             _ = try await api.paymentRequest(path: "/app-api/flow/rights-order/buySuccess", body: body, owner: owner)
             var confirmed = records
             confirmed[index].confirmedIDs.insert(transactionID)
-            try save(confirmed) // Keychain write and read-back must precede finishTransaction.
+            try save(confirmed)
             SKPaymentQueue.default().finishTransaction(transaction)
             if api.session?.userId.value == record.owner.userId.value {
                 let rights = try await api.rights()
@@ -424,7 +427,7 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
     nonisolated func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         Task { @MainActor in
             guard request === productsRequest else { return }
-            guard let product = response.products.first(where: { $0.productIdentifier == requestedProductID }), product.subscriptionPeriod.map({ $0.numberOfUnits > 0 }) == true else {
+            guard let product = response.products.first(where: { $0.productIdentifier == requestedProductID }) else {
                 finishProductRequest(request, result: .failure(TrickoError.service("This plan isn’t available from Apple yet. Please try again later.")))
                 return
             }
@@ -457,7 +460,7 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
                 switch transaction.transactionState {
                 case .purchased, .restored: await confirm(transaction)
                 case .failed:
-                    busy = false
+                    busy = receivedRestoreTransaction != nil || !processing.isEmpty
                     guard let index = records.firstIndex(where: { $0.id == transaction.payment.applicationUsername }) else {
                         self.error = "An Apple purchase is awaiting account reconciliation. Its original order could not be identified; it has not been discarded."
                         continue
@@ -475,7 +478,9 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
                     queue.finishTransaction(transaction)
                     let recordID = next[index].id
                     Task { await reportFailure(recordID: recordID) }
-                case .deferred: busy = false; message = "Your purchase is waiting for approval."
+                case .deferred:
+                    busy = receivedRestoreTransaction != nil || !processing.isEmpty
+                    message = "Your purchase is waiting for approval."
                 case .purchasing: busy = true
                 @unknown default: break
                 }
@@ -484,15 +489,19 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
     }
     nonisolated func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
         Task { @MainActor in
-            busy = false
-            if queue.transactions.isEmpty { message = "Apple has no pending purchases to restore." }
-            else if message == "Checking your Apple purchases…" { message = nil }
+            let restored = receivedRestoreTransaction == true
+            receivedRestoreTransaction = nil
+            busy = !processing.isEmpty
+            if message == "Checking your Apple purchases…" {
+                message = !restored && queue.transactions.isEmpty ? "Apple has no pending purchases to restore." : nil
+            }
             await refresh()
         }
     }
     nonisolated func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
         Task { @MainActor in
-            busy = false
+            receivedRestoreTransaction = nil
+            busy = !processing.isEmpty
             message = nil
             if (error as? SKError)?.code == .paymentCancelled {
                 self.error = nil
