@@ -6,7 +6,8 @@
 
 - 业务沿用 Clipo。首页保留课程链接和短码输入，通过 `search-check` 进入可纵向切换的全屏播放器。游客登录、推荐、收藏、离线播放、编辑导出、额度、开屏与激励广告、订阅和恢复购买继续走原有路径。订阅与媒体导出保留服务端权益校验。
 - 当前 API 使用测试配置 `https://devapi.io-jp.com`，`getV2.name` 为 `Tricko`，取自 `TRICKO_RELEASE_NAME`。Bundle ID 为 `com.trickostudio.videodesk`，由 `Config/Tricko.xcconfig` 定义，并派生游客登录 `source` 和业务 `packageName`。
-- 广告使用 Clipo 的 Google 官方演示 App ID 和开屏、激励广告位。测试版开屏与游客登录并行预载，冷启动最多等待五秒，展示前核对当前账户权益。官网、用户协议、隐私政策使用 HTTPS 占位链接。测试商品为月付 `coins_1.99` USD 9.99、年付 `conis_4.99` USD 99.99。会员页展示 StoreKit 返回的本地化价格和账期。
+- 广告使用 Clipo 的 Google 官方演示 App ID 和开屏、激励广告位。测试版开屏与游客登录并行预载，冷启动最多等待五秒，展示前核对当前账户权益。官网、用户协议、隐私政策使用 HTTPS 占位链接。
+- Plus 月付商品为 `com.trickostudio.videodesk.plus.monthly`，年付商品为 `com.trickostudio.videodesk.plus.yearly`。本地目录的参考价格分别为 USD 9.99 和 USD 99.99，会员页展示 StoreKit 返回的本地化价格和账期。App Store Connect 商品和后台 `rightsName` 映射使用同一对 ID。
 - 播放联调用 Clipo 的原测试短码，在首页手动输入。短码和广告配置见工具包的 [Clipo 基线](/Users/chengdupengyuyan/.codex/skills/toolkit/references/clipo-baseline.md) 第 1、5 节。Clipo 源工程位于 `/Users/chengdupengyuyan/Fun/Clipo`。
 - 用户确认本项目测试通过后，再收集尚未提供的正式 API 域名、广告 App ID 和广告位、官网、用户协议和隐私政策。上线前按工程的 Bundle ID 核对后台注册和签名，确认 `getV2.name` 为 `Tricko`，并核对正式月年商品与后台订单映射。
 

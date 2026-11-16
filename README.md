@@ -8,10 +8,11 @@ Open `Tricko.xcodeproj` and select the shared `Tricko` scheme. The minimum deplo
 
 - API host `devapi.io-jp.com` and `getV2.name` `Tricko`.
 - Bundle ID `com.trickostudio.videodesk` in `Config/Tricko.xcconfig`. The guest login `source` and business `packageName` derive from this setting.
-- Google iOS demo App ID, app-open and rewarded units. Membership requests `coins_1.99` monthly (USD 9.99) and `conis_4.99` yearly (USD 99.99) in Apple Sandbox. The app displays the prices returned by StoreKit.
+- Google iOS demo App ID, app-open and rewarded units.
+- Plus requests `com.trickostudio.videodesk.plus.monthly` and `com.trickostudio.videodesk.plus.yearly`. The catalog has USD 9.99 and USD 99.99 reference prices. The app displays localized prices and billing periods from StoreKit.
 - Website, terms and privacy point to HTTPS placeholders.
 
-For playback integration, enter the Clipo test short code from the Toolkit on Home. Verify that the search result opens in the full-screen player. Use a new or authorized test account when verifying Apple purchases and restores.
+For playback integration, enter the Clipo test short code from the Toolkit on Home. Verify that the search result opens in the full-screen player. For purchase and restore verification, match the catalog IDs in App Store Connect and the backend `rightsName` mapping, then use an authorized Apple Sandbox account.
 
 The demo app-open ad preloads during guest login. Its five-second cold-start window waits for verified non-Plus rights while package configuration loads independently. The `AppOpen` log category records inventory loading, skips, presentation failures and impressions.
 
