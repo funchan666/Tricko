@@ -19,7 +19,7 @@ struct HomeView: View {
     @State private var channels: [LandingInfo] = []
     @State private var channelRetry = 0
     @State private var showingLinkGuide = false
-    @State private var showingRecentLinks = false
+    @State private var showingRecentLinks = true
     @State private var showingCollections = true
     @State private var loadingCollections = true
     @State private var composerError: String?
@@ -243,31 +243,36 @@ struct HomeView: View {
     }
 
     private var lessonAccess: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
+            browseVideosButton
             linkComposer
-            watchLessonsButton
         }
     }
 
-    private var watchLessonsButton: some View {
-        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+    private var browseVideosButton: some View {
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
         return Button {
             guard searchRequest == nil else { return }
             focused = false
             searchRequest = LessonSearch(query: "")
         } label: {
             HStack(spacing: 12) {
-                Glyph(symbol: .play, size: 16, tint: TrickoStyle.coolAccent)
-                LocalizedText("Watch lessons").font(.stage(.subheadline, weight: .semibold))
+                LocalizedText("Watch lessons")
+                    .font(.stage(.title3, weight: .bold))
+                    .foregroundStyle(TrickoStyle.ink)
+                    .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent)
-                    .rotationEffect(.degrees(180))
+                Glyph(symbol: .play, size: 18, tint: TrickoStyle.paper)
+                    .frame(width: 44, height: 44)
+                    .trickoGlass(in: Circle())
+                    .background(TrickoStyle.ink, in: Circle())
+                    .allowsHitTesting(false)
             }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .frame(minHeight: 52)
-            .foregroundStyle(TrickoStyle.paper)
-            .trickoGlass(in: shape)
+            .padding(.leading, 18)
+            .padding(.trailing, 10)
+            .padding(.vertical, 10)
+            .background(TrickoStyle.coolAccent, in: shape)
             .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle())
@@ -535,7 +540,6 @@ struct HomeView: View {
             }
             Button {
                 library.clearHistory()
-                showingRecentLinks = false
             } label: { LocalizedText("Clear history") }
                 .buttonStyle(QuietActionStyle())
         }
