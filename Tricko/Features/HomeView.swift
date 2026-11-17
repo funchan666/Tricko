@@ -45,7 +45,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         headerActions
                         Spacer(minLength: 0)
-                        videoImport
+                        lessonAccess
                     }
                     .trickoPage()
                     .frame(minHeight: max(0, photoHeight - topInset), alignment: .top)
@@ -53,7 +53,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         continueReview
                         recentVideos
-                        lessonAccess
+                        videoImport
                         lessonResources
                     }
                     .trickoPage()
@@ -247,8 +247,8 @@ struct HomeView: View {
 
     private var lessonAccess: some View {
         VStack(alignment: .leading, spacing: 12) {
-            browseVideosButton
             linkComposer
+            browseVideosButton
         }
     }
 
