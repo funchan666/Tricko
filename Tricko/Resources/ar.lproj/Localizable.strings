@@ -291,6 +291,7 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "شاهد إعلانًا كاملًا لمشاهدة بلا حدود حتى 5 صباحًا وإضافة %@ عملية حفظ.";
 "Watch an ad" = "مشاهدة إعلان";
 "Watch lessons" = "تصفّح الفيديوهات";
+"No link needed" = "لا حاجة إلى رابط";
 "Watch. Practise. Repeat." = "شاهد. تدرّب. كرّر.";
 "What happens at 40–40?" = "ماذا يحدث عند 40–40؟";
 "When reviewing your footage, pause at contact: is there space between the ball and your body?" = "أوقف الفيديو عند ضرب الكرة: هل توجد مساحة بين الكرة وجسمك؟";
@@ -633,6 +634,7 @@
 "Open a video" = "فتح فيديو";
 "Preview, trim or change the speed of a video on your device." = "شغّل فيديو من جهازك أو قصّه أو غيّر سرعته.";
 "View all" = "عرض الكل";
+"View more" = "عرض المزيد";
 "No lesson collections yet." = "لا توجد مجموعات فيديو بعد.";
 "Play a clip slower or faster." = "شغّل المقطع بسرعة أبطأ أو أسرع.";
 "Crop, rotate or flip a video." = "اقتصّ إطار الفيديو أو دوّره أو اعكسه.";

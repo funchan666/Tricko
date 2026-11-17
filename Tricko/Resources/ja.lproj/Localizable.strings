@@ -291,6 +291,7 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "広告を最後まで見ると、午前5時まで視聴無制限になり、保存が%@回増えます。";
 "Watch an ad" = "広告を見る";
 "Watch lessons" = "動画を見る";
+"No link needed" = "リンクは不要です";
 "Watch. Practise. Repeat." = "見て、練習して、繰り返す。";
 "What happens at 40–40?" = "40–40になると？";
 "When reviewing your footage, pause at contact: is there space between the ball and your body?" = "動画の打球時点で止めてみましょう。ボールと体の間に余裕がありますか？";
@@ -633,6 +634,7 @@
 "Open a video" = "動画を開く";
 "Preview, trim or change the speed of a video on your device." = "端末の動画を再生して、トリミングや速度調整ができます。";
 "View all" = "すべて表示";
+"View more" = "もっと見る";
 "No lesson collections yet." = "動画コレクションはまだありません。";
 "Play a clip slower or faster." = "動画を遅くしたり速くしたりできます。";
 "Crop, rotate or flip a video." = "動画の切り抜き、回転、左右反転ができます。";

@@ -20,6 +20,8 @@ struct HomeView: View {
     @State private var channelRetry = 0
     @State private var showingLinkGuide = false
     @State private var showingRecentLinks = true
+    @State private var showingLinkHistory = false
+    @State private var pendingHistoryLink: String?
     @State private var showingCollections = true
     @State private var loadingCollections = true
     @State private var composerError: String?
@@ -29,6 +31,7 @@ struct HomeView: View {
     var body: some View {
         homePage
             .sheet(isPresented: $showingLinkGuide) { LinkGuideSheet() }
+            .sheet(isPresented: $showingLinkHistory, onDismiss: openSelectedHistoryLink) { linkHistorySheet }
             .fullScreenCover(isPresented: $paywall) { MembershipView() }
             .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0) }
     }
@@ -257,22 +260,33 @@ struct HomeView: View {
             searchRequest = LessonSearch(query: "")
         } label: {
             HStack(spacing: 12) {
-                LocalizedText("Watch lessons")
-                    .font(.stage(.title3, weight: .bold))
-                    .foregroundStyle(TrickoStyle.ink)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .play, size: 18, tint: TrickoStyle.paper)
-                    .frame(width: 44, height: 44)
+                VStack(alignment: .leading, spacing: 4) {
+                    LocalizedText("Watch lessons")
+                        .font(.stage(.title3, weight: .bold))
+                        .foregroundStyle(TrickoStyle.paper)
+                    LocalizedText("No link needed")
+                        .font(.stage(.footnote, weight: .medium))
+                        .foregroundStyle(TrickoStyle.coolAccent)
+                }
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Glyph(symbol: .play, size: 19, tint: TrickoStyle.accent)
+                    .frame(width: 48, height: 48)
                     .trickoGlass(in: Circle())
-                    .background(TrickoStyle.ink, in: Circle())
+                    .background(TrickoStyle.ink.opacity(0.78), in: Circle())
                     .allowsHitTesting(false)
             }
             .padding(.leading, 18)
-            .padding(.trailing, 10)
-            .padding(.vertical, 10)
-            .background(TrickoStyle.coolAccent, in: shape)
+            .padding(.trailing, 12)
+            .padding(.vertical, 12)
+            .frame(minHeight: 86)
+            .background { browseVideosBackdrop.clipShape(shape) }
+            .overlay {
+                shape.strokeBorder(TrickoStyle.coolAccent.opacity(0.18))
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
             .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle())
@@ -280,8 +294,31 @@ struct HomeView: View {
         .accessibilityIdentifier("home.watchLessons")
     }
 
+    private var browseVideosBackdrop: some View {
+        TrickoStyle.surface.overlay {
+            StagePhoto(asset: "VideoBrowsePhoto")
+                .overlay {
+                    LinearGradient(stops: [
+                        .init(color: TrickoStyle.ink.opacity(0.92), location: 0),
+                        .init(color: TrickoStyle.ink.opacity(0.88), location: 0.46),
+                        .init(color: TrickoStyle.ink.opacity(0.52), location: 0.70),
+                        .init(color: TrickoStyle.ink.opacity(0.24), location: 1)
+                    ], startPoint: .leading, endPoint: .trailing)
+                }
+                .environment(\.layoutDirection, .leftToRight)
+                .scaleEffect(x: direction == .rightToLeft ? -1 : 1, y: 1)
+                .opacity(typeSize.isAccessibilitySize ? 0.30 : 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var linkHistory: [LessonLinkVisit] {
+        library.history.filter { $0.link.nilIfBlank != nil }
+    }
+
     @ViewBuilder private var lessonResources: some View {
-        let visits = library.history.filter { $0.link.nilIfBlank != nil }
+        let visits = linkHistory
         let hasCollections = !(commerce.release?.lcList?["us"] ?? []).isEmpty
         if !visits.isEmpty || hasCollections {
             VStack(alignment: .leading, spacing: 4) {
@@ -522,27 +559,82 @@ struct HomeView: View {
         link = text
     }
     private func recentLinks(_ visits: [LessonLinkVisit]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(visits.prefix(5)) { visit in
-                HStack {
-                    Button {
-                        link = visit.link
-                        resolve()
-                    } label: {
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(verbatim: visit.title).font(.stage(.headline)).lineLimit(1)
-                            Text(verbatim: visit.link).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary).lineLimit(1)
-                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }.buttonStyle(PressStyle()).disabled(searchRequest != nil)
-                    IconButton(symbol: .close, label: "Remove history item") { library.removeVisit(visit) }
+        let preview = visits.prefix(3)
+        return VStack(alignment: .leading, spacing: 8) {
+            ForEach(preview) { visit in
+                historyLinkRow(visit) { openHistoryLink(visit.link) }
+            }
+            if preview.count < visits.count {
+                Button {
+                    focused = false
+                    showingLinkHistory = true
+                } label: {
+                    LocalizedText("View more")
+                }
+                .buttonStyle(EmptyStateActionStyle(primary: false))
+                .disabled(searchRequest != nil)
+                .accessibilityIdentifier("home.viewMoreHistory")
+            } else {
+                clearHistoryButton
+            }
+        }
+    }
+
+    private var linkHistorySheet: some View {
+        let visits = linkHistory
+        return VStack(alignment: .leading, spacing: 12) {
+            StageSheetHeader(title: "Recently opened") { showingLinkHistory = false }
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    ForEach(visits) { visit in
+                        historyLinkRow(visit) {
+                            pendingHistoryLink = visit.link
+                            showingLinkHistory = false
+                        }
+                    }
                 }
             }
-            Button {
-                library.clearHistory()
-            } label: { LocalizedText("Clear history") }
-                .buttonStyle(QuietActionStyle())
+            if !visits.isEmpty { clearHistoryButton }
         }
+        .trickoPage()
+        .trickoScreenBackground()
+        .foregroundStyle(TrickoStyle.paper)
+        .onChange(of: visits.isEmpty) { _, isEmpty in
+            if isEmpty { showingLinkHistory = false }
+        }
+    }
+
+    private func historyLinkRow(_ visit: LessonLinkVisit, open: @escaping () -> Void) -> some View {
+        HStack {
+            Button(action: open) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(verbatim: visit.title).font(.stage(.headline)).lineLimit(1)
+                    Text(verbatim: visit.link).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary).lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressStyle())
+            .disabled(searchRequest != nil || pendingHistoryLink != nil)
+            IconButton(symbol: .close, label: "Remove history item") { library.removeVisit(visit) }
+        }
+    }
+
+    private var clearHistoryButton: some View {
+        Button(action: library.clearHistory) { LocalizedText("Clear history") }
+            .buttonStyle(EmptyStateActionStyle(primary: false))
+    }
+
+    private func openSelectedHistoryLink() {
+        guard let pendingHistoryLink else { return }
+        self.pendingHistoryLink = nil
+        openHistoryLink(pendingHistoryLink)
+    }
+
+    private func openHistoryLink(_ target: String) {
+        guard searchRequest == nil else { return }
+        link = target
+        resolve()
     }
 
     private func resolve() {
