@@ -40,11 +40,12 @@ struct HomeView: View {
         GeometryReader { viewport in
             let topInset = viewport.safeAreaInsets.top
             let photoHeight = min((viewport.size.height + topInset) * 0.42, 336)
+            let photoOverlap = photoHeight * 0.28
             ScrollView {
                 VStack(spacing: 0) {
                     headerActions
                         .trickoPage()
-                        .frame(minHeight: max(0, photoHeight - topInset), alignment: .top)
+                        .frame(minHeight: max(0, photoHeight - topInset - photoOverlap), alignment: .top)
 
                     VStack(alignment: .leading, spacing: 24) {
                         lessonAccess
@@ -52,7 +53,18 @@ struct HomeView: View {
                         lessonResources
                     }
                     .trickoPage()
-                    .background(TrickoStyle.background)
+                    .background {
+                        VStack(spacing: 0) {
+                            LinearGradient(
+                                colors: [TrickoStyle.background.opacity(0.42), TrickoStyle.background],
+                                startPoint: .top, endPoint: .bottom
+                            )
+                            .frame(height: photoOverlap)
+                            TrickoStyle.background
+                        }
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                    }
                 }
                 .foregroundStyle(TrickoStyle.paper)
             }
@@ -446,9 +458,6 @@ struct HomeView: View {
                     linkHelpButton
                 }
             }
-            LocalizedText("If no videos match, your input is sent to Google Search.")
-                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .onChange(of: link) { _, _ in composerError = nil }
     }
