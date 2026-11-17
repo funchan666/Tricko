@@ -39,21 +39,16 @@ struct HomeView: View {
     private var homePage: some View {
         GeometryReader { viewport in
             let topInset = viewport.safeAreaInsets.top
-            let photoHeight = (viewport.size.height + topInset) * 0.5
+            let photoHeight = min((viewport.size.height + topInset) * 0.42, 336)
             ScrollView {
                 VStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        headerActions
-                        Spacer(minLength: 0)
-                        lessonAccess
-                    }
-                    .trickoPage()
-                    .frame(minHeight: max(0, photoHeight - topInset), alignment: .top)
+                    headerActions
+                        .trickoPage()
+                        .frame(minHeight: max(0, photoHeight - topInset), alignment: .top)
 
                     VStack(alignment: .leading, spacing: 24) {
-                        continueReview
-                        recentVideos
-                        videoImport
+                        lessonAccess
+                        localVideoSection
                         lessonResources
                     }
                     .trickoPage()
@@ -80,8 +75,8 @@ struct HomeView: View {
                 LinearGradient(stops: [
                     .init(color: TrickoStyle.background.opacity(0.35), location: 0),
                     .init(color: .clear, location: 0.28),
-                    .init(color: .clear, location: 0.54),
-                    .init(color: TrickoStyle.background.opacity(0.64), location: 0.82),
+                    .init(color: .clear, location: 0.60),
+                    .init(color: TrickoStyle.background.opacity(0.56), location: 0.84),
                     .init(color: TrickoStyle.background, location: 1)
                 ], startPoint: .top, endPoint: .bottom)
             }
@@ -111,12 +106,19 @@ struct HomeView: View {
             .accessibilityIdentifier("home.account")
     }
 
+    private var localVideoSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            videoImport
+            continueReview
+            recentVideos
+        }
+    }
+
     private var videoImport: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             LocalizedText("Import a video")
-                .font(.stage(.largeTitle, weight: .bold))
+                .font(.stage(.title2, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
-                .shadow(color: .black.opacity(0.55), radius: 6, y: 2)
                 .accessibilityAddTraits(.isHeader)
             LocalVideoImportButtons(prominent: true, onImport: openVideo)
         }
@@ -189,14 +191,14 @@ struct HomeView: View {
                 .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             }
         } else {
-            HStack(spacing: 12) {
-                Glyph(symbol: .feed, size: 18, tint: TrickoStyle.coolAccent)
+            HStack(spacing: 8) {
+                Glyph(symbol: .feed, size: 15, tint: TrickoStyle.coolAccent)
                 LocalizedText("No imported videos yet")
-                    .font(.stage(.subheadline, weight: .medium))
+                    .font(.stage(.footnote))
                     .foregroundStyle(TrickoStyle.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -426,35 +428,29 @@ struct HomeView: View {
 
     private var linkComposer: some View {
         VStack(alignment: .leading, spacing: 8) {
-            linkField
+            HStack(spacing: 8) {
+                linkField
+                openLessonButton
+            }
             if let composerError { ErrorNote(message: composerError) }
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    pasteButton(inline: true)
-                    openLessonButton(inline: true)
+                HStack(spacing: 12) {
+                    pasteButton.fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: 0)
+                    allowanceLabel.fixedSize(horizontal: true, vertical: false)
+                    linkHelpButton.fixedSize(horizontal: true, vertical: false)
                 }
-                VStack(spacing: 8) {
-                    pasteButton(inline: false)
-                    openLessonButton(inline: false)
+                VStack(alignment: .leading, spacing: 4) {
+                    pasteButton
+                    allowanceLabel
+                    linkHelpButton
                 }
             }
             LocalizedText("If no videos match, your input is sent to Google Search.")
                 .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 12) {
-                    allowanceLabel
-                    Spacer(minLength: 0)
-                    linkHelpButton
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    allowanceLabel
-                    linkHelpButton
-                }
-            }
-        }.padding(.horizontal, 12).padding(.top, 12)
-            .background { StageSurface(tone: .smoke, radius: 20) }
-            .onChange(of: link) { _, _ in composerError = nil }
+        }
+        .onChange(of: link) { _, _ in composerError = nil }
     }
 
     private var linkHelpButton: some View {
@@ -470,22 +466,21 @@ struct HomeView: View {
         }.buttonStyle(PressStyle()).accessibilityIdentifier("home.linkHelp")
     }
 
-    private func openLessonButton(inline: Bool) -> some View {
+    private var openLessonButton: some View {
         Button(action: resolve) {
-            let foreground = canOpenLink ? TrickoStyle.ink : TrickoStyle.secondary
-            HStack(spacing: 8) {
-                Glyph(symbol: .search, size: 14, tint: foreground)
-                LocalizedText("Open lesson").font(.stage(.subheadline, weight: .semibold))
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: inline, vertical: true)
+            let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+            let label = Glyph(symbol: .search, size: 20, tint: canOpenLink ? TrickoStyle.ink : TrickoStyle.secondary)
+                .frame(width: 52, height: 52)
+            Group {
+                if canOpenLink { label.background(TrickoStyle.coolAccent, in: shape) }
+                else { label.trickoGlass(in: shape) }
             }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .foregroundStyle(foreground)
-            .background(canOpenLink ? TrickoStyle.coolAccent : TrickoStyle.raised, in: .rect(cornerRadius: 12))
-            .contentShape(.rect(cornerRadius: 12))
-        }.buttonStyle(PressStyle(disabledOpacity: 1)).disabled(!canOpenLink)
-            .accessibilityIdentifier("home.openLesson")
+            .contentShape(.interaction, shape)
+        }
+        .buttonStyle(PressStyle(disabledOpacity: 1))
+        .disabled(!canOpenLink)
+        .accessibilityLabel(Text(verbatim: L10n.text("Open lesson", language: AppLanguage.from(locale))))
+        .accessibilityIdentifier("home.openLesson")
     }
 
     private var linkField: some View {
@@ -537,17 +532,9 @@ struct HomeView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
-    private func pasteButton(inline: Bool) -> some View {
-        Button(action: pasteCopiedLink) {
-            LocalizedText("Paste").font(.stage(.subheadline, weight: .semibold))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: inline, vertical: true)
-                .padding(.horizontal, 14).padding(.vertical, 10)
-                .frame(minWidth: 44, maxWidth: inline ? nil : .infinity, minHeight: 44)
-                .foregroundStyle(TrickoStyle.paper)
-                .background { StageSurface(tone: .velvet, radius: 12) }
-                .contentShape(.rect(cornerRadius: 12))
-        }.buttonStyle(PressStyle())
+    private var pasteButton: some View {
+        Button(action: pasteCopiedLink) { LocalizedText("Paste") }
+            .buttonStyle(EmptyStateActionStyle(primary: false, minHeight: 44, horizontalPadding: 12))
             .accessibilityIdentifier("home.pasteLink")
     }
     private func pasteCopiedLink() {
