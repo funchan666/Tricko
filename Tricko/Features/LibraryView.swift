@@ -256,13 +256,14 @@ struct LibraryView: View {
     }
 
     private func libraryPage(for entry: Category) -> some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 18) {
             libraryHeader
-            pendingReviewIndex
-            categoryIndex
+            VStack(spacing: 8) {
+                pendingReviewIndex
+                categoryIndex
+            }
             if entry == .imports {
-                if count(in: entry) == 0 { emptyArchive(for: entry) }
-                LocalVideoImportButtons(onImport: edit)
+                archiveImport(for: entry, isEmpty: count(in: entry) == 0)
             }
             librarySection(for: entry)
         }.trickoPage()
@@ -337,6 +338,7 @@ struct LibraryView: View {
         return LazyVGrid(columns: columns, spacing: 4) {
             ForEach(Category.allCases.filter { $0 != .pendingReviews }) { entry in
                 let selected = category == entry
+                let total = count(in: entry)
                 let labelColor = selected ? TrickoStyle.ink : TrickoStyle.paper
                 Button { filter = entry.rawValue } label: {
                     HStack(spacing: 7) {
@@ -344,9 +346,12 @@ struct LibraryView: View {
                         LocalizedText(entry.title).font(.stage(.subheadline, weight: .semibold))
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(count(in: entry), format: .number.locale(locale))
-                            .font(.stage(.footnote, weight: .medium).monospacedDigit())
-                            .foregroundStyle(selected ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
+                        if total > 0 {
+                            Text(total, format: .number.locale(locale))
+                                .font(.stage(.footnote, weight: .medium).monospacedDigit())
+                                .foregroundStyle(selected ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
                     }
                     .foregroundStyle(labelColor)
                     .padding(.horizontal, 10).padding(.vertical, 6)
@@ -358,7 +363,7 @@ struct LibraryView: View {
                 }
                 .buttonStyle(PressStyle())
                 .accessibilityLabel(Text(verbatim: L10n.text(entry.title, language: AppLanguage.from(locale))))
-                .accessibilityValue(Text(count(in: entry), format: .number.locale(locale)))
+                .accessibilityValue(Text(total, format: .number.locale(locale)))
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
@@ -403,8 +408,7 @@ struct LibraryView: View {
     private func emptyCategory(for entry: Category) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             if entry == .exports {
-                emptyArchive(for: entry)
-                LocalVideoImportButtons(onImport: edit)
+                archiveImport(for: entry, isEmpty: true)
             } else {
                 EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
                 if entry == .pendingReviews {
@@ -418,20 +422,29 @@ struct LibraryView: View {
         }
     }
 
-    private func emptyArchive(for entry: Category) -> some View {
-        EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
-            .padding(18).frame(minHeight: 182, alignment: .bottomLeading)
-            .background {
-                StagePhoto(asset: "VideoArchivePhoto")
+    private func archiveImport(for entry: Category, isEmpty: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if isEmpty {
+                EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
+                    .padding(.top, 64)
+            }
+            LocalVideoImportButtons(onImport: edit)
+        }
+        .padding(isEmpty ? 16 : 0)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            if isEmpty {
+                StagePhoto(asset: "VideoArchivePhoto", alignment: .trailing)
                     .overlay {
                         LinearGradient(stops: [
-                            .init(color: .clear, location: 0.28),
-                            .init(color: TrickoStyle.background.opacity(0.86), location: 0.73),
+                            .init(color: .clear, location: 0),
+                            .init(color: TrickoStyle.background.opacity(0.84), location: 0.40),
                             .init(color: TrickoStyle.background, location: 1)
                         ], startPoint: .top, endPoint: .bottom)
                     }
+                    .clipShape(.rect(cornerRadius: 18))
             }
-            .clipShape(.rect(cornerRadius: 19))
+        }
     }
 
     private func localGallery(for entry: Category) -> some View {

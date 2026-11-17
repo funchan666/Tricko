@@ -202,24 +202,26 @@ struct VideoReviewView: View {
         filter: VideoReviewFilter,
         compact: Bool
     ) -> some View {
-        ZStack(alignment: .topLeading) {
-            ForEach(VideoReviewFilter.allCases, id: \.rawValue) { listFilter in
-                let isVisible = listFilter == filter
-                VStack(alignment: .leading, spacing: 8) {
-                    if listFilter == .pending && !pendingPoints.isEmpty {
-                        pendingNavigation(in: points, pendingPoints: pendingPoints, compact: compact)
+        VStack(alignment: .leading, spacing: 8) {
+            if !points.isEmpty {
+                markerFilters(totalCount: points.count, pendingCount: pendingPoints.count, filter: filter)
+            }
+            ZStack(alignment: .topLeading) {
+                ForEach(VideoReviewFilter.allCases, id: \.rawValue) { listFilter in
+                    let isVisible = listFilter == filter
+                    VStack(alignment: .leading, spacing: 8) {
+                        if listFilter == .pending && !pendingPoints.isEmpty {
+                            pendingNavigation(in: points, pendingPoints: pendingPoints, compact: compact)
+                        }
+                        reviewMarkerList(listFilter == .pending ? pendingPoints : points, filter: listFilter,
+                                         hasMarkers: !points.isEmpty, isVisible: isVisible)
+                            .id(listResetID)
                     }
-                    if !points.isEmpty {
-                        markerFilters(totalCount: points.count, pendingCount: pendingPoints.count, filter: listFilter)
-                    }
-                    reviewMarkerList(listFilter == .pending ? pendingPoints : points, filter: listFilter,
-                                     hasMarkers: !points.isEmpty, isVisible: isVisible)
-                        .id(listResetID)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .opacity(isVisible ? 1 : 0)
+                    .allowsHitTesting(isVisible)
+                    .accessibilityHidden(!isVisible)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .opacity(isVisible ? 1 : 0)
-                .allowsHitTesting(isVisible)
-                .accessibilityHidden(!isVisible)
             }
         }
     }
@@ -234,10 +236,15 @@ struct VideoReviewView: View {
             let content = ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if visiblePoints.isEmpty && !finishedPendingReview {
-                        LocalizedText(hasMarkers ? Self.completionMessage : "Mark a moment to revisit it later.")
-                            .font(.stage(.subheadline))
-                            .foregroundStyle(TrickoStyle.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(alignment: .top, spacing: 10) {
+                            Glyph(symbol: hasMarkers ? .saved : .bookmark, size: 17, tint: TrickoStyle.coolAccent)
+                                .padding(.top, 2)
+                            LocalizedText(hasMarkers ? Self.completionMessage : "Mark a moment to revisit it later.")
+                                .font(.stage(.subheadline))
+                                .foregroundStyle(TrickoStyle.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.vertical, 12)
                     }
                     ForEach(visiblePoints) { point in
                         VStack(spacing: 0) {
@@ -448,7 +455,7 @@ struct VideoReviewView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: reviewTimecode(point.seconds))
                         .font(.stage(.subheadline, weight: isCurrent ? .bold : .semibold).monospacedDigit())
-                        .foregroundStyle(TrickoStyle.accent)
+                        .foregroundStyle(isCurrent ? TrickoStyle.accent : TrickoStyle.secondary)
                         .environment(\.layoutDirection, .leftToRight)
                     if let category = point.category {
                         LocalizedText(category.label).font(.stage(.subheadline, weight: .semibold))
@@ -466,7 +473,7 @@ struct VideoReviewView: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .padding(.vertical, 5)
+                .padding(.vertical, 8)
                 .contentShape(Rectangle())
             }
             .buttonStyle(PressStyle())
@@ -476,7 +483,7 @@ struct VideoReviewView: View {
                 seek(to: point, revealInList: false)
                 draft = point
             }
-            .padding(.top, 5)
+            .padding(.top, 8)
         }
         .padding(.horizontal, 8)
         .background {

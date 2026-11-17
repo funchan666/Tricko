@@ -126,26 +126,32 @@ struct HomeView: View {
         }.max { $0.point.updatedAt < $1.point.updatedAt }
         if let recent {
             let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+            let count = recent.movie.pendingReviewCount.formatted(.number.locale(locale))
+            let pending = L10n.format("%@ pending review", [count], language: AppLanguage.from(locale))
             Button { openReview(recent.movie) } label: {
                 HStack(spacing: 12) {
-                    Glyph(symbol: .bookmark, size: 18, tint: TrickoStyle.ink)
-                        .frame(width: 36, height: 36)
-                        .background(TrickoStyle.accent, in: Circle())
+                    if !typeSize.isAccessibilitySize {
+                        LocalVideoCover(url: library.url(for: recent.movie), cornerRadius: 9, maximumPixelSize: 208)
+                            .frame(width: 64, height: 48)
+                    }
                     VStack(alignment: .leading, spacing: 4) {
                         LocalizedText("Continue review").font(.stage(.headline, weight: .semibold))
                         Text(verbatim: recent.movie.title)
                             .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                            .lineLimit(2).truncationMode(.middle)
                     }
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    Glyph(symbol: .back, size: 11, tint: TrickoStyle.accent).rotationEffect(.degrees(180))
+                    CountBadge(text: count).accessibilityHidden(true)
+                    Glyph(symbol: .back, size: 10, tint: TrickoStyle.coolAccent).rotationEffect(.degrees(180))
                 }
-                .padding(14)
+                .padding(12)
                 .frame(minHeight: 60)
                 .trickoGlass(in: shape)
                 .contentShape(.interaction, shape)
             }
             .buttonStyle(PressStyle())
+            .accessibilityValue(Text(verbatim: pending))
         }
     }
 
@@ -166,22 +172,28 @@ struct HomeView: View {
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(alignment: .top, spacing: 12) {
-                        ForEach(videos) { movie in recentVideo(movie) }
+                        ForEach(videos) { movie in
+                            recentVideo(movie)
+                                .containerRelativeFrame(.horizontal, alignment: .leading) { width, _ in
+                                    let preferredWidth = typeSize.isAccessibilitySize ? 286 : min(230, max(150, width * 0.55))
+                                    return min(width, preferredWidth)
+                                }
+                        }
                     }
+                    .scrollTargetLayout()
                 }
+                .scrollTargetBehavior(.viewAligned)
+                .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             }
         } else {
             HStack(spacing: 12) {
                 Glyph(symbol: .feed, size: 18, tint: TrickoStyle.coolAccent)
-                    .frame(width: 36, height: 36)
-                    .background(TrickoStyle.raised, in: .rect(cornerRadius: 10))
                 LocalizedText("No imported videos yet")
                     .font(.stage(.subheadline, weight: .medium))
                     .foregroundStyle(TrickoStyle.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background { StageSurface(tone: .smoke, radius: 16) }
+            .padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -189,9 +201,10 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 8) {
             Button { openVideo(movie) } label: {
                 VStack(alignment: .leading, spacing: 7) {
-                    LocalVideoCover(url: library.url(for: movie), cornerRadius: 12, maximumPixelSize: 640)
-                        .aspectRatio(1.52, contentMode: .fit)
-                    Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)
+                    LocalVideoCover(url: library.url(for: movie), cornerRadius: 10, maximumPixelSize: 640)
+                        .aspectRatio(1.6, contentMode: .fit)
+                    Text(verbatim: movie.title).font(.stage(.subheadline, weight: .semibold))
+                        .lineLimit(2).truncationMode(.middle)
                     LocalizedDateText(date: movie.date).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -202,7 +215,9 @@ struct HomeView: View {
 
             VideoReviewButton(movie: movie) { openReview(movie) }
         }
-        .frame(width: typeSize.isAccessibilitySize ? 250 : 168, alignment: .leading)
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background { StageSurface(tone: .smoke) }
     }
 
     private func openReview(_ movie: PracticeRecording) {
@@ -242,17 +257,15 @@ struct HomeView: View {
             searchRequest = LessonSearch(query: "")
         } label: {
             HStack(spacing: 12) {
-                Glyph(symbol: .play, size: 16, tint: TrickoStyle.ink)
-                    .frame(width: 36, height: 36)
-                    .background(TrickoStyle.coolAccent, in: Circle())
-                LocalizedText("Watch lessons").font(.stage(.headline, weight: .semibold))
+                Glyph(symbol: .play, size: 16, tint: TrickoStyle.coolAccent)
+                LocalizedText("Watch lessons").font(.stage(.subheadline, weight: .semibold))
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent)
                     .rotationEffect(.degrees(180))
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
-            .frame(minHeight: 60)
+            .frame(minHeight: 52)
             .foregroundStyle(TrickoStyle.paper)
             .trickoGlass(in: shape)
             .contentShape(.interaction, shape)
@@ -373,9 +386,6 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 8) {
             linkField
             if let composerError { ErrorNote(message: composerError) }
-            LocalizedText("If no videos match, your input is sent to Google Search.")
-                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                .fixedSize(horizontal: false, vertical: true)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
                     pasteButton(inline: true)
@@ -386,6 +396,9 @@ struct HomeView: View {
                     openLessonButton(inline: false)
                 }
             }
+            LocalizedText("If no videos match, your input is sent to Google Search.")
+                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
                     allowanceLabel

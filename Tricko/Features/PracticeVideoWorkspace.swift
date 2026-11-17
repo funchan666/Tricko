@@ -42,7 +42,6 @@ enum VideoTool: String, Identifiable, CaseIterable {
 
 struct ToolsView: View {
     @EnvironmentObject private var commerce: CommerceStore
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selectedTool: VideoTool?
     @State private var showingPracticeResources = false
     @State private var showingMembership = false
@@ -58,6 +57,7 @@ struct ToolsView: View {
                         PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
                             .accessibilityIdentifier("tools.membership")
                             .frame(maxWidth: .infinity, alignment: .trailing)
+                        Spacer(minLength: 20)
                         studioEntry
                     }
                     .trickoPage()
@@ -105,21 +105,18 @@ struct ToolsView: View {
 
     private var studioEntry: some View {
         Button { selectedTool = .studio } label: {
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                HStack(alignment: .bottom, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        LocalizedText(VideoTool.studio.title).font(.stage(.title2, weight: .bold))
-                        LocalizedText(VideoTool.studio.detail)
-                            .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.86))
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    Glyph(symbol: .back, size: 13, tint: TrickoStyle.paper)
-                        .rotationEffect(.degrees(180))
-                        .frame(width: 44, height: 44)
-                        .trickoGlass(in: Circle())
+            HStack(alignment: .bottom, spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    LocalizedText(VideoTool.studio.title).font(.stage(.largeTitle, weight: .bold))
+                    LocalizedText(VideoTool.studio.detail)
+                        .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.86))
                 }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 13, tint: TrickoStyle.paper)
+                    .rotationEffect(.degrees(180))
+                    .frame(width: 48, height: 48)
+                    .trickoGlass(in: Circle())
             }
             .foregroundStyle(TrickoStyle.paper)
             .contentShape(.interaction, Rectangle())
@@ -129,55 +126,43 @@ struct ToolsView: View {
     }
 
     private var shortcuts: some View {
-        let columns = [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 260 : 142), spacing: 10, alignment: .top)]
-        return VStack(spacing: 10) {
-            LazyVGrid(columns: columns, spacing: 10) {
-                toolCard(.speed, light: true)
-                toolCard(.frame)
-            }
-            Button { selectedTool = .audio } label: {
-                HStack(spacing: 12) {
-                    Glyph(symbol: .sound, size: 21, tint: TrickoStyle.coolAccent).frame(width: 28)
-                    shortcutCopy(.audio, light: false)
-                    Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent).rotationEffect(.degrees(180))
+        VStack(spacing: 0) {
+            ForEach([VideoTool.speed, .frame, .audio]) { tool in
+                if tool != .speed {
+                    Rectangle().fill(TrickoStyle.line)
+                        .frame(height: 1)
+                        .padding(.leading, 54)
+                        .accessibilityHidden(true)
                 }
-                .padding(16)
-                .background { StageSurface(tone: .smoke, radius: 16) }
-                .contentShape(.rect(cornerRadius: 16))
+                shortcutRow(tool)
             }
-            .buttonStyle(PressStyle())
-            .accessibilityIdentifier("tools.audio")
         }
+        .background { StageSurface(tone: .smoke) }
     }
 
-    private func toolCard(_ tool: VideoTool, light: Bool = false) -> some View {
+    private func shortcutRow(_ tool: VideoTool) -> some View {
         Button { selectedTool = tool } label: {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Glyph(symbol: tool.glyph, size: 22, tint: light ? TrickoStyle.ink : TrickoStyle.coolAccent)
-                    Spacer(minLength: 0)
-                    Glyph(symbol: .back, size: 10, tint: light ? TrickoStyle.ink : TrickoStyle.coolAccent)
-                        .rotationEffect(.degrees(180))
+            HStack(spacing: 12) {
+                Glyph(symbol: tool.glyph, size: 20, tint: TrickoStyle.coolAccent)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 4) {
+                    LocalizedText(tool.title)
+                        .font(.stage(.subheadline, weight: .semibold))
+                        .foregroundStyle(TrickoStyle.paper)
+                    LocalizedText(tool.detail).font(.stage(.footnote))
+                        .foregroundStyle(TrickoStyle.secondary)
                 }
-                shortcutCopy(tool, light: light)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 10, tint: TrickoStyle.coolAccent)
+                    .rotationEffect(.degrees(180))
             }
-            .padding(14).frame(minHeight: 130, alignment: .topLeading)
-            .background { StageSurface(tone: light ? .ivory : .velvet, radius: 16) }
-            .contentShape(.rect(cornerRadius: 16))
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(minHeight: 60)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
         .accessibilityIdentifier("tools.\(tool.rawValue)")
-    }
-
-    private func shortcutCopy(_ tool: VideoTool, light: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            LocalizedText(tool.title).font(.stage(.headline))
-                .foregroundStyle(light ? TrickoStyle.ink : TrickoStyle.paper)
-            LocalizedText(tool.detail).font(.stage(.footnote))
-                .foregroundStyle(light ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
-        }
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var practiceResources: some View {
@@ -261,6 +246,7 @@ struct LocalVideoImportButtons: View {
     var prominent = false
     let onImport: (PracticeRecording) -> Void
     @EnvironmentObject private var library: LibraryStore
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var picker: PhotosPickerItem?
     @State private var showingPhotos = false
     @State private var showingFiles = false
@@ -269,15 +255,22 @@ struct LocalVideoImportButtons: View {
 
     var body: some View {
         let buttonSpacing: CGFloat = prominent ? 12 : 8
+        let stackedButtons = VStack(alignment: .leading, spacing: buttonSpacing) {
+            filesButton
+            photosButton
+        }
         VStack(alignment: .leading, spacing: 12) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: buttonSpacing) {
-                    filesButton.fixedSize(horizontal: !prominent, vertical: false)
-                    photosButton.fixedSize(horizontal: !prominent, vertical: false)
-                }
-                VStack(alignment: .leading, spacing: buttonSpacing) {
-                    filesButton
-                    photosButton
+            Group {
+                if typeSize.isAccessibilitySize {
+                    stackedButtons
+                } else {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: buttonSpacing) {
+                            filesButton.fixedSize(horizontal: !prominent, vertical: false)
+                            photosButton.fixedSize(horizontal: !prominent, vertical: false)
+                        }
+                        stackedButtons
+                    }
                 }
             }
             .disabled(importTask != nil)
