@@ -198,7 +198,7 @@ final class CommerceStore: NSObject, ObservableObject {
     private func requestProduct(_ entry: CommerceConfiguration.Product) async throws -> SKProduct {
         guard productsRequest == nil else { throw TrickoError.service("An Apple request is already in progress.") }
         let request = SKProductsRequest(productIdentifiers: [entry.id])
-        let product: SKProduct = try await withTaskCancellationHandler(operation: {
+        return try await withTaskCancellationHandler(operation: {
             try Task.checkCancellation()
             return try await withCheckedThrowingContinuation { continuation in
                 productsRequest = request
@@ -218,11 +218,6 @@ final class CommerceStore: NSObject, ObservableObject {
                 self?.finishProductRequest(request, result: .failure(CancellationError()))
             }
         })
-        let expectedUnit: SKProduct.PeriodUnit = entry.period == .month ? .month : .year
-        guard let period = product.subscriptionPeriod, period.unit == expectedUnit, period.numberOfUnits == 1 else {
-            throw TrickoError.service("This plan isn’t available from Apple yet. Please try again later.")
-        }
-        return product
     }
     private func finishProductRequest(_ request: SKRequest, result: Result<SKProduct, Error>) {
         guard request === productsRequest else { return }
@@ -427,7 +422,8 @@ extension CommerceStore: SKProductsRequestDelegate, SKRequestDelegate, SKPayment
     nonisolated func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         Task { @MainActor in
             guard request === productsRequest else { return }
-            guard let product = response.products.first(where: { $0.productIdentifier == requestedProductID }) else {
+            guard let product = response.products.first(where: { $0.productIdentifier == requestedProductID }),
+                  let period = product.subscriptionPeriod, period.numberOfUnits > 0 else {
                 finishProductRequest(request, result: .failure(TrickoError.service("This plan isn’t available from Apple yet. Please try again later.")))
                 return
             }

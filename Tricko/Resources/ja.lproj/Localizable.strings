@@ -605,6 +605,7 @@
 "Unlimited lesson views" = "動画を視聴し放題";
 "Watch lessons without using a daily view allowance." = "1日の視聴回数を気にせず動画を見られます。";
 "Unlimited offline downloads" = "オフラインダウンロードが無制限";
+"Unlimited downloads for supported videos" = "対応動画を無制限にダウンロード";
 "Download supported lessons for offline viewing without a daily limit." = "対応動画を回数制限なしでダウンロードし、オフラインで視聴できます。";
 "Video and audio exports" = "動画と音声の書き出し";
 "Share edited videos as MP4 or save the audio as M4A." = "編集した動画をMP4で共有したり、音声をM4Aで保存したりできます。";

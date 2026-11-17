@@ -72,7 +72,9 @@ struct MembershipView: View {
     var rewardKind: AllowanceKind? = nil
     var exportRequired = false
     var reviewPresetsRequired = false
+    var showsRewardOptions = true
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
@@ -109,14 +111,43 @@ struct MembershipView: View {
         if exportRequired { return "Export is included with Plus." }
         return nil
     }
+    private var purchaseFeedback: String? {
+        if attemptedPurchaseAction, let message = commerce.error ?? commerce.message { return message }
+        return commerce.premium ? nil : commerce.plansError
+    }
 
     var body: some View {
-        StagePage(asset: "VideoPlusPhoto", minHeight: 204, maxHeight: 258, photoOpacity: 1) { _ in
-            membershipIntro
-        } content: {
-            subscriptionOptions
+        GeometryReader { viewport in
+            let plansSideBySide = viewport.size.width >= 360 && !typeSize.isAccessibilitySize
+            VStack(spacing: 0) {
+                header
+                ScrollViewReader { scroll in
+                    ScrollView {
+                        subscriptionOptions(plansSideBySide: plansSideBySide)
+                            .trickoPage()
+                    }
+                    .onChange(of: purchaseFeedback) { _, feedback in
+                        if feedback != nil, attemptedPurchaseAction || priceRequest > 0 {
+                            scroll.scrollTo("membership.feedback", anchor: .bottom)
+                        }
+                    }
+                }
+                if !commerce.premium { purchaseBar }
+            }
+            .background(alignment: .top) {
+                StagePhoto(asset: "VideoPlusPhoto", alignment: .trailing)
+                    .overlay {
+                        LinearGradient(colors: [TrickoStyle.background.opacity(0.18), TrickoStyle.background],
+                                       startPoint: .top, endPoint: .bottom)
+                    }
+                    .frame(height: min(viewport.size.height * 0.27, 196) + viewport.safeAreaInsets.top)
+                    .padding(.top, -viewport.safeAreaInsets.top)
+                    .ignoresSafeArea(.container, edges: .horizontal)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
         }
-        .overlay(alignment: .topTrailing) { closeButton }
+        .trickoScreenBackground()
         .foregroundStyle(TrickoStyle.paper)
         .task { await commerce.refresh() }
         .task(id: priceRequest) { await commerce.loadPlans() }
@@ -140,8 +171,8 @@ struct MembershipView: View {
         }
     }
 
-    private var subscriptionOptions: some View {
-        VStack(alignment: .leading, spacing: 16) {
+    private func subscriptionOptions(plansSideBySide: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
             if let entryMessage, !commerce.premium {
                 LocalizedText(entryMessage)
                     .font(.stage(.subheadline, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
@@ -149,32 +180,38 @@ struct MembershipView: View {
             }
             if commerce.premium {
                 activeMembership
-            } else {
-                if api.session == nil { ConnectionPanel() }
-                if !plans.isEmpty { planPicker }
-                if let error = commerce.plansError {
-                    ErrorNote(message: error)
-                }
+            } else if !plans.isEmpty {
+                planPicker(sideBySide: plansSideBySide)
             }
-            renewalDisclosure
-            if !commerce.premium { purchaseAction }
-            restoreLink
-            if attemptedPurchaseAction {
-                if let error = commerce.error { ErrorNote(message: error) }
-                if let message = commerce.message {
-                    LocalizedText(message).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.accent)
+            if let purchaseFeedback {
+                Group {
+                    if attemptedPurchaseAction, commerce.error == nil, commerce.message != nil {
+                        LocalizedText(purchaseFeedback).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.accent)
+                    } else {
+                        ErrorNote(message: purchaseFeedback)
+                    }
                 }
+                .id("membership.feedback")
             }
-            PolicyLinks(compact: true)
-            if rewardKind == nil { plusBenefits }
-            if entryMessage == nil, !commerce.premium, api.session != nil { rewardOption }
-            if rewardKind != nil { plusBenefits }
+            plusBenefits
+            if !commerce.premium { renewalDisclosure }
+            VStack(alignment: .leading, spacing: 0) {
+                restoreLink
+                if api.session != nil || commerce.premium { PolicyLinks(compact: true) }
+            }
+            if api.session == nil, !commerce.premium { ConnectionPanel() }
+            if showsRewardOptions, entryMessage == nil, !commerce.premium, api.session != nil { rewardOption }
         }
     }
 
-    private var closeButton: some View {
-        HStack {
-            Spacer(minLength: 0)
+    private var header: some View {
+        HStack(spacing: 16) {
+            LocalizedText("Plus")
+                .font(.stage(.largeTitle, weight: .heavy))
+                .tracking(-0.6)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
             Button {
                 cancelRewardRequest()
                 dismiss()
@@ -186,8 +223,10 @@ struct MembershipView: View {
             }.buttonStyle(PressStyle())
                 .accessibilityLabel(LocalizedStringKey("Close"))
                 .disabled(purchasing || ads.isPresenting)
-        }.pageHorizontalMargins().padding(.top, 12)
-            .frame(maxWidth: 680).frame(maxWidth: .infinity)
+        }
+        .pageHorizontalMargins()
+        .padding(.vertical, 10)
+        .frame(maxWidth: 680).frame(maxWidth: .infinity)
     }
 
     private var purchaseButtonTitle: String {
@@ -198,53 +237,31 @@ struct MembershipView: View {
         return plan.product == nil ? "Check Apple price" : "Subscribe"
     }
 
-    private var membershipIntro: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            LocalizedText("Plus")
-                .font(.stage(.largeTitle, weight: .heavy))
-                .tracking(-0.6)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-            LocalizedText("Video exports, editing presets and no opening ads.")
-                .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.88))
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.top, 44)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private var plusBenefits: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            LocalizedText("Included with Plus").font(.stage(.title3, weight: .bold))
+        VStack(alignment: .leading, spacing: 10) {
+            LocalizedText("Included with Plus").font(.stage(.headline, weight: .bold))
                 .accessibilityAddTraits(.isHeader)
-            VStack(alignment: .leading, spacing: 14) {
-                benefit(.edit, "Video and audio exports", "Share edited videos as MP4 or save the audio as M4A.", onPaper: true)
-                Divider().overlay(TrickoStyle.ink.opacity(0.16))
-                benefit(.settings, "Review presets", "Apply slow-motion presets or reuse your saved settings in the video editor.", onPaper: true)
+            VStack(alignment: .leading, spacing: 8) {
+                benefit(.edit, "Video and audio exports")
+                benefit(.settings, "Review presets")
+                benefit(.exit, "Skip opening ads")
+                benefit(.play, "Unlimited lesson views")
+                benefit(.download, "Unlimited downloads for supported videos")
             }
-            .padding(16)
-            .background { StageSurface(tone: .ivory, radius: 16) }
-            benefit(.exit, "Skip opening ads", "Open or return to the app without an opening ad.")
-            benefit(.play, "Unlimited lesson views", "Watch lessons without using a daily view allowance.")
-            benefit(.download, "Unlimited offline downloads", "Download supported lessons for offline viewing without a daily limit.")
+            .padding(12)
+            .background { StageSurface(tone: .smoke) }
         }
-        .padding(.top, 10)
     }
 
-    private func benefit(_ symbol: TrickoGlyph, _ title: String, _ description: String, onPaper: Bool = false) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Glyph(symbol: symbol, size: 19, tint: onPaper ? TrickoStyle.ink : TrickoStyle.accent)
-                .frame(width: 30, height: 28)
-            VStack(alignment: .leading, spacing: 4) {
-                LocalizedText(title).font(.stage(.subheadline, weight: .semibold))
-                    .foregroundStyle(onPaper ? TrickoStyle.ink : TrickoStyle.paper)
-                LocalizedText(description).font(.stage(.footnote))
-                    .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
-            }
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    private func benefit(_ symbol: TrickoGlyph, _ title: String) -> some View {
+        HStack(spacing: 10) {
+            Glyph(symbol: symbol, size: 16, tint: TrickoStyle.coolAccent)
+                .frame(width: 24, height: 24)
+                .accessibilityHidden(true)
+            LocalizedText(title).font(.stage(.subheadline, weight: .medium))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .accessibilityElement(children: .combine)
     }
 
     private var activeMembership: some View {
@@ -260,40 +277,49 @@ struct MembershipView: View {
             .background { StageSurface(tone: .smoke, radius: 16, border: TrickoStyle.accent.opacity(0.45)) }
     }
 
-    private var planPicker: some View {
-        VStack(spacing: 8) {
-            ForEach(plans) { planOption($0) }
+    private func planPicker(sideBySide: Bool) -> some View {
+        let layout = sideBySide ? AnyLayout(HStackLayout(alignment: .top, spacing: 10))
+                               : AnyLayout(VStackLayout(spacing: 8))
+        return layout {
+            ForEach(plans) { planOption($0, sideBySide: sideBySide) }
         }
     }
 
-    private func planOption(_ plan: Plan) -> some View {
+    private func planOption(_ plan: Plan, sideBySide: Bool) -> some View {
         let selected = selectedPlan?.id == plan.id
         let price = plan.product.map { commerce.price($0) } ?? "USD \(plan.entry.displayPriceUSD)"
         let period = plan.product.map { commerce.period($0, locale: locale) }
+        let title = plan.product?.localizedTitle ?? L10n.text(plan.entry.label, language: AppLanguage.from(locale))
+        let planLabel = Text(verbatim: title).font(.stage(.subheadline, weight: .semibold))
+        let stackedDetails = VStack(alignment: .leading, spacing: 6) {
+            planLabel.fixedSize(horizontal: false, vertical: true)
+            planPrice(price, period: period, alignment: .leading, onPaper: selected)
+        }.frame(maxWidth: .infinity, alignment: .leading)
+
         return Button { selectedID = plan.id } label: {
-            HStack(spacing: 14) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        LocalizedText(plan.entry.label).font(.stage(.headline, weight: .semibold))
-                            .fixedSize(horizontal: true, vertical: false)
-                        Spacer(minLength: 0)
-                        planPrice(price, period: period, alignment: .trailing, onPaper: selected, intrinsicWidth: true)
+            HStack(alignment: sideBySide ? .top : .center, spacing: 8) {
+                if sideBySide {
+                    stackedDetails
+                } else {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline, spacing: 12) {
+                            planLabel.fixedSize(horizontal: true, vertical: false)
+                            Spacer(minLength: 0)
+                            planPrice(price, period: period, alignment: .trailing, onPaper: selected, intrinsicWidth: true)
+                        }
+                        stackedDetails
                     }
-                    VStack(alignment: .leading, spacing: 6) {
-                        LocalizedText(plan.entry.label).font(.stage(.headline, weight: .semibold))
-                            .fixedSize(horizontal: false, vertical: true)
-                        planPrice(price, period: period, alignment: .leading, onPaper: selected)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Glyph(symbol: .saved, size: 16, tint: TrickoStyle.ink)
                     .opacity(selected ? 1 : 0)
+                    .accessibilityHidden(true)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: sideBySide ? 102 : 60, alignment: sideBySide ? .topLeading : .leading)
             .foregroundStyle(selected ? TrickoStyle.ink : TrickoStyle.paper)
             .background { StageSurface(tone: selected ? .ivory : .smoke, radius: 16) }
             .contentShape(.rect(cornerRadius: 16))
-        }.buttonStyle(PressStyle()).disabled(interactionLocked)
+        }.buttonStyle(PressStyle(disabledOpacity: 0.9)).disabled(interactionLocked)
             .accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityIdentifier("membership.plan.\(plan.id)")
     }
@@ -321,23 +347,54 @@ struct MembershipView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    private var purchaseAction: some View {
-        Button(action: subscribe) {
-            LocalizedText(purchaseButtonTitle).font(.stage(.headline, weight: .semibold))
-                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 14).padding(.vertical, 10)
+    private var purchaseBar: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(TrickoStyle.line).frame(height: 1)
+                .accessibilityHidden(true)
+            Button(action: subscribe) {
+                VStack(spacing: 3) {
+                    LocalizedText(purchaseButtonTitle)
+                        .font(.stage(.headline, weight: .semibold))
+                    if let plan = selectedPlan, let product = plan.product {
+                        HStack(spacing: 5) {
+                            Text(verbatim: commerce.price(product))
+                                .environment(\.layoutDirection, .leftToRight)
+                                .monospacedDigit()
+                                .layoutPriority(1)
+                            Text(verbatim: "·").accessibilityHidden(true)
+                            LocalizedText("Billed every %@", commerce.period(product, locale: locale))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .font(.stage(.footnote, weight: .medium))
+                        .foregroundStyle(TrickoStyle.paperSecondary)
+                    }
+                }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 18).padding(.vertical, 10)
                 .frame(maxWidth: .infinity, minHeight: 51)
                 .foregroundStyle(TrickoStyle.ink)
                 .background(TrickoStyle.accent, in: Capsule())
                 .contentShape(Capsule())
-        }.buttonStyle(PressStyle())
+            }
+            .buttonStyle(PressStyle())
             .disabled(interactionLocked || selectedPlan == nil)
             .accessibilityIdentifier("membership.subscribe")
+            .pageHorizontalMargins()
+            .padding(.vertical, 10)
+            .frame(maxWidth: 680)
+            .frame(maxWidth: .infinity)
+        }
+        .background { TrickoStyle.surface.ignoresSafeArea(.container, edges: .bottom) }
     }
 
     private func subscribe() {
         guard !interactionLocked, let plan = selectedPlan else { return }
-        guard plan.product != nil else { priceRequest += 1; return }
+        guard plan.product != nil else {
+            attemptedPurchaseAction = false
+            priceRequest += 1
+            return
+        }
         attemptedPurchaseAction = true
         purchaseTask = Task {
             await commerce.purchase(planID: plan.id)
@@ -401,7 +458,6 @@ struct MembershipView: View {
             LocalizedText("Restore purchases")
                 .font(.stage(.subheadline, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 12).padding(.vertical, 8)
                 .frame(minHeight: 44)
                 .foregroundStyle(TrickoStyle.accent)
                 .contentShape(Rectangle())
@@ -450,7 +506,7 @@ struct AccountView: View {
                 }.trickoPage()
             }
         }.trickoScreenBackground().foregroundStyle(.white)
-            .sheet(isPresented: $paywall) { MembershipView() }
+            .fullScreenCover(isPresented: $paywall) { MembershipView() }
     }
 
     private func accountIdentity(_ id: String) -> some View {

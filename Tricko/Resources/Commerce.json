@@ -1,7 +1,7 @@
 {
   "products": [
-    {"id": "coins_1.99", "usdPrice": "999", "label": "Monthly", "displayPriceUSD": "9.99", "period": "month"},
-    {"id": "conis_4.99", "usdPrice": "9999", "label": "Yearly", "displayPriceUSD": "99.99", "period": "year"}
+    {"id": "com.trickostudio.videodesk.plus.monthly", "usdPrice": "999", "label": "Monthly", "displayPriceUSD": "9.99"},
+    {"id": "com.trickostudio.videodesk.plus.yearly", "usdPrice": "9999", "label": "Yearly", "displayPriceUSD": "99.99"}
   ],
   "rewardedAdType": 5,
   "unlimitedAfterCompletedAds": 4,

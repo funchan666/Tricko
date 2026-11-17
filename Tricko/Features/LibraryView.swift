@@ -191,8 +191,8 @@ struct LibraryView: View {
             .sheet(item: $reviewingVideo, onDismiss: { restorePendingReviewScroll(using: scroll) }) { route in
                 VideoReviewView(movie: route.movie, startingAt: route.startingAt, startingPointID: route.startingPointID)
             }
-            .sheet(isPresented: $showingMembership) { MembershipView() }
-            .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
+            .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
+            .fullScreenCover(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
             .sheet(item: $downloadOptions) { DownloadOptionsSheet(video: $0) }
             .sheet(item: $removing) { movie in
@@ -899,20 +899,26 @@ struct OfflineDownloadButton: View {
                     ActionButton(title: "Retry", primary: false) { Task { await offline.retryCompletion() } }
                 }
             }
-        }.sheet(isPresented: $downloadGate) { MembershipView(rewardKind: .download) }
+        }.fullScreenCover(isPresented: $downloadGate) { MembershipView(rewardKind: .download) }
     }
 }
 
 struct VideoExportEntry: View {
     let clip: LessonClip
     @State private var showingExport = false
+    @State private var showingMembership = false
     @EnvironmentObject private var commerce: CommerceStore
     var body: some View {
-        ActionButton(title: "Export video", primary: false) { showingExport = true }
+        ActionButton(title: "Export video", primary: false) {
+            if commerce.canExportMedia { showingExport = true }
+            else { showingMembership = true }
+        }
             .accessibilityIdentifier("player.openExport")
-            .sheet(isPresented: $showingExport) {
-                if commerce.canExportMedia { OfflineExportSheet(clip: clip) }
-                else { MembershipView(exportRequired: true) }
+            .sheet(isPresented: $showingExport) { OfflineExportSheet(clip: clip) }
+            .fullScreenCover(isPresented: $showingMembership, onDismiss: {
+                if commerce.canExportMedia { showingExport = true }
+            }) {
+                MembershipView(exportRequired: true)
             }
     }
 }
@@ -1044,7 +1050,7 @@ private struct OfflineExportButton: View {
             if let exportError { ErrorNote(message: exportError) }
         }
         .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
-        .sheet(isPresented: $downloadGate) { MembershipView(exportRequired: true) }
+        .fullScreenCover(isPresented: $downloadGate) { MembershipView(exportRequired: true) }
         .onDisappear { exportTask?.cancel() }
     }
 
@@ -1154,6 +1160,6 @@ struct DownloadAllowanceSummary: View {
             .accessibilityElement(children: .contain)
             .onAppear { quota.resetIfNeeded() }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in quota.resetIfNeeded() }
-            .sheet(isPresented: $showingReward) { MembershipView(rewardKind: .download) }
+            .fullScreenCover(isPresented: $showingReward) { MembershipView(rewardKind: .download) }
     }
 }

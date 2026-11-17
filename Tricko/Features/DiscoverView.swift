@@ -117,6 +117,8 @@ struct DiscoverView: View {
     @State private var openedBrowserSearchID: UUID?
     @State private var browserSearch: PolicyDocument?
     @State private var retry = 0
+    @State private var loadedFeedRequest: FeedRequest?
+    private var feedRequest: FeedRequest { FeedRequest(ownerID: api.session?.userId.value, retry: retry) }
     init(initialSearch: String, onExit: @escaping () -> Void,
          onSearchResult: ((String, LessonClip) -> Void)? = nil) {
         self.onExit = onExit
@@ -176,10 +178,17 @@ struct DiscoverView: View {
                 if request != nil { players.releaseAll() }
             }
             .onAppear { visible = true; players.update(entries: displayEntries, selectedID: activeID) }
-            .task(id: FeedRequest(ownerID: api.session?.userId.value, retry: retry)) {
-                guard api.session != nil, !Task.isCancelled else { return }
-                await feed.load(api: api, search: search)
+            .task(id: feedRequest) {
+                let request = feedRequest
                 guard !Task.isCancelled else { return }
+                guard request.ownerID != nil else {
+                    loadedFeedRequest = nil
+                    return
+                }
+                guard request != loadedFeedRequest else { return }
+                await feed.load(api: api, search: search)
+                guard !Task.isCancelled, request == feedRequest else { return }
+                loadedFeedRequest = request
                 activeID = feed.entries.first?.id
             }
             .onChange(of: activeID) { _, id in
@@ -198,7 +207,7 @@ struct DiscoverView: View {
                     onSearchResult?(feed.query, first)
                 }
             }
-            .onDisappear { visible = false; feed.invalidatePendingLoad(); players.releaseAll() }
+            .onDisappear { visible = false; feed.invalidatePendingLoad(); players.pauseAll() }
             .fullScreenCover(item: $browserSearch) { document in
                 PolicyBrowser(document: document, webSearch: true)
             }
@@ -323,7 +332,9 @@ struct PlayerScreen: View {
                 }
                 .scrollTargetBehavior(.paging).scrollPosition(id: $activeID, anchor: .top)
                 .scrollIndicators(.hidden)
-                .task { proxy.scrollTo(route.startID, anchor: .top) }
+                .task {
+                    if let activeID { proxy.scrollTo(activeID, anchor: .top) }
+                }
             }.ignoresSafeArea(.container, edges: .all)
         }.trickoScreenBackground(.black).overlay(alignment: .top) {
             HStack {
@@ -349,7 +360,7 @@ struct PlayerScreen: View {
                 if activeID == morePageID, entries.count > previous.count { activeID = entries[previous.count].id }
                 players.update(entries: displayEntries, selectedID: activeID)
             }
-            .onDisappear { visible = false; feed.invalidatePendingLoad(); players.releaseAll() }
+            .onDisappear { visible = false; feed.invalidatePendingLoad(); players.pauseAll() }
             .onChange(of: scenePhase) { _, phase in if phase != .active { players.suspend() } }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in players.trimMemory() }
     }
@@ -380,7 +391,7 @@ private struct PlayerPagingAccess: ViewModifier {
     @EnvironmentObject private var commerce: CommerceStore
     @State private var admittedID: String?
     @State private var requestedID: String?
-    @State private var showingReward = false
+    @State private var showingWatchOptions = false
     @State private var swipeOrigin: String?
     @State private var trackingSwipe = false
     @State private var swipeEnded: UUID?
@@ -388,9 +399,9 @@ private struct PlayerPagingAccess: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .environment(\.playbackGatePresented, showingReward)
+            .environment(\.playbackGatePresented, showingWatchOptions)
             .simultaneousGesture(DragGesture(minimumDistance: 12).onChanged { value in
-                guard !showingReward, abs(value.translation.height) > abs(value.translation.width) else { return }
+                guard !showingWatchOptions, abs(value.translation.height) > abs(value.translation.width) else { return }
                 if !trackingSwipe { trackingSwipe = true; swipeOrigin = admittedID; swipeEnded = nil }
             }.onEnded { _ in swipeEnded = UUID() })
             .task(id: swipeEnded) {
@@ -400,8 +411,8 @@ private struct PlayerPagingAccess: ViewModifier {
             }
             .onAppear { admit(selectedID) }
             .onChange(of: selectedID) { _, value in admit(value) }
-            .sheet(isPresented: $showingReward, onDismiss: finishReward) {
-                MembershipView(rewardKind: .watch)
+            .fullScreenCover(isPresented: $showingWatchOptions, onDismiss: finishWatchOptions) {
+                WatchLimitPrompt()
             }
     }
     private func canWatch(_ id: String) -> Bool {
@@ -409,7 +420,7 @@ private struct PlayerPagingAccess: ViewModifier {
         return clip.playbackURL.isFileURL || quota.mayWatch(clip.id, premium: commerce.premium)
     }
     private func admit(_ id: String?) {
-        guard !showingReward, let id else { return }
+        guard !showingWatchOptions, let id else { return }
         if let admittedID, !entries.contains(where: { $0.id == admittedID }) { self.admittedID = nil }
         let isTail = id == tailID
         if canWatch(id) || (isTail && !quota.canRequestReward(for: .watch, premium: commerce.premium)) {
@@ -423,19 +434,152 @@ private struct PlayerPagingAccess: ViewModifier {
         }
         guard isTail || entries.contains(where: { $0.id == id }) else { return }
         requestedID = id
-        players.controllers.values.forEach { $0.pause() }
-        players.suspend()
+        players.pauseAll()
         if let admittedID, admittedID != id {
-            showingReward = true
+            showingWatchOptions = true
             selectedID = admittedID
         } else {
             admittedID = id
-            if quota.claimWatchLimitPrompt(premium: commerce.premium) { showingReward = true }
+            if quota.claimWatchLimitPrompt(premium: commerce.premium) { showingWatchOptions = true }
         }
     }
-    private func finishReward() {
-        if let requestedID, canWatch(requestedID) { selectedID = requestedID }
+    private func finishWatchOptions() {
+        if let requestedID {
+            let canContinueFeed = requestedID == tailID && !quota.canRequestReward(for: .watch, premium: commerce.premium)
+            if canContinueFeed || canWatch(requestedID) { selectedID = requestedID }
+        }
         requestedID = nil
+    }
+}
+
+private struct WatchLimitPrompt: View {
+    @EnvironmentObject private var commerce: CommerceStore
+    @EnvironmentObject private var quota: QuotaStore
+    @EnvironmentObject private var ads: RewardedAds
+    @Environment(\.dismiss) private var dismiss
+    @AccessibilityFocusState private var headingFocused: Bool
+    @State private var showingPlus = false
+    @State private var rewardTask: Task<Void, Never>?
+    @State private var previousRewardID: UUID?
+    @State private var previousLuckyRewardID: UUID?
+
+    private var canWatchAd: Bool { quota.canRequestReward(for: .watch, premium: commerce.premium) }
+    private var adBusy: Bool { ads.busy || ads.isPresenting || ads.isPreparingAppOpen }
+    private var adFeedback: String? {
+        guard rewardTask != nil, !adBusy else { return nil }
+        return ads.error ?? ads.message ?? "Rewarded ads are not available right now. No views have been deducted."
+    }
+
+    var body: some View {
+        ZStack {
+            if rewardTask != nil, let reward = ads.luckyReward, reward.id != previousLuckyRewardID {
+                LuckyRewardView(message: reward.message) {
+                    ads.luckyReward = nil
+                    dismiss()
+                }
+            } else {
+                GeometryReader { viewport in
+                    ScrollView {
+                        choices
+                            .padding(20)
+                            .frame(maxWidth: 352, alignment: .leading)
+                            .background { StageSurface(tone: .smoke, radius: 24) }
+                            .padding(24)
+                            .frame(maxWidth: .infinity, minHeight: viewport.size.height)
+                    }
+                }
+                .background { Color.black.opacity(0.66).ignoresSafeArea() }
+                .foregroundStyle(TrickoStyle.paper)
+                .accessibilityAddTraits(.isModal)
+                .accessibilityAction(.escape, cancel)
+                .onAppear { headingFocused = true }
+            }
+        }
+        .trickoImmersiveChrome()
+        .presentationBackground(.clear)
+        .interactiveDismissDisabled()
+        .fullScreenCover(isPresented: $showingPlus, onDismiss: {
+            if commerce.premium { dismiss() }
+        }) {
+            MembershipView(showsRewardOptions: false)
+        }
+        .onAppear(perform: finishAdIfRewarded)
+        .onChange(of: ads.completedReward) { _, _ in finishAdIfRewarded() }
+        .onChange(of: commerce.premium) { _, active in
+            if active, !showingPlus, !ads.isPresenting { dismiss() }
+        }
+        .onDisappear { cancelRewardLoading() }
+    }
+
+    private var choices: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                LocalizedText(canWatchAd ? "Out of views" : "Playback unavailable")
+                    .font(.stage(.title2, weight: .bold))
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityFocused($headingFocused)
+                if let message = adFeedback ?? quota.error ?? (canWatchAd ? quota.rewardSummary(for: .watch) : nil) {
+                    LocalizedText(message)
+                        .font(.stage(.subheadline))
+                        .foregroundStyle(TrickoStyle.secondary)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 8) {
+                if canWatchAd {
+                    Button(action: watchAd) {
+                        LocalizedText(ads.busy ? "Loading ad…" : "Watch an ad")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(EmptyStateActionStyle())
+                    .disabled(adBusy)
+                }
+                Button {
+                    showingPlus = true
+                } label: {
+                    LocalizedText("Get Plus").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(EmptyStateActionStyle(primary: !canWatchAd))
+                .disabled(ads.busy || ads.isPresenting)
+                Button(action: cancel) {
+                    LocalizedText("Cancel")
+                        .font(.stage(.footnote, weight: .semibold))
+                        .foregroundStyle(TrickoStyle.secondary)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PressStyle())
+                .disabled(ads.isPresenting)
+            }
+            .multilineTextAlignment(.center)
+        }
+    }
+
+    private func watchAd() {
+        guard canWatchAd, !adBusy else { return }
+        rewardTask?.cancel()
+        previousRewardID = ads.completedReward
+        previousLuckyRewardID = ads.luckyReward?.id
+        rewardTask = Task { await ads.watch(commerce: commerce, quota: quota, kind: .watch) }
+    }
+
+    private func finishAdIfRewarded() {
+        guard rewardTask != nil, let completion = ads.completedReward, completion != previousRewardID else { return }
+        previousRewardID = completion
+        dismiss()
+    }
+
+    private func cancel() {
+        guard !ads.isPresenting else { return }
+        cancelRewardLoading()
+        dismiss()
+    }
+
+    private func cancelRewardLoading() {
+        guard let rewardTask, !ads.isPresenting, !ads.isPresentingConsent else { return }
+        rewardTask.cancel()
+        self.rewardTask = nil
+        ads.cancelRewardLoading()
     }
 }
 
@@ -635,7 +779,7 @@ struct ClipPage: View {
             .onChange(of: pagingGate) { _, presented in
                 if presented { playback.pause() } else if active { activate() }
             }
-            .sheet(isPresented: $gate, onDismiss: { if active { activate() } }) { MembershipView(rewardKind: .watch) }
+            .fullScreenCover(isPresented: $gate, onDismiss: { if active { activate() } }) { WatchLimitPrompt() }
             .sheet(isPresented: $options, onDismiss: resumeAfterControls) {
                 ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -672,7 +816,7 @@ struct ClipPage: View {
                     }.padding(22)
                 }.trickoScreenBackground().presentationDetents([.medium, .large])
             }
-            .sheet(isPresented: $downloadReward, onDismiss: resumeAfterControls) { MembershipView(rewardKind: .download) }
+            .fullScreenCover(isPresented: $downloadReward, onDismiss: resumeAfterControls) { MembershipView(rewardKind: .download) }
     }
     private var playerControls: some View {
         GeometryReader { viewport in

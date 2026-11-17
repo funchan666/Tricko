@@ -63,7 +63,7 @@ final class VideoEditor: ObservableObject {
     @Published var error: String?
     @Published var exportedURL: URL?
     let preview = PlaybackController()
-    private var sourceURL: URL?
+    private(set) var sourceURL: URL?
     private var exporter: AVAssetExportSession?
     private var revision = UUID()
     private var cancelRequested = false

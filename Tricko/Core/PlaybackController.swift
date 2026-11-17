@@ -299,6 +299,10 @@ final class PlaybackPool: ObservableObject {
         cancelWarmup()
         for (id, controller) in controllers where id != selectedID { controller.pause() }
     }
+    func pauseAll() {
+        suspend()
+        if let selectedID { controllers[selectedID]?.pause() }
+    }
     func trimMemory() {
         cancelWarmup()
         for (id, controller) in controllers where id != selectedID { controller.release() }

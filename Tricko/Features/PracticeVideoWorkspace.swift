@@ -80,7 +80,7 @@ struct ToolsView: View {
         }
         .trickoScreenBackground()
         .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
-        .sheet(isPresented: $showingMembership) { MembershipView() }
+        .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
         .sheet(isPresented: $showingPracticeResources) {
             PracticeResourcesSheet()
                 .presentationDetents([.medium, .large])
@@ -466,17 +466,25 @@ private struct EditorWorkspace: View {
             }
             .sheet(item: $shareURL) { ShareSheet(items: [$0.url]) }
             .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0.movie, startingAt: $0.startingAt) }
-            .sheet(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
-            .sheet(isPresented: $showingPresetMembership, onDismiss: {
+            .fullScreenCover(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
+            .fullScreenCover(isPresented: $showingPresetMembership, onDismiss: {
                 showingPresets = commerce.hasVerifiedPlus && selected != nil
             }) {
                 MembershipView(reviewPresetsRequired: true)
             }
             .task(id: selected?.id) {
-                if let selected { await editor.open(library.url(for: selected)) }
+                guard let selected else { return }
+                let source = library.url(for: selected)
+                if editor.sourceURL != source || editor.duration <= 0 {
+                    await editor.open(source)
+                }
             }
             .onChange(of: scenePhase) { _, phase in if phase != .active { editor.preview.pause() } }
-            .onDisappear { editor.close(); exportTask?.cancel() }
+            .onDisappear {
+                guard !showingExportMembership, !showingPresetMembership else { return }
+                editor.close()
+                exportTask?.cancel()
+            }
     }
 
     private func close() {
@@ -592,7 +600,10 @@ private struct EditorWorkspace: View {
         return VStack(alignment: .leading, spacing: 12) {
             Button {
                 if commerce.hasVerifiedPlus { showingPresets.toggle() }
-                else { showingPresetMembership = true }
+                else {
+                    editor.preview.pause()
+                    showingPresetMembership = true
+                }
             } label: {
                 LocalizedText(expanded ? "Hide review presets" : "Review presets")
             }
@@ -690,7 +701,11 @@ private struct EditorWorkspace: View {
     }
     private func export(audio: Bool, title: String) {
         guard exportTask == nil else { return }
-        guard commerce.canExportMedia else { showingExportMembership = true; return }
+        guard commerce.canExportMedia else {
+            editor.preview.pause()
+            showingExportMembership = true
+            return
+        }
         error = nil
         exportTask = Task {
             defer { exportTask = nil; departure.finish() }

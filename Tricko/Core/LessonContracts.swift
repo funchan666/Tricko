@@ -397,12 +397,10 @@ struct UserRights: Decodable {
 }
 struct CommerceConfiguration: Decodable {
     struct Product: Decodable, Identifiable {
-        enum BillingPeriod: String, Decodable { case month, year }
         let id: String
         let usdPrice: String
         let label: String
         let displayPriceUSD: String
-        let period: BillingPeriod
     }
     let products: [Product]
     let rewardedAdType: Int

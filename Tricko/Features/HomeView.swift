@@ -29,7 +29,7 @@ struct HomeView: View {
     var body: some View {
         homePage
             .sheet(isPresented: $showingLinkGuide) { LinkGuideSheet() }
-            .sheet(isPresented: $paywall) { MembershipView() }
+            .fullScreenCover(isPresented: $paywall) { MembershipView() }
             .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0) }
     }
 
