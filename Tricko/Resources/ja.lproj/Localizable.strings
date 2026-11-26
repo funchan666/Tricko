@@ -113,7 +113,7 @@
 "Keep the soundtrack." = "音声を抽出";
 "Keep watching" = "視聴を続ける";
 "Video collections" = "動画コレクション";
-"Video link or code" = "動画のリンクまたはコード";
+"Search" = "検索";
 "Let it speak. Or don’t." = "音声設定";
 "Let’s reconnect." = "接続できませんでした";
 "Library" = "ライブラリ";
@@ -248,7 +248,6 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "広告を最後まで見ると、午前5時まで視聴無制限になり、保存が%@回増えます。";
 "Watch an ad" = "広告を見る";
 "Browse videos" = "動画を見る";
-"No link needed" = "リンクは不要です";
 "Yearly" = "年額";
 "Your changes could not be saved on this device. Please try again." = "変更をこの端末に保存できませんでした。もう一度お試しください。";
 "Your connection is not ready yet. Please try again." = "インターネットに接続してから、もう一度動画を開いてください。";
@@ -389,7 +388,7 @@
 
 "Paste" = "ペースト";
 "Find video" = "動画を探す";
-"Copy a video link or code, then tap Paste." = "動画のリンクかコードをコピーしてから「貼り付け」をタップしてください。";
+"No text to paste." = "ペーストできるテキストがありません。";
 
 "Search in browser" = "ウェブで検索";
 "The browser could not open. Please try again." = "ウェブサイトを開けませんでした。もう一度お試しください。";

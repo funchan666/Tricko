@@ -113,7 +113,7 @@
 "Keep the soundtrack." = "استخراج الصوت";
 "Keep watching" = "متابعة المشاهدة";
 "Video collections" = "مجموعات الفيديو";
-"Video link or code" = "رابط الفيديو أو رمزه";
+"Search" = "بحث";
 "Let it speak. Or don’t." = "إعدادات الصوت";
 "Let’s reconnect." = "تعذّر الاتصال";
 "Library" = "المكتبة";
@@ -248,7 +248,6 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "شاهد إعلانًا كاملًا لمشاهدة بلا حدود حتى 5 صباحًا وإضافة %@ عملية حفظ.";
 "Watch an ad" = "مشاهدة إعلان";
 "Browse videos" = "تصفّح الفيديوهات";
-"No link needed" = "لا حاجة إلى رابط";
 "Yearly" = "سنوي";
 "Your changes could not be saved on this device. Please try again." = "تعذّر حفظ تغييراتك على هذا الجهاز. حاول مرة أخرى.";
 "Your connection is not ready yet. Please try again." = "اتصل بالإنترنت، ثم حاول فتح الفيديو مرة أخرى.";
@@ -389,7 +388,7 @@
 
 "Paste" = "لصق";
 "Find video" = "البحث عن فيديو";
-"Copy a video link or code, then tap Paste." = "انسخ رابط الفيديو أو رمزه، ثم اضغط على «لصق».";
+"No text to paste." = "لا يوجد نص للصق.";
 
 "Search in browser" = "البحث على الويب";
 "The browser could not open. Please try again." = "تعذّر فتح الموقع. حاول مرة أخرى.";

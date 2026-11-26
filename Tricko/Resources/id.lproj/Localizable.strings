@@ -113,7 +113,7 @@
 "Keep the soundtrack." = "Ekstrak audio";
 "Keep watching" = "Terus menonton";
 "Video collections" = "Koleksi video";
-"Video link or code" = "Tautan atau kode video";
+"Search" = "Cari";
 "Let it speak. Or don’t." = "Pengaturan audio";
 "Let’s reconnect." = "Tidak dapat menyambung";
 "Library" = "Koleksi";
@@ -248,7 +248,6 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "Selesaikan iklan untuk tonton tanpa batas hingga pukul 05.00 dan %@ simpan tambahan.";
 "Watch an ad" = "Tonton iklan";
 "Browse videos" = "Jelajahi video";
-"No link needed" = "Tidak perlu tautan";
 "Yearly" = "Tahunan";
 "Your changes could not be saved on this device. Please try again." = "Perubahanmu tidak bisa disimpan di perangkat ini. Coba lagi.";
 "Your connection is not ready yet. Please try again." = "Sambungkan ke internet, lalu coba buka video lagi.";
@@ -389,7 +388,7 @@
 
 "Paste" = "Tempel";
 "Find video" = "Cari video";
-"Copy a video link or code, then tap Paste." = "Salin tautan atau kode video, lalu ketuk Tempel.";
+"No text to paste." = "Tidak ada teks untuk ditempel.";
 
 "Search in browser" = "Cari di web";
 "The browser could not open. Please try again." = "Situs tidak dapat dibuka. Coba lagi.";

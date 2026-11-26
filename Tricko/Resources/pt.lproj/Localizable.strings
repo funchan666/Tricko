@@ -113,7 +113,7 @@
 "Keep the soundtrack." = "Extrair o áudio";
 "Keep watching" = "Continuar assistindo";
 "Video collections" = "Coleções de vídeos";
-"Video link or code" = "Link ou código do vídeo";
+"Search" = "Buscar";
 "Let it speak. Or don’t." = "Configurações de áudio";
 "Let’s reconnect." = "Não foi possível conectar";
 "Library" = "Biblioteca";
@@ -248,7 +248,6 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "Assista a um anúncio completo para visualizações ilimitadas até as 5h e mais %@ salvamentos.";
 "Watch an ad" = "Assistir a anúncio";
 "Browse videos" = "Explorar vídeos";
-"No link needed" = "Não precisa de link";
 "Yearly" = "Anual";
 "Your changes could not be saved on this device. Please try again." = "Não foi possível salvar as alterações neste aparelho. Tente novamente.";
 "Your connection is not ready yet. Please try again." = "Conecte-se à internet e tente abrir o vídeo novamente.";
@@ -389,7 +388,7 @@
 
 "Paste" = "Colar";
 "Find video" = "Encontrar vídeo";
-"Copy a video link or code, then tap Paste." = "Copie o link ou código do vídeo e toque em Colar.";
+"No text to paste." = "Nenhum texto para colar.";
 
 "Search in browser" = "Pesquisar na web";
 "The browser could not open. Please try again." = "Não foi possível abrir o site. Tente novamente.";

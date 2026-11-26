@@ -113,7 +113,7 @@
 "Keep the soundtrack." = "Extract the audio";
 "Keep watching" = "Keep watching";
 "Video collections" = "Video collections";
-"Video link or code" = "Video link or code";
+"Search" = "Search";
 "Let it speak. Or don’t." = "Audio settings";
 "Let’s reconnect." = "Couldn’t connect";
 "Library" = "Library";
@@ -248,7 +248,6 @@
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "Watch a full ad for unlimited viewing until 5 AM and %@ more saves.";
 "Watch an ad" = "Watch an ad";
 "Browse videos" = "Browse videos";
-"No link needed" = "No link needed";
 "Yearly" = "Yearly";
 "Your changes could not be saved on this device. Please try again." = "Couldn’t save your changes on this device. Try again.";
 "Your connection is not ready yet. Please try again." = "Connect to the internet, then try opening the video again.";
@@ -389,7 +388,7 @@
 
 "Paste" = "Paste";
 "Find video" = "Find video";
-"Copy a video link or code, then tap Paste." = "Copy a video link or code, then tap Paste.";
+"No text to paste." = "No text to paste.";
 
 "Search in browser" = "Search the web";
 "The browser could not open. Please try again." = "Couldn’t open the website. Try again.";

@@ -236,34 +236,30 @@ struct HomeView: View {
     }
 
     private var browseVideosButton: some View {
-        Button {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        return Button {
             guard searchRequest == nil else { return }
             focused = false
             searchRequest = LessonSearch(query: "")
         } label: {
-            HStack(spacing: 12) {
-                Glyph(symbol: .play, size: 16, tint: TrickoStyle.coolAccent)
-                    .frame(width: 38, height: 38)
-                    .background(TrickoStyle.surface, in: Circle())
-                VStack(alignment: .leading, spacing: 3) {
-                    LocalizedText("Browse videos")
-                        .font(.stage(.headline, weight: .semibold))
-                        .foregroundStyle(TrickoStyle.paper)
-                    LocalizedText("No link needed")
-                        .font(.stage(.footnote))
-                        .foregroundStyle(TrickoStyle.secondary)
-                }
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Glyph(symbol: .back, size: 11, tint: TrickoStyle.secondary)
+            HStack(spacing: 14) {
+                Glyph(symbol: .play, size: 16, tint: TrickoStyle.ink)
+                    .frame(width: 36, height: 36)
+                    .background(TrickoStyle.coolAccent, in: Circle())
+                LocalizedText("Browse videos")
+                    .font(.stage(.headline, weight: .semibold))
+                    .foregroundStyle(TrickoStyle.paper)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 12, tint: TrickoStyle.coolAccent)
                     .rotationEffect(.degrees(180))
             }
-            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .frame(minHeight: 60)
-            .overlay(alignment: .top) { Divider().overlay(TrickoStyle.line).accessibilityHidden(true) }
-            .contentShape(Rectangle())
+            .trickoGlass(in: shape, tint: TrickoStyle.coolAccent.opacity(0.12))
+            .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle())
         .disabled(searchRequest != nil)
@@ -411,7 +407,7 @@ struct HomeView: View {
 
     private var linkField: some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-        let prompt = Text(verbatim: L10n.text("Video link or code", language: AppLanguage.from(locale)))
+        let prompt = Text(verbatim: L10n.text("Search", language: AppLanguage.from(locale)))
             .foregroundStyle(TrickoStyle.secondary)
         return HStack(spacing: 10) {
             Glyph(symbol: .link, size: 18, tint: TrickoStyle.coolAccent)
@@ -423,7 +419,7 @@ struct HomeView: View {
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, minHeight: 52)
                 .environment(\.layoutDirection, .leftToRight)
-                .accessibilityLabel(LocalizedStringKey("Video link or code"))
+                .accessibilityLabel(LocalizedStringKey("Search"))
                 .accessibilityIdentifier("home.lessonLinkField")
             if !link.isEmpty {
                 Button {
@@ -456,7 +452,7 @@ struct HomeView: View {
     }
     private func pasteCopiedLink() {
         guard let text = UIPasteboard.general.string, text.nilIfBlank != nil else {
-            composerError = "Copy a video link or code, then tap Paste."
+            composerError = "No text to paste."
             return
         }
         composerError = nil
