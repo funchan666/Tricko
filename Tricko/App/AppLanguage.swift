@@ -47,7 +47,6 @@ enum L10n {
         "Error: %@",
         "Downloading · %@%",
         "%@ downloads left today",
-        "%@ short reads · Available offline",
         "Access through %@.",
         "Continue with %@",
         "%@, %@ per %@",

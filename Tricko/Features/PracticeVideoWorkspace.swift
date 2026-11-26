@@ -47,13 +47,13 @@ struct ToolsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.locale) private var locale
     @ScaledMetric(relativeTo: .subheadline) private var minimumToolWidth: CGFloat = 94
-    @State private var destination: Destination?
+    @State private var editorRequest: EditorRequest?
     @State private var showingMembership = false
 
-    private enum Destination: Hashable, Identifiable {
-        case editor(VideoTool, PracticeRecording?)
-        case journal, notes
-        var id: Self { self }
+    private struct EditorRequest: Identifiable {
+        let id = UUID()
+        let tool: VideoTool
+        let movie: PracticeRecording?
     }
 
     private var latestImport: PracticeRecording? { library.movies.first { !$0.isExport } }
@@ -66,22 +66,19 @@ struct ToolsView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     editorEntry
                     LocalVideoImportButtons(prominent: true) { movie in
-                        if destination == nil, !showingMembership { destination = .editor(.studio, movie) }
+                        if editorRequest == nil, !showingMembership {
+                            editorRequest = EditorRequest(tool: .studio, movie: movie)
+                        }
                     }
                 }
                 quickEdits
-                practice
             }
             .trickoPage()
         }
         .foregroundStyle(TrickoStyle.paper)
         .trickoScreenBackground()
-        .sheet(item: $destination) { page in
-            switch page {
-            case let .editor(tool, movie): EditorSheet(initialMovie: movie, initialTool: tool)
-            case .journal: RoutinePracticeView()
-            case .notes: MagicGuideView()
-            }
+        .sheet(item: $editorRequest) { request in
+            EditorSheet(initialMovie: request.movie, initialTool: request.tool)
         }
         .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
     }
@@ -116,7 +113,7 @@ struct ToolsView: View {
     private var editorEntry: some View {
         let movie = latestImport
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return Button { destination = .editor(.studio, movie) } label: {
+        return Button { editorRequest = EditorRequest(tool: .studio, movie: movie) } label: {
             HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -164,7 +161,8 @@ struct ToolsView: View {
 
     private var quickEdits: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle("Quick edits")
+            LocalizedText("Quick edits").font(.stage(.headline, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
             if typeSize.isAccessibilitySize {
                 shortcutList
             } else {
@@ -191,7 +189,7 @@ struct ToolsView: View {
         let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
                              : AnyLayout(HStackLayout(spacing: 12))
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-        return Button { destination = .editor(tool, latestImport) } label: {
+        return Button { editorRequest = EditorRequest(tool: tool, movie: latestImport) } label: {
             layout {
                 Glyph(symbol: tool.glyph, size: 23, tint: TrickoStyle.coolAccent)
                 LocalizedText(tool.title).font(.stage(.subheadline, weight: .semibold))
@@ -207,44 +205,6 @@ struct ToolsView: View {
         .buttonStyle(PressStyle())
         .accessibilityHint(Text(verbatim: L10n.text(tool.detail, language: AppLanguage.from(locale))))
         .accessibilityIdentifier("tools.\(tool.rawValue)")
-    }
-
-    private var practice: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            sectionTitle("Practice resources").padding(.bottom, 4)
-            resource("Practice log", detail: "Run a routine. Record every run. Review your notes.", symbol: .edit) {
-                destination = .journal
-            }
-            .accessibilityIdentifier("practice.openJournal")
-            Divider().overlay(TrickoStyle.line)
-            resource("Magic field notes", detail: "Available offline", symbol: .library) {
-                destination = .notes
-            }
-            .accessibilityIdentifier("magicGuide.open")
-        }
-    }
-
-    private func sectionTitle(_ key: String) -> some View {
-        LocalizedText(key).font(.stage(.headline, weight: .semibold)).accessibilityAddTraits(.isHeader)
-    }
-
-    private func resource(_ title: String, detail: String, symbol: TrickoGlyph, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Glyph(symbol: symbol, size: 19, tint: TrickoStyle.coolAccent)
-                VStack(alignment: .leading, spacing: 4) {
-                    LocalizedText(title).font(.stage(.subheadline, weight: .semibold))
-                    LocalizedText(detail).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 11, tint: TrickoStyle.secondary).rotationEffect(.degrees(180))
-            }
-            .padding(.vertical, 8)
-            .frame(minHeight: 52)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PressStyle())
     }
 }
 

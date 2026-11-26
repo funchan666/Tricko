@@ -30,69 +30,6 @@ struct StagePhoto: View {
     }
 }
 
-struct StagePage<Header: View, Content: View>: View {
-    @Environment(\.verticalSizeClass) private var heightClass
-    @Environment(\.dynamicTypeSize) private var typeSize
-    private let asset: String
-    private let minHeight: CGFloat
-    private let maxHeight: CGFloat
-    private let topAligned: Bool
-    private let photoOpacity: Double
-    private let header: (CGFloat) -> Header
-    private let content: Content
-
-    init(asset: String, minHeight: CGFloat, maxHeight: CGFloat, topAligned: Bool = false, photoOpacity: Double,
-         @ViewBuilder header: @escaping (CGFloat) -> Header, @ViewBuilder content: () -> Content) {
-        self.asset = asset
-        self.minHeight = minHeight
-        self.maxHeight = maxHeight
-        self.topAligned = topAligned
-        self.photoOpacity = photoOpacity
-        self.header = header
-        self.content = content()
-    }
-
-    var body: some View {
-        GeometryReader { viewport in
-            let availableHeight = viewport.size.height
-            let portraitHeight = max(minHeight, min(availableHeight * 0.46, maxHeight))
-            let height = min(heightClass == .compact ? minHeight : portraitHeight,
-                             availableHeight * (typeSize.isAccessibilitySize ? 0.45 : 0.68))
-            ScrollView {
-                VStack(spacing: 0) {
-                    header(height).trickoPage().foregroundStyle(TrickoStyle.paper)
-                        .frame(minHeight: height, alignment: topAligned ? .top : .bottom)
-                    content.trickoPage().foregroundStyle(TrickoStyle.paper)
-                        .background { TrickoStyle.background }
-                }
-            }
-            .frame(width: viewport.size.width, height: viewport.size.height)
-            .clipped()
-            .background(alignment: .top) {
-                backdrop
-                    .frame(height: height + viewport.safeAreaInsets.top)
-                    .padding(.top, -viewport.safeAreaInsets.top)
-                    .ignoresSafeArea(.container, edges: .horizontal)
-            }
-        }.trickoScreenBackground()
-    }
-
-    private var backdrop: some View {
-        StagePhoto(asset: asset)
-            .opacity(photoOpacity)
-            .overlay {
-                LinearGradient(stops: [
-                    .init(color: TrickoStyle.background.opacity(0.74), location: 0),
-                    .init(color: .clear, location: 0.32),
-                    .init(color: .clear, location: 0.50),
-                    .init(color: TrickoStyle.background.opacity(0.86), location: 0.88),
-                    .init(color: TrickoStyle.background, location: 1)
-                ], startPoint: .top, endPoint: .bottom)
-            }
-            .allowsHitTesting(false).accessibilityHidden(true)
-    }
-}
-
 struct StageSheetHeader: View {
     let title: String
     let close: () -> Void
@@ -112,23 +49,6 @@ struct StageSheetHeader: View {
         }
     }
 }
-
-struct ScenePlate: View {
-    enum Subject: String {
-        case handling = "PlateHandling"
-        case misdirection = "PlateMisdirection"
-        case patter = "PlatePatter"
-        case practice = "PlatePractice"
-        case ethics = "PlateEthics"
-
-        var asset: String { rawValue }
-    }
-    let subject: Subject
-    var body: some View {
-        StagePhoto(asset: subject.asset)
-    }
-}
-
 
 enum TrickoGlyph: String, CaseIterable {
     case feed, edit, library, link, search, bookmark, download
