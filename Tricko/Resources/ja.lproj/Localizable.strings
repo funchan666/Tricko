@@ -7,13 +7,7 @@
 "%@ views · %@ saves left today" = "本日の残り：視聴%@回 · 保存%@回";
 "%@, %@ per %@" = "%@、%@ / %@";
 "1. Copy your shared link" = "1. 共有リンクをコピー";
-"2. Paste or type" = "2. 貼り付けるか入力する";
-"3. Open and watch" = "3. 動画を探す";
-"A better game\nstarts here." = "上達への一歩を、\nここから。";
-"A closer look at your own game" = "自分のプレーをじっくり確認";
 "A full year of Plus" = "Plusを1年間";
-"No results? Check your input, or ask the sender for a new link." = "見つからないときは、送信元にリンクやコードを確認してください。";
-"A little knowledge for your next session." = "次の練習に役立つ、小さな知識。";
 "A little luck, on us" = "ボーナスが追加されました";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "安全に接続できませんでした。ネットワークやVPNを確認してから、もう一度お試しください。";
 "Access password" = "アクセス用パスワード";
@@ -40,7 +34,6 @@
 "Back" = "戻る";
 "Back to link" = "リンクに戻る";
 "Browse Files" = "ファイルから選ぶ";
-"Build your lesson collection." = "お気に入りの動画を集めましょう。";
 "Cancel" = "キャンセル";
 "Cancel export" = "書き出しをキャンセル";
 "Change" = "変更";
@@ -53,14 +46,11 @@
 "Choose a clip from your device. We’ll keep your original untouched." = "編集は動画のコピーに適用されます。";
 "Choose from Photos" = "写真から選ぶ";
 "Choose your language" = "言語を選ぶ";
-"Choose your practice footage in Tools to keep a local working copy." = "ツールで練習動画を選ぶと、作業用コピーを端末に保存できます。";
 "Clear" = "消去";
 "The online service isn’t set up yet. You can still edit local videos." = "オンラインサービスは未設定です。端末内の動画は編集できます。";
 "Close" = "閉じる";
 "Confirming your purchase…" = "購入を確認中…";
-"Connecting your lesson feed…" = "動画フィードに接続中…";
 "Continue with %@" = "%@で続ける";
-"Control before speed" = "スピードよりコントロール";
 "Copy a video link or short code first, then tap Paste link." = "動画リンクかショートコードをコピーしてから「リンクを貼り付け」を押してください。";
 "Couldn’t open this link" = "リンクを開けませんでした";
 "Couldn’t open this page" = "ページを読み込めませんでした";
@@ -90,31 +80,25 @@
 "Final duration · %@" = "仕上がりの長さ · %@";
 "Find the frame." = "画角を調整";
 "Finding more clips…" = "次の動画を読み込み中…";
-"Finding your next lesson…" = "動画を読み込み中…";
+"Loading videos…" = "動画を読み込み中…";
 "Finish a video or extract its audio in Tools. Your exports will be collected here." = "ツールで動画を仕上げたり音声を抽出したりすると、書き出したファイルがここに表示されます。";
 "Folder" = "フォルダ";
 "Frame" = "フレーム";
 "Frames crop from the center. Use Preview changes to inspect the result." = "動画は中央を基準に切り抜きます。「変更をプレビュー」で画角を確認できます。";
 "Free plan" = "無料プラン";
 "From raw to ready" = "素材から仕上げまで";
-"From watching to playing" = "見るから、プレーへ";
 "From your link" = "リンクから";
 "Full editor" = "動画エディタ";
-"Further reading" = "参考リンク";
-"Games make sets" = "ゲームからセットへ";
 "Get Plus" = "Plusプラン";
 "Get more" = "もっと獲得";
 "Get more daily views and saves" = "本日の視聴・保存回数を増やす";
 "Get more views" = "視聴回数を増やす";
-"Give your swing a consistent ball to meet." = "安定したトスでスイングを整える。";
 "Go" = "検索";
 "Go further with Plus." = "Plusでもっと上達。";
 "Got it" = "わかりました";
 "Has a password?" = "パスワードはありますか？";
-"Have a lesson link?" = "動画のリンクはありますか？";
 "Hide password" = "パスワードを隠す";
 "Home" = "ホーム";
-"How to" = "リンクの使い方";
 "ID · %@" = "アカウントID %@";
 "If a payment is waiting to be confirmed, retry without purchasing again." = "支払いが確認待ちの場合、再購入せずに確認を再試行してください。";
 "Imported video" = "読み込んだ動画";
@@ -123,24 +107,17 @@
 "Included with your membership" = "メンバーシップに含まれます";
 "Keep exploring" = "引き続き見る";
 "Keep it" = "残す";
-"Keep learning, one session at a time." = "一回の練習ごとに、少しずつ学ぼう。";
 "Keep the best part" = "ベストな部分を残す";
 "Keep the good part." = "動画をトリミング";
 "Keep the sound as an M4A file." = "音声をM4Aファイルとして保存します。";
 "Keep the soundtrack." = "音声を抽出";
 "Keep watching" = "視聴を続ける";
-"Keep your game growing." = "もっと上達しよう。";
-"Know the game.\nEnjoy every point." = "テニスを知って、\n一球をもっと楽しもう。";
-"Leave room for contact" = "打点に余裕を持つ";
-"Lesson collections" = "動画コレクション";
-"Lesson link or short code" = "動画のリンクまたはコード";
-"Lesson or collection link" = "動画またはコレクションのリンク";
+"Video collections" = "動画コレクション";
+"Video link or code" = "動画のリンクまたはコード";
 "Let it speak. Or don’t." = "音声設定";
-"Let the ball meet your motion" = "動きに合うトスを";
 "Let’s reconnect." = "接続できませんでした";
 "Library" = "ライブラリ";
 "Load more" = "さらに読み込む";
-"Loading your lesson feed." = "動画フィードを読み込んでいます。";
 "Loading…" = "読み込み中…";
 "MP4 · Up to the selected resolution · 30 fps\nSmaller resolutions reduce export size. Source videos are never upscaled." = "MP4 · 選択した解像度以下 · 30fps\n解像度を下げるとファイルが小さくなります。元の動画より高解像度にはしません。";
 "Manage membership" = "Plusを管理";
@@ -153,18 +130,13 @@
 "Mute" = "ミュート";
 "No ad is available right now. %@" = "利用できる広告がありませんでした。 %@";
 "No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "このリンクの動画が見つかりませんでした。コードと大文字・小文字を確認するか、時間をおいてお試しください。";
-"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "まだ動画がありません。別の検索語を試すか、ホームで共有された動画のリンクを貼り付けてください。";
 "No reward was received. Finish a rewarded ad to get more views." = "報酬を受け取れませんでした。リワード広告を最後まで見ると視聴回数が増えます。";
 "Nothing here yet" = "まだ何もありません";
-"ONE THING TO REMEMBER" = "覚えておきたいこと";
 "Official sources · Opens online" = "公式情報 · オンラインで開きます";
-"One idea for your next session" = "次の練習のヒント";
 "One month of Plus" = "Plusを1か月間";
 "Online streams stay online. Import a video you own to make an edit." = "オンライン動画はオンラインで再生されます。編集するには自分の動画を読み込んでください。";
 "Open Me and account settings" = "アカウント設定を開く";
-"Open a lesson" = "動画を開く";
 "Open link" = "リンクを開く";
-"Open your next lesson" = "動画のリンクやコードの使い方";
 "Opening document…" = "文書を読み込み中…";
 "Opening link…" = "リンクを開いています…";
 "Or, keep it free" = "広告で利用回数を追加";
@@ -181,7 +153,6 @@
 "Please wait…" = "お待ちください…";
 "Plus" = "Plus";
 "Plus active" = "Plus利用中";
-"Points make a game" = "ポイントからゲームへ";
 "Preparing preview…" = "プレビューを準備中…";
 "Preparing your subscription…" = "購入を準備中…";
 "Preparing your video…" = "動画を準備中…";
@@ -202,7 +173,6 @@
 "Purchases are not allowed on this device." = "この端末では購入が許可されていません。";
 "Purchases are temporarily unavailable. Please try again later." = "現在購入できません。後ほど再試行してください。";
 "Ready for its next screen." = "書き出し画質";
-"Ready for your next session." = "次の練習の準備は万全。";
 "Receipt refresh is already in progress. Please retry shortly." = "レシートを更新中です。少し待ってから再試行してください。";
 "Recent imports" = "最近読み込んだファイル";
 "Recently opened" = "最近開いた項目";
@@ -214,41 +184,32 @@
 "Restore purchases" = "購入を復元";
 "Restoring purchases…" = "購入を復元中…";
 "Retry purchase confirmation" = "購入確認を再試行";
-"Review a practice video" = "練習動画を振り返る";
-"Review practice" = "練習を振り返る";
 "Rewarded ads are not available right now. No views have been deducted." = "現在広告を利用できません。残りの視聴とダウンロードの回数は変わりません。";
 "Rewards are unavailable." = "報酬を利用できません。";
 "Rotate 90° · %@°" = "90°回転 · %@°";
-"Rules" = "ルール";
 "Save" = "保存";
 "Save a video or extract an audio track." = "動画を保存したり、音声を抽出したりできます。";
 "Save video" = "お気に入りに追加";
 "Saved" = "保存済み";
 "Saves left" = "残りの保存回数";
 "Search videos" = "動画を検索";
-"See your game\nfrom a new angle." = "別の角度から、\n自分のプレーを見る。";
 "Selected" = "選択中";
 "Set the pace." = "再生速度";
 "Share" = "共有";
 "Share video link" = "動画リンクを共有";
 "Speed" = "速度";
 "Start" = "開始";
-"Start with a shorter motion" = "小さな動きから始める";
 "Start with a video." = "動画を選ぶ";
-"Start with contact and control, then build your swing." = "打点とコントロールから始め、スイングを磨こう。";
 "Subscription information is being prepared. Please try again later." = "購読情報を準備中です。後ほど再試行してください。";
 "Subscriptions are temporarily unavailable. Please try again later." = "現在サブスクリプションを利用できません。後ほど再試行してください。";
 "Supported streams adjust quality to your connection." = "対応する動画は通信状況に合わせて画質が変わります。";
-"Tap Open link to find matching lessons, then swipe to watch." = "「リンクを開く」で一致する動画を検索し、スワイプして視聴できます。";
 "Tap Paste link or enter the code exactly as received. Uppercase and lowercase letters matter." = "「リンクを貼り付け」を押すか、受け取ったコードをそのまま入力してください。大文字と小文字は区別されます。";
-"Technique" = "テクニック";
 "Terms of Use" = "利用規約";
 "Test ads require Google's sample iOS App ID." = "テスト広告にはGoogleのサンプルiOSアプリIDが必要です。";
 "The ad finished, but its reward could not be saved. %@" = "広告は完了しましたが、報酬を保存できませんでした。%@";
 "This removes the local copy. Your original file stays where it is." = "端末内のコピーを削除します。元のファイルはそのまま残ります。";
 "The document was interrupted. Please try again." = "ドキュメントの読み込みが中断されました。再試行してください。";
 "The export finished but could not be added to your library. %@" = "書き出しは完了しましたが、保存または共有の処理を完了できませんでした。 %@";
-"The other side" = "反対側のストローク";
 "The request could not be completed." = "リクエストを完了できませんでした。";
 "The service is unavailable (%@). Please try again." = "サービスを利用できません（%@）。再試行してください。";
 "The service returned an unreadable response. Please try again." = "応答を読み取れませんでした。もう一度お試しください。";
@@ -271,7 +232,6 @@
 "Trim the timing, crop the frame, change the pace." = "長さ、フレーム、速度を調整。";
 "Review moments, trim clips or adjust playback speed." = "気になる場面の確認、動画のトリミング、再生速度の調整ができます。";
 "Try again" = "再試行";
-"Turn together" = "体を一緒に回す";
 "USD reference prices. Apple confirms your local price before payment." = "米ドルでの参考価格です。支払い前にAppleが現地価格を表示します。";
 "Unlimited" = "無制限";
 "Unlimited viewing today" = "本日は視聴無制限";
@@ -287,12 +247,8 @@
 "Watch a full ad for %@ more views and %@ more saves." = "広告を最後まで見ると、視聴%@回と保存%@回が増えます。";
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "広告を最後まで見ると、午前5時まで視聴無制限になり、保存が%@回増えます。";
 "Watch an ad" = "広告を見る";
-"Watch lessons" = "動画を見る";
+"Browse videos" = "動画を見る";
 "No link needed" = "リンクは不要です";
-"Watch. Practise. Repeat." = "見て、練習して、繰り返す。";
-"What happens at 40–40?" = "40–40になると？";
-"When reviewing your footage, pause at contact: is there space between the ball and your body?" = "動画の打球時点で止めてみましょう。ボールと体の間に余裕がありますか？";
-"YOUR DAILY PRACTICE" = "毎日の練習";
 "Yearly" = "年額";
 "Your changes could not be saved on this device. Please try again." = "変更をこの端末に保存できませんでした。もう一度お試しください。";
 "Your connection is not ready yet. Please try again." = "インターネットに接続してから、もう一度動画を開いてください。";
@@ -303,10 +259,8 @@
 "Your local library could not be read. Existing files have been preserved." = "端末内のライブラリを読み込めませんでした。既存のファイルは保持しています。";
 "Your membership is active" = "Plusは有効です";
 "Your membership is already active." = "メンバーシップはすでに有効です。";
-"Your next session starts here." = "次の練習はここから。";
 "Your original stays untouched. Exports are saved to your local library." = "書き出したファイルはライブラリの「書き出し」にあります。元の動画はそのまま残ります。";
-"Your practice space" = "ゲストアカウント";
-"Your practice, in focus." = "練習を、もっと鮮明に。";
+"Guest account" = "ゲストアカウント";
 "Your purchase is waiting for approval." = "購入の承認を待っています。";
 "Your session has expired. Please sign in again." = "セッションの有効期限が切れました。再接続してください。";
 "Your viewing and save allowance has been updated." = "視聴・保存の利用枠を更新しました。";
@@ -315,6 +269,7 @@
 "year" = "年";
 "Retry" = "再試行";
 "Playback" = "再生";
+"Player" = "プレーヤー";
 "Downloads" = "ダウンロード";
 "Downloads left" = "残りのダウンロード回数";
 "Get more downloads" = "ダウンロード回数を追加";
@@ -339,7 +294,7 @@
 "Your viewing allowance has been updated." = "視聴回数が追加されました。";
 "Your download allowance has been updated." = "ダウンロード回数が追加されました。";
 "Your download allowance is used up." = "この期間のダウンロード回数を使い切りました。";
-"Download a lesson from its playback options to watch without a connection." = "再生オプションから動画をダウンロードすると、オフラインで視聴できます。";
+"Download a video from its playback options to watch offline." = "再生オプションから動画をダウンロードすると、オフラインで視聴できます。";
 "Offline downloads could not be read. Existing files have been preserved." = "ダウンロード情報を読み込めませんでした。既存のファイルは保持されています。";
 "Download interrupted. Please try again." = "ダウンロードが中断されました。もう一度お試しください。";
 "Download could not start. Please check your connection." = "ダウンロードを開始できません。接続を確認してください。";
@@ -350,13 +305,11 @@
 "This download is no longer on this device. Download it again." = "ダウンロードしたファイルが見つかりません。動画をもう一度ダウンロードしてください。";
 "Purchase status is waiting to sync. Please try again when connected." = "購入状況の同期を待っています。接続後にもう一度お試しください。";
 "No reward was received. Finish the ad to receive your reward." = "報酬は追加されませんでした。受け取るには広告を最後まで見てください。";
-"Practice" = "練習";
-"Sessions" = "練習記録";
 "This change could not be saved. Please try again." = "変更を保存できませんでした。もう一度お試しください。";
 
 "Follow system" = "端末の言語を使う";
 
-"No more lessons are available right now. Try again." = "現在、追加の動画はありません。もう一度お試しください。";
+"No more videos are available right now. Try again." = "現在、追加の動画はありません。もう一度お試しください。";
 
 "Another download is being prepared." = "別のダウンロードを準備中です。";
 
@@ -435,16 +388,11 @@
 "Connect to refresh your allowance." = "接続すると残りのダウンロード回数を確認できます。";
 
 "Paste" = "ペースト";
-"Open lesson" = "動画を探す";
-"Use the lesson link or code you received." = "受け取った動画のリンクやコードを使います。";
-"Copy a lesson link or code, then tap Paste." = "動画のリンクかコードをコピーしてから「貼り付け」をタップしてください。";
-"1. Copy the link or code" = "1. リンクまたはコードをコピー";
-"On Home, tap Paste or enter the code as received. Codes are case-sensitive." = "ホームで「貼り付け」をタップするか、受け取ったコードをそのまま入力します。大文字と小文字は区別されます。";
-"Tap Open lesson to find matching lessons, then swipe to watch." = "「動画を探す」をタップします。上下にスワイプすると動画が切り替わります。";
+"Find video" = "動画を探す";
+"Copy a video link or code, then tap Paste." = "動画のリンクかコードをコピーしてから「貼り付け」をタップしてください。";
 
 "Search in browser" = "ウェブで検索";
 "The browser could not open. Please try again." = "ウェブサイトを開けませんでした。もう一度お試しください。";
-"No matching lessons. Search the web with your original input." = "一致する動画がありません。入力した内容でウェブを検索できます。";
 
 "Official website" = "公式サイト";
 
@@ -464,33 +412,28 @@
 "Web search" = "ウェブ検索";
 "Opening page…" = "ページを開いています…";
 
-"Magic library" = "ライブラリ";
 "Backstage pass" = "バックステージパス";
 
 "Mirror" = "鏡の前";
 "Camera" = "カメラの前";
-"Open a magic lesson" = "動画を開く";
-"Review your practice" = "練習を見返す";
-"Couldn’t load lessons" = "動画を読み込めませんでした";
-"No matching lessons" = "動画が見つかりませんでした";
-"No lessons yet" = "表示できる動画がありません";
-"Open a lesson link or short code from Home." = "ホームで動画のリンクを貼り付けるか、コードを入力してください。";
+"Couldn’t load videos" = "動画を読み込めませんでした";
+"No videos found" = "動画が見つかりませんでした";
+"No videos to show" = "表示できる動画がありません";
+"To play your own video, choose Files or Photos on Home." = "自分の動画を再生するには、ホームで「ファイル」か「写真」を選んでください。";
 "Search the web with your original input." = "入力した内容でウェブ検索できます。";
 
 "No favorites yet" = "お気に入りはまだありません";
 "No offline videos yet" = "ダウンロード済みの動画はありません";
 "No imported videos yet" = "読み込んだ動画はまだありません";
 "No exports yet" = "書き出したファイルはまだありません";
-"Tap Favorite while watching a lesson to save it here." = "視聴中に動画をお気に入りに追加すると、ここに表示されます。";
+"Add a video to Favorites while you watch. It’ll appear here." = "視聴中に動画をお気に入りに追加すると、ここに表示されます。";
 "Choose a video from Photos or Files to start editing." = "「写真」か「ファイル」から動画を読み込んで編集できます。";
 "Export a video or audio track from the editor to find it here." = "エディタから書き出した動画や音声がここに表示されます。";
 "Import a video" = "動画を読み込む";
 
-"Couldn’t load lesson collections" = "コレクションを読み込めませんでした";
+"Couldn’t load collections" = "コレクションを読み込めませんでした";
 "Setting up your table…" = "接続中…";
 "Slow down a move to check every frame." = "動きをゆっくり再生して、見え方を確認できます。";
-"Bring your hands and props into focus." = "手元と道具が見えるように動画を切り抜きます。";
-"Review notes" = "練習メモ";
 "Opens online" = "オンラインで開きます";
 "Performance" = "演技";
 "Craft" = "マナー";
@@ -509,17 +452,13 @@
 "View options for more views and downloads" = "視聴とダウンロードの回数を増やす方法を見る";
 
 "Included with Plus" = "Plusに含まれる機能";
-"Unlimited lesson views" = "動画を視聴し放題";
-"Watch lessons without using a daily view allowance." = "1日の視聴回数を気にせず動画を見られます。";
 "Unlimited offline downloads" = "オフラインダウンロードが無制限";
 "Unlimited downloads for supported videos" = "対応動画を無制限にダウンロード";
-"Download supported lessons for offline viewing without a daily limit." = "対応動画を回数制限なしでダウンロードし、オフラインで視聴できます。";
 "Video and audio exports" = "動画と音声の書き出し";
 "Share edited videos as MP4 or save the audio as M4A." = "編集した動画をMP4で共有したり、音声をM4Aで保存したりできます。";
 "Skip opening ads" = "起動時広告をスキップ";
 "Open or return to the app without an opening ad." = "アプリの起動時や再表示時に広告が表示されません。";
 "Review presets" = "見直しプリセット";
-"In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "「練習」の動画エディタでスロー再生のプリセットや保存した設定を使えます。";
 "Hide review presets" = "見直しプリセットを閉じる";
 "Presets keep your trim points. Play the preview to check the result." = "プリセットを使ってもトリミングの開始点と終了点は変わりません。プレビューを再生して確認できます。";
 "Slow mirror" = "スロー反転";
@@ -539,7 +478,7 @@
 "Preview, trim or change the speed of a video on your device." = "端末の動画を再生して、トリミングや速度調整ができます。";
 "View all" = "すべて表示";
 "View more" = "もっと見る";
-"No lesson collections yet." = "動画コレクションはまだありません。";
+"No video collections yet." = "動画コレクションはまだありません。";
 "Play a clip slower or faster." = "動画を遅くしたり速くしたりできます。";
 "Crop, rotate or flip a video." = "動画の切り抜き、回転、左右反転ができます。";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "動画エディタでスロー再生のプリセットや保存済みの設定を適用できます。";

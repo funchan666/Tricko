@@ -2,7 +2,6 @@ import SwiftUI
 import StoreKit
 
 struct PlusEntryButton: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
     let active: Bool
     var compact = false
     let action: () -> Void
@@ -22,32 +21,19 @@ struct PlusEntryButton: View {
                         .foregroundStyle(TrickoStyle.accent)
                         .trickoGlass(in: Capsule(), tint: TrickoStyle.accent.opacity(0.18))
                 } else {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 12) {
-                            artwork
-                            copy.frame(minWidth: 136, idealWidth: typeSize.isAccessibilitySize ? 280 : 160,
-                                       maxWidth: .infinity, alignment: .leading)
-                            arrow
-                        }
-                        VStack(alignment: .leading, spacing: 12) {
-                            artwork
-                            HStack(spacing: 8) { copy; arrow }
-                        }
+                    HStack(spacing: 12) {
+                        copy
+                        Glyph(symbol: .back, size: 12, tint: TrickoStyle.accent)
+                            .rotationEffect(.degrees(180))
                     }
-                    .padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16).padding(.vertical, 14)
+                    .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
                     .foregroundStyle(TrickoStyle.paper)
                     .trickoGlass(in: .rect(cornerRadius: 18), tint: TrickoStyle.accent.opacity(0.12))
                 }
             }
             .contentShape(Rectangle())
         }.buttonStyle(PressStyle())
-    }
-
-    private var artwork: some View {
-        StagePhoto(asset: "VideoPlusPhoto")
-            .frame(width: 60, height: 52)
-            .clipShape(.rect(cornerRadius: 9))
     }
 
     private var copy: some View {
@@ -60,12 +46,6 @@ struct PlusEntryButton: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var arrow: some View {
-        Glyph(symbol: .back, size: 12, tint: TrickoStyle.accent)
-            .rotationEffect(.degrees(180))
-            .frame(width: 32, height: 32)
-            .background { StageSurface(tone: .ink, radius: 10) }
-    }
 }
 
 struct MembershipView: View {
@@ -123,18 +103,6 @@ struct MembershipView: View {
                     }
                 }
                 if !commerce.premium { purchaseBar }
-            }
-            .background(alignment: .top) {
-                StagePhoto(asset: "VideoPlusPhoto", alignment: .trailing)
-                    .overlay {
-                        LinearGradient(colors: [TrickoStyle.background.opacity(0.18), TrickoStyle.background],
-                                       startPoint: .top, endPoint: .bottom)
-                    }
-                    .frame(height: min(viewport.size.height * 0.27, 196) + viewport.safeAreaInsets.top)
-                    .padding(.top, -viewport.safeAreaInsets.top)
-                    .ignoresSafeArea(.container, edges: .horizontal)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
             }
         }
         .trickoScreenBackground()
@@ -442,7 +410,7 @@ struct AccountView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         if let session = api.session {
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                LocalizedText("Your practice space").font(.stage(.subheadline, weight: .semibold))
+                                LocalizedText("Guest account").font(.stage(.subheadline, weight: .semibold))
                                 if commerce.rightsVerified { accountStatus }
                             }
                             LocalizedText("ID · %@", session.userId.value).font(.caption.monospaced())
@@ -544,20 +512,15 @@ struct AccountView: View {
 struct LuckyRewardView: View {
     let message: String
     let dismiss: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var appeared = false
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: 16) {
-                    StagePhoto(asset: "ArtPropCase").frame(width: 112, height: 80)
-                        .clipShape(.rect(cornerRadius: 12))
-                        .scaleEffect(appeared || reduceMotion ? 1 : 0.88)
-                        .accessibilityHidden(true)
-                    LocalizedText("A little luck, on us").font(.stage(.headline)).foregroundStyle(.white)
+                VStack(alignment: .leading, spacing: 14) {
+                    LocalizedText("A little luck, on us").font(.stage(.headline)).foregroundStyle(TrickoStyle.paper)
+                        .accessibilityAddTraits(.isHeader)
                     LocalizedText("No ad is available right now. \(message)")
                         .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true)
                     ActionButton(title: "Keep exploring", action: dismiss)
                 }.padding(20).frame(maxWidth: 360)
                     .trickoGlass(in: .rect(cornerRadius: 28), fallback: TrickoStyle.surface, interactive: false)
@@ -566,7 +529,6 @@ struct LuckyRewardView: View {
         }.background(Color.black.opacity(0.68).ignoresSafeArea())
             .trickoImmersiveChrome()
             .accessibilityAddTraits(.isModal).interactiveDismissDisabled()
-            .onAppear { withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) { appeared = true } }
     }
 }
 

@@ -114,45 +114,38 @@ struct ToolsView: View {
         let movie = latestImport
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
         return Button { editorRequest = EditorRequest(tool: .studio, movie: movie) } label: {
-            HStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        LocalizedText(VideoTool.studio.title)
-                            .font(.stage(.title2, weight: .bold))
-                        Glyph(symbol: .back, size: 13, tint: TrickoStyle.ink)
-                            .rotationEffect(.degrees(180))
+            HStack(spacing: 12) {
+                if !typeSize.isAccessibilitySize {
+                    if let movie {
+                        LocalVideoCover(url: library.url(for: movie), cornerRadius: 8, maximumPixelSize: 208)
+                            .frame(width: 64, height: 48)
+                            .accessibilityHidden(true)
+                    } else {
+                        Glyph(symbol: VideoTool.studio.glyph, size: 24, tint: TrickoStyle.coolAccent)
                     }
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    LocalizedText(VideoTool.studio.title)
+                        .font(.stage(.headline, weight: .semibold))
                     if let movie {
                         LocalizedText("Latest import").font(.stage(.caption))
-                            .foregroundStyle(TrickoStyle.paperSecondary)
+                            .foregroundStyle(TrickoStyle.secondary)
                         Text(verbatim: movie.title)
                             .font(.stage(.subheadline, weight: .semibold))
                             .lineLimit(2).truncationMode(.middle)
                     } else {
                         LocalizedText(VideoTool.studio.detail).font(.stage(.subheadline))
-                            .foregroundStyle(TrickoStyle.paperSecondary)
+                            .foregroundStyle(TrickoStyle.secondary)
                     }
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(16)
-                .frame(maxWidth: .infinity, minHeight: 124, alignment: .leading)
-                if !typeSize.isAccessibilitySize {
-                    Color.clear.frame(width: 104)
-                        .overlay {
-                            if let movie {
-                                LocalVideoCover(url: library.url(for: movie), cornerRadius: 0, maximumPixelSize: 480)
-                            } else {
-                                StagePhoto(asset: "VideoToolsPhoto", alignment: .trailing)
-                            }
-                        }
-                        .clipped()
-                        .accessibilityHidden(true)
-                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 12, tint: TrickoStyle.coolAccent)
+                    .rotationEffect(.degrees(180))
             }
-            .fixedSize(horizontal: false, vertical: true)
-            .foregroundStyle(TrickoStyle.ink)
-            .background(TrickoStyle.paper)
-            .clipShape(shape)
+            .padding(16)
+            .foregroundStyle(TrickoStyle.paper)
+            .trickoGlass(in: shape, tint: TrickoStyle.coolAccent.opacity(0.09), fallback: TrickoStyle.surface)
             .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle())

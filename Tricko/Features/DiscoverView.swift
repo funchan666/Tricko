@@ -90,7 +90,7 @@ final class FeedStore: ObservableObject {
             if entries.isEmpty, requestQuery.nilIfBlank != nil {
                 emptySearch = BrowserLessonSearch(query: requestQuery)
             }
-            if !entries.isEmpty { error = "No more lessons are available right now. Try again." }
+            if !entries.isEmpty { error = "No more videos are available right now. Try again." }
         } catch is CancellationError {
         } catch {
             if current == generation, !Task.isCancelled { self.error = error.localizedDescription }
@@ -222,22 +222,22 @@ struct DiscoverView: View {
             if api.session == nil {
                 ConnectionPanel()
             } else if feed.loading || !feed.hasLoaded {
-                StageLoadingIndicator(title: "Finding your next lesson…")
+                StageLoadingIndicator(title: "Loading videos…")
                     .frame(maxWidth: .infinity)
             } else if let error = feed.error {
                 EmptyStatePanel(symbol: .feed) {
-                    EmptyStateCopy(title: "Couldn’t load lessons", message: error)
+                    EmptyStateCopy(title: "Couldn’t load videos", message: error)
                     retryButton
                 }
             } else if let request = feed.emptySearch {
                 EmptyStatePanel(symbol: .search) {
-                    EmptyStateCopy(title: "No matching lessons", message: "Search the web with your original input.")
+                    EmptyStateCopy(title: "No videos found", message: "Search the web with your original input.")
                     Button { openBrowserSearch(request) } label: { LocalizedText("Search in browser") }
                         .buttonStyle(EmptyStateActionStyle())
                 }
             } else {
                 EmptyStatePanel(symbol: .feed) {
-                    EmptyStateCopy(title: "No lessons yet", message: "Open a lesson link or short code from Home.")
+                    EmptyStateCopy(title: "No videos to show", message: "To play your own video, choose Files or Photos on Home.")
                     retryButton
                 }
             }
@@ -293,7 +293,7 @@ private struct MoreLessonsStatus: View {
     var body: some View {
         VStack(spacing: 14) {
             if let error {
-                MessagePanel(title: "Couldn’t load lessons", message: error, actionTitle: "Try again", action: load)
+                MessagePanel(title: "Couldn’t load videos", message: error, actionTitle: "Try again", action: load)
             } else if loading {
                 StageLoadingIndicator(title: "Finding more clips…")
             } else {
@@ -711,6 +711,7 @@ struct ClipPage: View {
     @State private var allowed = false
     @State private var scrubbing = false
     @State private var favoriteError: String?
+    @ScaledMetric(relativeTo: .subheadline) private var speedOptionWidth: CGFloat = 56
     var body: some View {
         ZStack {
             Color.black
@@ -817,14 +818,16 @@ struct ClipPage: View {
     private var playbackOptions: some View {
         PlayerControlPopover(title: "Playback", close: { options = false }) {
             LocalizedText("Speed").font(.stage(.headline))
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 56), spacing: 6)], spacing: 6) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: speedOptionWidth), spacing: 6)], spacing: 6) {
                 ForEach([Float(0.5), 1, 1.5, 2], id: \.self) { speed in
-                    Button("\(speed, specifier: "%g")×") { playback.setSpeed(speed) }
-                        .font(.stage(.subheadline, weight: .semibold).monospacedDigit())
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .foregroundStyle(playback.speed == speed ? TrickoStyle.ink : TrickoStyle.paper)
-                        .background { StageSurface(tone: playback.speed == speed ? .gold : .velvet, radius: 12) }
-                        .accessibilityAddTraits(playback.speed == speed ? .isSelected : [])
+                    Button { playback.setSpeed(speed) } label: {
+                        Text("\(speed, specifier: "%g")×")
+                            .font(.stage(.subheadline, weight: .semibold).monospacedDigit())
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .foregroundStyle(playback.speed == speed ? TrickoStyle.ink : TrickoStyle.paper)
+                            .background { StageSurface(tone: playback.speed == speed ? .gold : .velvet, radius: 12) }
+                            .contentShape(Rectangle())
+                    }.accessibilityAddTraits(playback.speed == speed ? .isSelected : [])
                 }
             }.buttonStyle(PressStyle())
             LocalizedText("Supported streams adjust quality to your connection.")

@@ -7,13 +7,7 @@
 "%@ views · %@ saves left today" = "오늘 시청 %@회 · 저장 %@회 남음";
 "%@, %@ per %@" = "%@, %@ / %@";
 "1. Copy your shared link" = "1. 공유 링크 복사";
-"2. Paste or type" = "2. 붙여넣거나 입력하기";
-"3. Open and watch" = "3. 영상 찾기";
-"A better game\nstarts here." = "더 나은 테니스,\n여기서 시작하세요.";
-"A closer look at your own game" = "내 플레이를 자세히 살펴보세요";
 "A full year of Plus" = "Plus 1년 이용";
-"No results? Check your input, or ask the sender for a new link." = "검색 결과가 없으면 보낸 사람에게 링크나 코드를 확인하세요.";
-"A little knowledge for your next session." = "다음 연습에 도움이 되는 작은 지식.";
 "A little luck, on us" = "보너스가 추가됐어요";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "보안 연결을 설정하지 못했어요. 네트워크나 VPN을 확인한 뒤 다시 시도하세요.";
 "Access password" = "접근 비밀번호";
@@ -40,7 +34,6 @@
 "Back" = "뒤로";
 "Back to link" = "링크로 돌아가기";
 "Browse Files" = "파일에서 선택";
-"Build your lesson collection." = "나만의 영상 모음을 만들어 보세요.";
 "Cancel" = "취소";
 "Cancel export" = "내보내기 취소";
 "Change" = "변경";
@@ -53,14 +46,11 @@
 "Choose a clip from your device. We’ll keep your original untouched." = "편집한 내용은 영상 사본에 적용돼요.";
 "Choose from Photos" = "사진에서 선택";
 "Choose your language" = "언어 선택";
-"Choose your practice footage in Tools to keep a local working copy." = "도구에서 연습 영상을 선택해 기기에 작업용 사본을 보관하세요.";
 "Clear" = "지우기";
 "The online service isn’t set up yet. You can still edit local videos." = "온라인 서비스가 아직 설정되지 않았어요. 기기에 저장된 영상은 편집할 수 있어요.";
 "Close" = "닫기";
 "Confirming your purchase…" = "구매 확인 중…";
-"Connecting your lesson feed…" = "영상 피드에 연결 중…";
 "Continue with %@" = "%@으로 계속";
-"Control before speed" = "속도보다 컨트롤";
 "Copy a video link or short code first, then tap Paste link." = "영상 링크나 짧은 코드를 먼저 복사한 후 링크 붙여넣기를 누르세요.";
 "Couldn’t open this link" = "링크를 열 수 없습니다";
 "Couldn’t open this page" = "페이지를 불러오지 못했어요";
@@ -90,31 +80,25 @@
 "Final duration · %@" = "최종 길이 · %@";
 "Find the frame." = "화면 조정";
 "Finding more clips…" = "영상을 더 불러오는 중…";
-"Finding your next lesson…" = "영상을 불러오는 중…";
+"Loading videos…" = "영상을 불러오는 중…";
 "Finish a video or extract its audio in Tools. Your exports will be collected here." = "도구에서 영상을 완성하거나 오디오를 추출하세요. 내보낸 파일은 여기에 모입니다.";
 "Folder" = "폴더";
 "Frame" = "프레임";
 "Frames crop from the center. Use Preview changes to inspect the result." = "화면 가운데를 기준으로 잘라내요. 변경 사항 미리보기에서 확인하세요.";
 "Free plan" = "무료 요금제";
 "From raw to ready" = "원본에서 완성까지";
-"From watching to playing" = "시청에서 플레이로";
 "From your link" = "내 링크에서";
 "Full editor" = "영상 편집기";
-"Further reading" = "더 읽어보기";
-"Games make sets" = "게임이 모여 세트로";
 "Get Plus" = "Plus 요금제";
 "Get more" = "더 받기";
 "Get more daily views and saves" = "일일 시청 및 저장 횟수 늘리기";
 "Get more views" = "시청 횟수 늘리기";
-"Give your swing a consistent ball to meet." = "일정한 토스로 스윙을 맞추세요.";
 "Go" = "이동";
 "Go further with Plus." = "Plus로 더 성장하세요.";
 "Got it" = "확인";
 "Has a password?" = "비밀번호가 있나요?";
-"Have a lesson link?" = "영상 링크가 있나요?";
 "Hide password" = "비밀번호 숨기기";
 "Home" = "홈";
-"How to" = "링크 도움말";
 "ID · %@" = "계정 ID %@";
 "If a payment is waiting to be confirmed, retry without purchasing again." = "결제 확인 대기 중이라면 다시 구매하지 말고 확인을 재시도하세요.";
 "Imported video" = "가져온 영상";
@@ -123,24 +107,17 @@
 "Included with your membership" = "멤버십에 포함";
 "Keep exploring" = "계속 둘러보기";
 "Keep it" = "유지하기";
-"Keep learning, one session at a time." = "한 번의 연습마다 배워가세요.";
 "Keep the best part" = "최고의 구간 남기기";
 "Keep the good part." = "영상 자르기";
 "Keep the sound as an M4A file." = "오디오를 M4A 파일로 저장하세요.";
 "Keep the soundtrack." = "오디오 추출";
 "Keep watching" = "계속 시청하기";
-"Keep your game growing." = "계속 실력을 키워가세요.";
-"Know the game.\nEnjoy every point." = "경기를 알아가고,\n모든 포인트를 즐기세요.";
-"Leave room for contact" = "타점에 공간 만들기";
-"Lesson collections" = "영상 모음";
-"Lesson link or short code" = "영상 링크 또는 코드";
-"Lesson or collection link" = "영상 또는 모음 링크";
+"Video collections" = "영상 모음";
+"Video link or code" = "영상 링크 또는 코드";
 "Let it speak. Or don’t." = "오디오 설정";
-"Let the ball meet your motion" = "토스를 동작에 맞추기";
 "Let’s reconnect." = "연결하지 못했어요";
 "Library" = "보관함";
 "Load more" = "더 불러오기";
-"Loading your lesson feed." = "영상 피드를 불러오는 중입니다.";
 "Loading…" = "불러오는 중…";
 "MP4 · Up to the selected resolution · 30 fps\nSmaller resolutions reduce export size. Source videos are never upscaled." = "MP4 · 선택한 해상도 이하 · 30fps\n해상도를 낮추면 파일 크기가 줄어듭니다. 원본보다 확대하지 않습니다.";
 "Manage membership" = "Plus 관리";
@@ -153,18 +130,13 @@
 "Mute" = "음소거";
 "No ad is available right now. %@" = "이용할 수 있는 광고가 없었어요. %@";
 "No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "이 링크에 해당하는 영상이 없어요. 코드와 대소문자를 확인하거나 나중에 다시 시도하세요.";
-"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "아직 영상이 없어요. 다른 검색어를 쓰거나 홈에서 공유받은 영상 링크를 붙여넣으세요.";
 "No reward was received. Finish a rewarded ad to get more views." = "보상을 받지 못했습니다. 보상형 광고를 끝까지 시청하면 시청 횟수가 추가됩니다.";
 "Nothing here yet" = "아직 비어 있어요";
-"ONE THING TO REMEMBER" = "기억할 한 가지";
 "Official sources · Opens online" = "공식 출처 · 온라인으로 열기";
-"One idea for your next session" = "다음 연습을 위한 아이디어";
 "One month of Plus" = "Plus 1개월 이용";
 "Online streams stay online. Import a video you own to make an edit." = "온라인 영상은 온라인으로만 재생됩니다. 편집하려면 소유한 영상을 가져오세요.";
 "Open Me and account settings" = "계정 설정 열기";
-"Open a lesson" = "영상 열기";
 "Open link" = "링크 열기";
-"Open your next lesson" = "영상 링크와 코드 사용법";
 "Opening document…" = "문서 불러오는 중…";
 "Opening link…" = "링크 여는 중…";
 "Or, keep it free" = "광고로 이용 횟수 늘리기";
@@ -181,7 +153,6 @@
 "Please wait…" = "잠시 기다려 주세요…";
 "Plus" = "Plus";
 "Plus active" = "Plus 이용 중";
-"Points make a game" = "포인트가 모여 게임으로";
 "Preparing preview…" = "미리보기 준비 중…";
 "Preparing your subscription…" = "구매 준비 중…";
 "Preparing your video…" = "영상 준비 중…";
@@ -202,7 +173,6 @@
 "Purchases are not allowed on this device." = "이 기기에서는 구매가 허용되지 않습니다.";
 "Purchases are temporarily unavailable. Please try again later." = "일시적으로 구매할 수 없습니다. 나중에 다시 시도하세요.";
 "Ready for its next screen." = "내보내기 화질";
-"Ready for your next session." = "다음 연습 준비 완료.";
 "Receipt refresh is already in progress. Please retry shortly." = "영수증 갱신 중입니다. 잠시 후 다시 시도하세요.";
 "Recent imports" = "최근 가져온 파일";
 "Recently opened" = "최근 열어본 항목";
@@ -214,41 +184,32 @@
 "Restore purchases" = "구매 복원";
 "Restoring purchases…" = "구매 내역 복원 중…";
 "Retry purchase confirmation" = "구매 확인 재시도";
-"Review a practice video" = "연습 영상 살펴보기";
-"Review practice" = "연습 돌아보기";
 "Rewarded ads are not available right now. No views have been deducted." = "지금은 광고를 볼 수 없어요. 남은 시청과 다운로드 횟수는 그대로예요.";
 "Rewards are unavailable." = "보상을 이용할 수 없습니다.";
 "Rotate 90° · %@°" = "90° 회전 · %@°";
-"Rules" = "규칙";
 "Save" = "저장";
 "Save a video or extract an audio track." = "영상을 저장하거나 오디오를 추출하세요.";
 "Save video" = "즐겨찾기에 추가";
 "Saved" = "저장됨";
 "Saves left" = "남은 저장 횟수";
 "Search videos" = "영상 검색";
-"See your game\nfrom a new angle." = "새로운 각도에서\n내 플레이를 보세요.";
 "Selected" = "선택됨";
 "Set the pace." = "재생 속도";
 "Share" = "공유";
 "Share video link" = "영상 링크 공유";
 "Speed" = "속도";
 "Start" = "시작";
-"Start with a shorter motion" = "짧은 동작부터 시작하기";
 "Start with a video." = "영상 선택";
-"Start with contact and control, then build your swing." = "타점과 컨트롤부터 익히고 스윙을 발전시키세요.";
 "Subscription information is being prepared. Please try again later." = "구독 정보를 준비 중입니다. 나중에 다시 시도하세요.";
 "Subscriptions are temporarily unavailable. Please try again later." = "구독을 일시적으로 이용할 수 없습니다. 나중에 다시 시도하세요.";
 "Supported streams adjust quality to your connection." = "지원되는 영상은 연결 상태에 따라 화질이 바뀝니다.";
-"Tap Open link to find matching lessons, then swipe to watch." = "링크 열기를 눌러 해당 영상을 찾은 뒤 스와이프하여 시청하세요.";
 "Tap Paste link or enter the code exactly as received. Uppercase and lowercase letters matter." = "링크 붙여넣기를 누르거나 받은 코드를 정확히 입력하세요. 대소문자를 구분합니다.";
-"Technique" = "기술";
 "Terms of Use" = "이용약관";
 "Test ads require Google's sample iOS App ID." = "테스트 광고에는 Google의 샘플 iOS 앱 ID가 필요합니다.";
 "The ad finished, but its reward could not be saved. %@" = "광고는 끝났지만 보상을 저장하지 못했습니다. %@";
 "This removes the local copy. Your original file stays where it is." = "로컬 사본을 삭제해요. 원본 파일은 그대로 남아요.";
 "The document was interrupted. Please try again." = "문서가 중단되었습니다. 다시 시도하세요.";
 "The export finished but could not be added to your library. %@" = "내보내기는 끝났지만 저장 또는 공유를 완료하지 못했어요. %@";
-"The other side" = "반대쪽 스트로크";
 "The request could not be completed." = "요청을 완료하지 못했습니다.";
 "The service is unavailable (%@). Please try again." = "서비스를 이용할 수 없습니다 (%@). 다시 시도하세요.";
 "The service returned an unreadable response. Please try again." = "응답을 읽지 못했어요. 다시 시도하세요.";
@@ -271,7 +232,6 @@
 "Trim the timing, crop the frame, change the pace." = "길이와 프레임, 속도를 조정하세요.";
 "Review moments, trim clips or adjust playback speed." = "원하는 순간을 다시 보거나, 클립을 자르거나, 재생 속도를 조절하세요.";
 "Try again" = "다시 시도";
-"Turn together" = "몸을 함께 돌리기";
 "USD reference prices. Apple confirms your local price before payment." = "미국 달러 기준 가격입니다. 결제 전 Apple에서 현지 가격을 확인합니다.";
 "Unlimited" = "무제한";
 "Unlimited viewing today" = "오늘 무제한 시청";
@@ -287,12 +247,8 @@
 "Watch a full ad for %@ more views and %@ more saves." = "광고를 끝까지 보면 시청 %@회와 저장 %@회를 드립니다.";
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "광고를 끝까지 보면 오전 5시까지 무제한 시청과 저장 %@회를 드립니다.";
 "Watch an ad" = "광고 보기";
-"Watch lessons" = "영상 둘러보기";
+"Browse videos" = "영상 둘러보기";
 "No link needed" = "링크가 필요 없어요";
-"Watch. Practise. Repeat." = "보고. 연습하고. 반복하세요.";
-"What happens at 40–40?" = "40–40이면 어떻게 될까요?";
-"When reviewing your footage, pause at contact: is there space between the ball and your body?" = "영상을 볼 때 임팩트 순간에 멈춰보세요. 공과 몸 사이에 공간이 있나요?";
-"YOUR DAILY PRACTICE" = "매일의 연습";
 "Yearly" = "연간";
 "Your changes could not be saved on this device. Please try again." = "이 기기에 변경 사항을 저장하지 못했어요. 다시 시도하세요.";
 "Your connection is not ready yet. Please try again." = "인터넷에 연결한 뒤 영상을 다시 열어 보세요.";
@@ -303,10 +259,8 @@
 "Your local library could not be read. Existing files have been preserved." = "기기의 보관함을 읽을 수 없습니다. 기존 파일은 보존되었습니다.";
 "Your membership is active" = "Plus 이용 중";
 "Your membership is already active." = "이미 멤버십이 활성화되어 있습니다.";
-"Your next session starts here." = "다음 연습은 여기서 시작됩니다.";
 "Your original stays untouched. Exports are saved to your local library." = "내보낸 파일은 보관함의 내보내기에서 확인하세요. 원본은 그대로 남아요.";
-"Your practice space" = "게스트 계정";
-"Your practice, in focus." = "내 연습을 자세히.";
+"Guest account" = "게스트 계정";
 "Your purchase is waiting for approval." = "구매 승인을 기다리는 중이에요.";
 "Your session has expired. Please sign in again." = "연결 세션이 만료됐어요. 계속하려면 다시 연결하세요.";
 "Your viewing and save allowance has been updated." = "시청 및 저장 이용 한도가 업데이트되었습니다.";
@@ -315,6 +269,7 @@
 "year" = "년";
 "Retry" = "다시 시도";
 "Playback" = "재생";
+"Player" = "플레이어";
 "Downloads" = "다운로드";
 "Downloads left" = "남은 다운로드";
 "Get more downloads" = "다운로드 횟수 추가";
@@ -339,7 +294,7 @@
 "Your viewing allowance has been updated." = "시청 횟수가 추가됐어요.";
 "Your download allowance has been updated." = "다운로드 횟수가 추가됐어요.";
 "Your download allowance is used up." = "이번 이용 기간의 다운로드 횟수를 모두 썼어요.";
-"Download a lesson from its playback options to watch without a connection." = "재생 옵션에서 영상을 다운로드하면 오프라인에서 볼 수 있어요.";
+"Download a video from its playback options to watch offline." = "재생 옵션에서 영상을 다운로드하면 오프라인에서 볼 수 있어요.";
 "Offline downloads could not be read. Existing files have been preserved." = "오프라인 다운로드를 읽을 수 없습니다. 기존 파일은 보존되었습니다.";
 "Download interrupted. Please try again." = "다운로드가 중단됐어요. 다시 시도하세요.";
 "Download could not start. Please check your connection." = "다운로드를 시작할 수 없습니다. 연결을 확인하세요.";
@@ -350,13 +305,11 @@
 "This download is no longer on this device. Download it again." = "다운로드한 파일이 없어요. 영상을 다시 다운로드하세요.";
 "Purchase status is waiting to sync. Please try again when connected." = "구매 상태 동기화가 대기 중입니다. 연결 후 다시 시도하세요.";
 "No reward was received. Finish the ad to receive your reward." = "보상이 추가되지 않았어요. 보상을 받으려면 광고를 끝까지 보세요.";
-"Practice" = "연습";
-"Sessions" = "연습 기록";
 "This change could not be saved. Please try again." = "변경 사항을 저장할 수 없습니다. 다시 시도해 주세요.";
 
 "Follow system" = "기기 언어 사용";
 
-"No more lessons are available right now. Try again." = "지금은 더 볼 수 있는 영상이 없어요. 다시 시도해 주세요.";
+"No more videos are available right now. Try again." = "지금은 더 볼 수 있는 영상이 없어요. 다시 시도해 주세요.";
 
 "Another download is being prepared." = "다른 다운로드를 준비하고 있습니다.";
 
@@ -435,16 +388,11 @@
 "Connect to refresh your allowance." = "연결하면 남은 다운로드 횟수를 확인할 수 있어요.";
 
 "Paste" = "붙여넣기";
-"Open lesson" = "영상 찾기";
-"Use the lesson link or code you received." = "받은 영상 링크나 코드를 사용하세요.";
-"Copy a lesson link or code, then tap Paste." = "영상 링크나 코드를 복사한 뒤 붙여넣기를 누르세요.";
-"1. Copy the link or code" = "1. 링크 또는 코드 복사";
-"On Home, tap Paste or enter the code as received. Codes are case-sensitive." = "홈에서 붙여넣기를 누르거나 받은 코드를 그대로 입력하세요. 대소문자를 구분합니다.";
-"Tap Open lesson to find matching lessons, then swipe to watch." = "영상 찾기를 누르세요. 위아래로 쓸어 넘기면 다른 영상을 볼 수 있어요.";
+"Find video" = "영상 찾기";
+"Copy a video link or code, then tap Paste." = "영상 링크나 코드를 복사한 뒤 붙여넣기를 누르세요.";
 
 "Search in browser" = "웹에서 검색";
 "The browser could not open. Please try again." = "웹사이트를 열지 못했어요. 다시 시도하세요.";
-"No matching lessons. Search the web with your original input." = "일치하는 영상이 없어요. 입력한 내용으로 웹을 검색하세요.";
 
 "Official website" = "공식 웹사이트";
 
@@ -464,33 +412,28 @@
 "Web search" = "웹 검색";
 "Opening page…" = "페이지 여는 중…";
 
-"Magic library" = "보관함";
 "Backstage pass" = "백스테이지 패스";
 
 "Mirror" = "거울 앞";
 "Camera" = "카메라 앞";
-"Open a magic lesson" = "영상 열기";
-"Review your practice" = "연습 다시 보기";
-"Couldn’t load lessons" = "영상을 불러오지 못했어요";
-"No matching lessons" = "일치하는 영상이 없어요";
-"No lessons yet" = "표시할 영상이 없어요";
-"Open a lesson link or short code from Home." = "홈에서 영상 링크를 붙여넣거나 코드를 입력하세요.";
+"Couldn’t load videos" = "영상을 불러오지 못했어요";
+"No videos found" = "일치하는 영상이 없어요";
+"No videos to show" = "표시할 영상이 없어요";
+"To play your own video, choose Files or Photos on Home." = "내 영상을 재생하려면 홈에서 파일이나 사진을 선택하세요.";
 "Search the web with your original input." = "입력한 내용으로 웹에서 검색할 수 있어요.";
 
 "No favorites yet" = "즐겨찾기가 비어 있어요";
 "No offline videos yet" = "아직 다운로드한 영상이 없어요";
 "No imported videos yet" = "아직 가져온 영상이 없어요";
 "No exports yet" = "아직 내보낸 파일이 없어요";
-"Tap Favorite while watching a lesson to save it here." = "영상을 보다가 즐겨찾기에 추가하면 여기에 표시돼요.";
+"Add a video to Favorites while you watch. It’ll appear here." = "영상을 보다가 즐겨찾기에 추가하면 여기에 표시돼요.";
 "Choose a video from Photos or Files to start editing." = "사진 또는 파일에서 영상을 가져와 편집하세요.";
 "Export a video or audio track from the editor to find it here." = "편집기에서 내보낸 영상과 오디오가 여기에 표시돼요.";
 "Import a video" = "영상 가져오기";
 
-"Couldn’t load lesson collections" = "모음을 불러오지 못했어요";
+"Couldn’t load collections" = "모음을 불러오지 못했어요";
 "Setting up your table…" = "연결 중…";
 "Slow down a move to check every frame." = "동작을 느리게 재생해 어떻게 보이는지 확인하세요.";
-"Bring your hands and props into focus." = "손과 소품이 잘 보이도록 영상의 화면을 잘라내세요.";
-"Review notes" = "연습 메모";
 "Opens online" = "온라인에서 열림";
 "Performance" = "공연";
 "Craft" = "예절";
@@ -509,17 +452,13 @@
 "View options for more views and downloads" = "시청 및 다운로드 횟수를 늘리는 방법 보기";
 
 "Included with Plus" = "Plus 혜택";
-"Unlimited lesson views" = "영상 무제한 시청";
-"Watch lessons without using a daily view allowance." = "일일 시청 횟수 제한 없이 영상을 보세요.";
 "Unlimited offline downloads" = "오프라인 무제한 다운로드";
 "Unlimited downloads for supported videos" = "지원되는 동영상 무제한 다운로드";
-"Download supported lessons for offline viewing without a daily limit." = "다운로드를 지원하는 영상을 횟수 제한 없이 저장해 오프라인에서 보세요.";
 "Video and audio exports" = "영상과 오디오 내보내기";
 "Share edited videos as MP4 or save the audio as M4A." = "편집한 영상을 MP4로 공유하거나 오디오를 M4A로 저장하세요.";
 "Skip opening ads" = "시작 광고 건너뛰기";
 "Open or return to the app without an opening ad." = "앱을 열거나 돌아올 때 시작 광고가 표시되지 않아요.";
 "Review presets" = "복습 프리셋";
-"In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "연습 탭의 영상 편집기에서 느린 재생 프리셋을 적용하거나 저장한 설정을 다시 쓰세요.";
 "Hide review presets" = "복습 프리셋 접기";
 "Presets keep your trim points. Play the preview to check the result." = "프리셋을 적용해도 자르기 구간은 유지돼요. 미리보기를 재생해 결과를 확인하세요.";
 "Slow mirror" = "느린 미러 모드";
@@ -539,7 +478,7 @@
 "Preview, trim or change the speed of a video on your device." = "기기에 있는 동영상을 재생하고, 자르고, 속도를 조절할 수 있어요.";
 "View all" = "모두 보기";
 "View more" = "더 보기";
-"No lesson collections yet." = "아직 영상 모음이 없어요.";
+"No video collections yet." = "아직 영상 모음이 없어요.";
 "Play a clip slower or faster." = "동영상을 느리게 또는 빠르게 재생하세요.";
 "Crop, rotate or flip a video." = "동영상의 화면을 자르거나, 회전하거나, 좌우로 뒤집으세요.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "편집기에서 슬로 모션 프리셋을 적용하거나 저장한 설정을 다시 사용하세요.";

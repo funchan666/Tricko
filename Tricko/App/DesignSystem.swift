@@ -18,18 +18,6 @@ enum TrickoStyle {
 }
 
 
-struct StagePhoto: View {
-    let asset: String
-    var alignment: Alignment = .center
-
-    var body: some View {
-        TrickoStyle.surface.overlay(alignment: alignment) {
-            Image(asset).resizable().interpolation(.high).scaledToFill()
-        }.clipped()
-            .allowsHitTesting(false).accessibilityHidden(true)
-    }
-}
-
 struct StageSheetHeader: View {
     let title: String
     let close: () -> Void
@@ -54,6 +42,8 @@ struct StageFloatingPanel<Content: View>: View {
     let title: String
     let close: () -> Void
     @ViewBuilder let content: Content
+    @Namespace private var panelSpace
+    @State private var panelBounds: CGRect?
 
     var body: some View {
         GeometryReader { geometry in
@@ -66,12 +56,19 @@ struct StageFloatingPanel<Content: View>: View {
                 .frame(maxWidth: 460, alignment: .leading)
                 .trickoGlass(in: .rect(cornerRadius: 28), tint: TrickoStyle.ink.opacity(0.68),
                              fallback: TrickoStyle.surface, interactive: false)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(panelSpace)) } action: { panelBounds = $0 }
                 .padding(18)
                 .frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)
         }
         .background { Color.black.opacity(0.56).ignoresSafeArea() }
+        .contentShape(Rectangle())
+        .simultaneousGesture(SpatialTapGesture(coordinateSpace: .named(panelSpace)).onEnded { tap in
+            if let panelBounds, !panelBounds.isEmpty, !panelBounds.contains(tap.location) { close() }
+        })
+        .coordinateSpace(name: panelSpace)
+        .presentationBackground(.clear)
         .foregroundStyle(TrickoStyle.paper)
         .accessibilityAction(.escape, close)
         .trickoImmersiveChrome()
@@ -512,20 +509,6 @@ struct MediaCover: View {
         }.clipped()
     }
 }
-struct SheetHeading: View {
-    let title: String?
-    var close: () -> Void
-    var body: some View {
-        HStack {
-            if let title {
-                LocalizedText(title).font(.stage(.title3, display: true)).lineLimit(2)
-                    .accessibilityAddTraits(.isHeader)
-            }
-            Spacer()
-            IconButton(symbol: .close, label: "Close", action: close)
-        }.pageHorizontalMargins().padding(.top, 8)
-    }
-}
 
 struct SectionLabel: View {
     let title: String
@@ -542,40 +525,6 @@ struct SectionLabel: View {
                 if let detail { LocalizedText(detail).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary) }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }.accessibilityAddTraits(.isHeader)
-    }
-}
-
-struct TrickoIllustration: View {
-    let name: String
-    var height: CGFloat = 180
-    var body: some View {
-        Image(name)
-            .renderingMode(.original)
-            .resizable()
-            .scaledToFit()
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-    }
-}
-
-struct FeatureRow: View {
-    let symbol: TrickoGlyph
-    let title: String
-    let detail: String
-    var body: some View {
-        HStack(spacing: 16) {
-            Glyph(symbol: symbol, size: 22, tint: TrickoStyle.accent)
-                .frame(width: 48, height: 48)
-                .background(TrickoStyle.raised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            VStack(alignment: .leading, spacing: 4) {
-                LocalizedText(title).font(.stage(.subheadline, weight: .semibold)).foregroundStyle(TrickoStyle.paper)
-                LocalizedText(detail).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }
     }
 }
 

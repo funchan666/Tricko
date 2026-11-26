@@ -7,13 +7,7 @@
 "%@ views · %@ saves left today" = "Sisa hari ini: %@ tonton · %@ simpan";
 "%@, %@ per %@" = "%@, %@ per %@";
 "1. Copy your shared link" = "1. Salin tautan yang dibagikan";
-"2. Paste or type" = "2. Tempel atau ketik";
-"3. Open and watch" = "3. Cari video";
-"A better game\nstarts here." = "Permainan lebih baik\ndimulai di sini.";
-"A closer look at your own game" = "Lihat permainanmu lebih dekat";
 "A full year of Plus" = "Plus selama setahun";
-"No results? Check your input, or ask the sender for a new link." = "Jika tidak ada hasil, periksa tautan atau kode dengan pengirimnya.";
-"A little knowledge for your next session." = "Pengetahuan singkat untuk latihan berikutnya.";
 "A little luck, on us" = "Bonus ditambahkan";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "Koneksi aman tidak dapat dibuat. Periksa jaringan atau VPN, lalu coba lagi.";
 "Access password" = "Kata sandi akses";
@@ -40,7 +34,6 @@
 "Back" = "Kembali";
 "Back to link" = "Kembali ke tautan";
 "Browse Files" = "Telusuri File";
-"Build your lesson collection." = "Buat koleksi videomu.";
 "Cancel" = "Batal";
 "Cancel export" = "Batalkan ekspor";
 "Change" = "Ubah";
@@ -53,14 +46,11 @@
 "Choose a clip from your device. We’ll keep your original untouched." = "Perubahan diterapkan pada salinan videomu.";
 "Choose from Photos" = "Pilih dari Foto";
 "Choose your language" = "Pilih bahasa";
-"Choose your practice footage in Tools to keep a local working copy." = "Pilih rekaman latihan di Alat untuk menyimpan salinan kerja lokal.";
 "Clear" = "Hapus";
 "The online service isn’t set up yet. You can still edit local videos." = "Layanan online belum disiapkan. Kamu masih bisa mengedit video lokal.";
 "Close" = "Tutup";
 "Confirming your purchase…" = "Mengonfirmasi pembelian…";
-"Connecting your lesson feed…" = "Menghubungkan ke feed video…";
 "Continue with %@" = "Lanjutkan dengan %@";
-"Control before speed" = "Kontrol sebelum kecepatan";
 "Copy a video link or short code first, then tap Paste link." = "Salin tautan video atau kode singkat terlebih dahulu, lalu ketuk Tempel tautan.";
 "Couldn’t open this link" = "Tautan tidak dapat dibuka";
 "Couldn’t open this page" = "Halaman tidak dapat dimuat";
@@ -90,31 +80,25 @@
 "Final duration · %@" = "Durasi akhir · %@";
 "Find the frame." = "Atur bingkai";
 "Finding more clips…" = "Memuat video lainnya…";
-"Finding your next lesson…" = "Memuat video…";
+"Loading videos…" = "Memuat video…";
 "Finish a video or extract its audio in Tools. Your exports will be collected here." = "Selesaikan video atau ekstrak audio di Alat. Hasil ekspormu akan terkumpul di sini.";
 "Folder" = "Folder";
 "Frame" = "Bingkai";
 "Frames crop from the center. Use Preview changes to inspect the result." = "Video dipangkas dari tengah. Ketuk Pratinjau perubahan untuk memeriksa bingkainya.";
 "Free plan" = "Paket gratis";
 "From raw to ready" = "Dari rekaman hingga siap";
-"From watching to playing" = "Dari menonton ke bermain";
 "From your link" = "Dari tautanmu";
 "Full editor" = "Editor video";
-"Further reading" = "Bacaan lanjutan";
-"Games make sets" = "Gim membentuk set";
 "Get Plus" = "Lihat paket Plus";
 "Get more" = "Dapatkan lagi";
 "Get more daily views and saves" = "Tambah kuota tonton dan simpan harian";
 "Get more views" = "Tambah kuota tonton";
-"Give your swing a consistent ball to meet." = "Lambungkan bola secara konsisten untuk ayunanmu.";
 "Go" = "Mulai";
 "Go further with Plus." = "Melangkah lebih jauh dengan Plus.";
 "Got it" = "Mengerti";
 "Has a password?" = "Ada kata sandi?";
-"Have a lesson link?" = "Punya tautan video?";
 "Hide password" = "Sembunyikan kata sandi";
 "Home" = "Beranda";
-"How to" = "Bantuan tautan";
 "ID · %@" = "ID akun %@";
 "If a payment is waiting to be confirmed, retry without purchasing again." = "Jika pembayaran menunggu konfirmasi, coba konfirmasi lagi tanpa membeli ulang.";
 "Imported video" = "Video yang diimpor";
@@ -123,24 +107,17 @@
 "Included with your membership" = "Termasuk dalam keanggotaan";
 "Keep exploring" = "Terus jelajahi";
 "Keep it" = "Simpan";
-"Keep learning, one session at a time." = "Terus belajar, satu latihan demi satu.";
 "Keep the best part" = "Simpan bagian terbaik";
 "Keep the good part." = "Potong video";
 "Keep the sound as an M4A file." = "Simpan audio sebagai file M4A.";
 "Keep the soundtrack." = "Ekstrak audio";
 "Keep watching" = "Terus menonton";
-"Keep your game growing." = "Terus tingkatkan permainanmu.";
-"Know the game.\nEnjoy every point." = "Kenali permainan.\nNikmati setiap poin.";
-"Leave room for contact" = "Beri ruang saat kontak";
-"Lesson collections" = "Koleksi video";
-"Lesson link or short code" = "Tautan atau kode video";
-"Lesson or collection link" = "Tautan video atau koleksi";
+"Video collections" = "Koleksi video";
+"Video link or code" = "Tautan atau kode video";
 "Let it speak. Or don’t." = "Pengaturan audio";
-"Let the ball meet your motion" = "Sesuaikan lambungan dengan gerakan";
 "Let’s reconnect." = "Tidak dapat menyambung";
 "Library" = "Koleksi";
 "Load more" = "Muat lagi";
-"Loading your lesson feed." = "Memuat feed videomu.";
 "Loading…" = "Memuat…";
 "MP4 · Up to the selected resolution · 30 fps\nSmaller resolutions reduce export size. Source videos are never upscaled." = "MP4 · Hingga resolusi pilihan · 30 fps\nResolusi lebih kecil mengurangi ukuran ekspor. Video asli tidak diperbesar.";
 "Manage membership" = "Kelola Plus";
@@ -153,18 +130,13 @@
 "Mute" = "Bisukan";
 "No ad is available right now. %@" = "Tidak ada iklan yang tersedia. %@";
 "No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "Video untuk tautan ini tidak ditemukan. Periksa kode beserta huruf besar dan kecilnya, atau coba lagi nanti.";
-"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "Belum ada video. Coba pencarian lain atau tempel tautan video di Beranda.";
 "No reward was received. Finish a rewarded ad to get more views." = "Hadiah belum diterima. Selesaikan iklan berhadiah untuk menambah kuota tonton.";
 "Nothing here yet" = "Belum ada apa pun";
-"ONE THING TO REMEMBER" = "SATU HAL UNTUK DIINGAT";
 "Official sources · Opens online" = "Sumber resmi · Dibuka online";
-"One idea for your next session" = "Ide untuk latihan berikutnya";
 "One month of Plus" = "Plus selama sebulan";
 "Online streams stay online. Import a video you own to make an edit." = "Streaming online tetap online. Impor video milikmu untuk mengedit.";
 "Open Me and account settings" = "Buka pengaturan akun";
-"Open a lesson" = "Buka video";
 "Open link" = "Buka tautan";
-"Open your next lesson" = "Cara memakai tautan atau kode video";
 "Opening document…" = "Memuat dokumen…";
 "Opening link…" = "Membuka tautan…";
 "Or, keep it free" = "Tambah kuota dengan iklan";
@@ -181,7 +153,6 @@
 "Please wait…" = "Tunggu sebentar…";
 "Plus" = "Plus";
 "Plus active" = "Plus aktif";
-"Points make a game" = "Poin membentuk gim";
 "Preparing preview…" = "Menyiapkan pratinjau…";
 "Preparing your subscription…" = "Menyiapkan pembelian…";
 "Preparing your video…" = "Menyiapkan video…";
@@ -202,7 +173,6 @@
 "Purchases are not allowed on this device." = "Pembelian tidak diizinkan pada perangkat ini.";
 "Purchases are temporarily unavailable. Please try again later." = "Pembelian sementara tidak tersedia. Coba lagi nanti.";
 "Ready for its next screen." = "Kualitas ekspor";
-"Ready for your next session." = "Siap untuk latihan berikutnya.";
 "Receipt refresh is already in progress. Please retry shortly." = "Penyegaran tanda terima sedang berlangsung. Coba sebentar lagi.";
 "Recent imports" = "Impor terbaru";
 "Recently opened" = "Terakhir dibuka";
@@ -214,41 +184,32 @@
 "Restore purchases" = "Pulihkan pembelian";
 "Restoring purchases…" = "Memulihkan pembelian…";
 "Retry purchase confirmation" = "Coba lagi konfirmasi pembelian";
-"Review a practice video" = "Tinjau video latihan";
-"Review practice" = "Tinjau latihan";
 "Rewarded ads are not available right now. No views have been deducted." = "Iklan belum tersedia saat ini. Sisa kuota tonton dan unduhanmu tetap sama.";
 "Rewards are unavailable." = "Hadiah tidak tersedia.";
 "Rotate 90° · %@°" = "Putar 90° · %@°";
-"Rules" = "Aturan";
 "Save" = "Simpan";
 "Save a video or extract an audio track." = "Simpan video atau ekstrak trek audio.";
 "Save video" = "Tambahkan ke favorit";
 "Saved" = "Tersimpan";
 "Saves left" = "Sisa simpan";
 "Search videos" = "Cari video";
-"See your game\nfrom a new angle." = "Lihat permainanmu\ndari sudut baru.";
 "Selected" = "Dipilih";
 "Set the pace." = "Kecepatan putar";
 "Share" = "Bagikan";
 "Share video link" = "Bagikan tautan video";
 "Speed" = "Kecepatan";
 "Start" = "Awal";
-"Start with a shorter motion" = "Mulai dengan gerakan pendek";
 "Start with a video." = "Pilih video";
-"Start with contact and control, then build your swing." = "Mulai dari kontak dan kontrol, lalu kembangkan ayunanmu.";
 "Subscription information is being prepared. Please try again later." = "Informasi langganan sedang disiapkan. Coba lagi nanti.";
 "Subscriptions are temporarily unavailable. Please try again later." = "Langganan sementara tidak tersedia. Coba lagi nanti.";
 "Supported streams adjust quality to your connection." = "Jika didukung, kualitas video menyesuaikan koneksimu.";
-"Tap Open link to find matching lessons, then swipe to watch." = "Ketuk Buka tautan untuk menemukan video yang sesuai, lalu geser untuk menonton.";
 "Tap Paste link or enter the code exactly as received. Uppercase and lowercase letters matter." = "Ketuk Tempel tautan atau masukkan kode persis seperti diterima. Huruf besar dan kecil dibedakan.";
-"Technique" = "Teknik";
 "Terms of Use" = "Ketentuan Penggunaan";
 "Test ads require Google's sample iOS App ID." = "Iklan uji memerlukan ID aplikasi iOS contoh dari Google.";
 "The ad finished, but its reward could not be saved. %@" = "Iklan selesai, tetapi hadiahnya gagal disimpan. %@";
 "This removes the local copy. Your original file stays where it is." = "Salinan lokal akan dihapus. File asli tetap berada di tempatnya.";
 "The document was interrupted. Please try again." = "Dokumen terputus. Coba lagi.";
 "The export finished but could not be added to your library. %@" = "Ekspor selesai. Penyimpanan atau proses berbagi tidak dapat diselesaikan. %@";
-"The other side" = "Sisi lainnya";
 "The request could not be completed." = "Permintaan tidak dapat diselesaikan.";
 "The service is unavailable (%@). Please try again." = "Layanan tidak tersedia (%@). Coba lagi.";
 "The service returned an unreadable response. Please try again." = "Respons tidak dapat dibaca. Coba lagi.";
@@ -271,7 +232,6 @@
 "Trim the timing, crop the frame, change the pace." = "Potong durasi, atur bingkai, ubah kecepatan.";
 "Review moments, trim clips or adjust playback speed." = "Tinjau momen, potong klip, atau atur kecepatan pemutaran.";
 "Try again" = "Coba lagi";
-"Turn together" = "Putar tubuh bersama";
 "USD reference prices. Apple confirms your local price before payment." = "Harga referensi dalam USD. Apple mengonfirmasi harga lokal sebelum pembayaran.";
 "Unlimited" = "Tak terbatas";
 "Unlimited viewing today" = "Tonton tanpa batas hari ini";
@@ -287,12 +247,8 @@
 "Watch a full ad for %@ more views and %@ more saves." = "Selesaikan iklan untuk %@ tonton dan %@ simpan tambahan.";
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "Selesaikan iklan untuk tonton tanpa batas hingga pukul 05.00 dan %@ simpan tambahan.";
 "Watch an ad" = "Tonton iklan";
-"Watch lessons" = "Jelajahi video";
+"Browse videos" = "Jelajahi video";
 "No link needed" = "Tidak perlu tautan";
-"Watch. Practise. Repeat." = "Tonton. Latih. Ulangi.";
-"What happens at 40–40?" = "Apa yang terjadi saat 40–40?";
-"When reviewing your footage, pause at contact: is there space between the ball and your body?" = "Saat meninjau video, jeda pada titik kontak: adakah ruang antara bola dan tubuhmu?";
-"YOUR DAILY PRACTICE" = "LATIHAN HARIANMU";
 "Yearly" = "Tahunan";
 "Your changes could not be saved on this device. Please try again." = "Perubahanmu tidak bisa disimpan di perangkat ini. Coba lagi.";
 "Your connection is not ready yet. Please try again." = "Sambungkan ke internet, lalu coba buka video lagi.";
@@ -303,10 +259,8 @@
 "Your local library could not be read. Existing files have been preserved." = "Koleksi lokal tidak dapat dibaca. File yang ada tetap disimpan.";
 "Your membership is active" = "Plus aktif";
 "Your membership is already active." = "Keanggotaanmu sudah aktif.";
-"Your next session starts here." = "Latihan berikutnya dimulai di sini.";
 "Your original stays untouched. Exports are saved to your local library." = "File hasil ekspor ada di bagian Ekspor dalam Koleksi. Video asli tetap utuh.";
-"Your practice space" = "Akun tamu";
-"Your practice, in focus." = "Fokus pada latihanmu.";
+"Guest account" = "Akun tamu";
 "Your purchase is waiting for approval." = "Menunggu persetujuan pembelian.";
 "Your session has expired. Please sign in again." = "Sesimu berakhir. Sambungkan kembali untuk melanjutkan.";
 "Your viewing and save allowance has been updated." = "Kuota tonton dan simpan diperbarui.";
@@ -315,6 +269,7 @@
 "year" = "tahun";
 "Retry" = "Coba lagi";
 "Playback" = "Pemutaran";
+"Player" = "Pemutar";
 "Downloads" = "Unduhan";
 "Downloads left" = "Sisa unduhan";
 "Get more downloads" = "Tambah kuota unduhan";
@@ -339,7 +294,7 @@
 "Your viewing allowance has been updated." = "Kuota tonton ditambahkan.";
 "Your download allowance has been updated." = "Kuota unduhan ditambahkan.";
 "Your download allowance is used up." = "Kuota unduhan untuk periode ini sudah habis.";
-"Download a lesson from its playback options to watch without a connection." = "Unduh video dari opsi pemutaran untuk menontonnya secara offline.";
+"Download a video from its playback options to watch offline." = "Unduh video dari opsi pemutaran untuk menontonnya secara offline.";
 "Offline downloads could not be read. Existing files have been preserved." = "Unduhan offline tidak dapat dibaca. File yang ada tetap disimpan.";
 "Download interrupted. Please try again." = "Unduhan terhenti. Coba lagi.";
 "Download could not start. Please check your connection." = "Unduhan tidak dapat dimulai. Periksa koneksi Anda.";
@@ -350,13 +305,11 @@
 "This download is no longer on this device. Download it again." = "Unduhan ini tidak ditemukan. Unduh kembali videonya.";
 "Purchase status is waiting to sync. Please try again when connected." = "Status pembelian menunggu sinkronisasi. Coba lagi saat terhubung.";
 "No reward was received. Finish the ad to receive your reward." = "Bonus belum ditambahkan. Tonton iklan sampai selesai untuk mendapatkannya.";
-"Practice" = "Latihan";
-"Sessions" = "Sesi";
 "This change could not be saved. Please try again." = "Perubahan tidak dapat disimpan. Coba lagi.";
 
 "Follow system" = "Gunakan bahasa perangkat";
 
-"No more lessons are available right now. Try again." = "Belum ada video tambahan. Coba lagi.";
+"No more videos are available right now. Try again." = "Belum ada video tambahan. Coba lagi.";
 
 "Another download is being prepared." = "Unduhan lain sedang disiapkan.";
 
@@ -435,16 +388,11 @@
 "Connect to refresh your allowance." = "Sambungkan untuk melihat sisa unduhanmu.";
 
 "Paste" = "Tempel";
-"Open lesson" = "Cari video";
-"Use the lesson link or code you received." = "Gunakan tautan atau kode video yang kamu terima.";
-"Copy a lesson link or code, then tap Paste." = "Salin tautan atau kode video, lalu ketuk Tempel.";
-"1. Copy the link or code" = "1. Salin tautan atau kode";
-"On Home, tap Paste or enter the code as received. Codes are case-sensitive." = "Di Beranda, ketuk Tempel atau ketik kode seperti yang diterima. Huruf besar dan kecil dibedakan.";
-"Tap Open lesson to find matching lessons, then swipe to watch." = "Ketuk Cari video. Geser ke atas atau bawah untuk berpindah video.";
+"Find video" = "Cari video";
+"Copy a video link or code, then tap Paste." = "Salin tautan atau kode video, lalu ketuk Tempel.";
 
 "Search in browser" = "Cari di web";
 "The browser could not open. Please try again." = "Situs tidak dapat dibuka. Coba lagi.";
-"No matching lessons. Search the web with your original input." = "Tidak ada video yang cocok. Cari di web dengan teks yang kamu masukkan.";
 
 "Official website" = "Situs resmi";
 
@@ -464,33 +412,28 @@
 "Web search" = "Penelusuran web";
 "Opening page…" = "Membuka halaman…";
 
-"Magic library" = "Koleksi";
 "Backstage pass" = "Akses belakang panggung";
 
 "Mirror" = "Cermin";
 "Camera" = "Kamera";
-"Open a magic lesson" = "Buka video";
-"Review your practice" = "Tinjau latihan";
-"Couldn’t load lessons" = "Video gagal dimuat";
-"No matching lessons" = "Video tidak ditemukan";
-"No lessons yet" = "Tidak ada video untuk ditampilkan";
-"Open a lesson link or short code from Home." = "Di Beranda, tempel tautan video atau masukkan kodenya.";
+"Couldn’t load videos" = "Video gagal dimuat";
+"No videos found" = "Video tidak ditemukan";
+"No videos to show" = "Tidak ada video untuk ditampilkan";
+"To play your own video, choose Files or Photos on Home." = "Untuk memutar video sendiri, pilih File atau Foto di Beranda.";
 "Search the web with your original input." = "Kamu bisa mencari di web dengan teks yang kamu masukkan.";
 
 "No favorites yet" = "Belum ada favorit";
 "No offline videos yet" = "Belum ada unduhan";
 "No imported videos yet" = "Belum ada video yang diimpor";
 "No exports yet" = "Belum ada hasil ekspor";
-"Tap Favorite while watching a lesson to save it here." = "Tambahkan video ke Favorit saat menonton. Video itu akan muncul di sini.";
+"Add a video to Favorites while you watch. It’ll appear here." = "Tambahkan video ke Favorit saat menonton. Video itu akan muncul di sini.";
 "Choose a video from Photos or Files to start editing." = "Impor video dari Foto atau File untuk mulai mengedit.";
 "Export a video or audio track from the editor to find it here." = "Video dan audio yang diekspor dari editor muncul di sini.";
 "Import a video" = "Impor video";
 
-"Couldn’t load lesson collections" = "Koleksi tidak dapat dimuat";
+"Couldn’t load collections" = "Koleksi tidak dapat dimuat";
 "Setting up your table…" = "Menyambungkan…";
 "Slow down a move to check every frame." = "Perlambat gerakan untuk melihatnya lebih jelas.";
-"Bring your hands and props into focus." = "Pangkas bingkai video agar tangan dan alat peraga terlihat jelas.";
-"Review notes" = "Catatan latihan";
 "Opens online" = "Dibuka secara online";
 "Performance" = "Pertunjukan";
 "Craft" = "Etika";
@@ -509,17 +452,13 @@
 "View options for more views and downloads" = "Lihat pilihan untuk menambah kuota tonton dan unduhan";
 
 "Included with Plus" = "Termasuk dalam Plus";
-"Unlimited lesson views" = "Tonton tanpa batas";
-"Watch lessons without using a daily view allowance." = "Tonton video tanpa batas tayangan harian.";
 "Unlimited offline downloads" = "Unduhan offline tanpa batas";
 "Unlimited downloads for supported videos" = "Unduhan tanpa batas untuk video yang didukung";
-"Download supported lessons for offline viewing without a daily limit." = "Unduh video yang mendukung tontonan offline tanpa batas harian.";
 "Video and audio exports" = "Ekspor video dan audio";
 "Share edited videos as MP4 or save the audio as M4A." = "Bagikan video hasil edit sebagai MP4 atau simpan audionya sebagai M4A.";
 "Skip opening ads" = "Lewati iklan pembuka";
 "Open or return to the app without an opening ad." = "Buka aplikasi atau kembali ke aplikasi tanpa iklan pembuka.";
 "Review presets" = "Preset peninjauan";
-"In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "Buka editor video di Latihan untuk memakai preset gerak lambat atau menggunakan lagi pengaturanmu.";
 "Hide review presets" = "Sembunyikan preset peninjauan";
 "Presets keep your trim points. Play the preview to check the result." = "Preset mempertahankan titik potong. Putar pratinjau untuk melihat hasilnya.";
 "Slow mirror" = "Cermin lambat";
@@ -539,7 +478,7 @@
 "Preview, trim or change the speed of a video on your device." = "Putar, pangkas, atau ubah kecepatan video di perangkatmu.";
 "View all" = "Lihat semua";
 "View more" = "Lihat lainnya";
-"No lesson collections yet." = "Belum ada koleksi video.";
+"No video collections yet." = "Belum ada koleksi video.";
 "Play a clip slower or faster." = "Putar klip lebih lambat atau lebih cepat.";
 "Crop, rotate or flip a video." = "Pangkas bingkai, putar, atau balik video.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Terapkan preset gerak lambat atau gunakan kembali pengaturan tersimpan di editor video.";

@@ -136,8 +136,8 @@ struct LibraryView: View {
 
         var emptyMessage: String {
             switch self {
-            case .saved: "Tap Favorite while watching a lesson to save it here."
-            case .offline: "Download a lesson from its playback options to watch without a connection."
+            case .saved: "Add a video to Favorites while you watch. It’ll appear here."
+            case .offline: "Download a video from its playback options to watch offline."
             case .imports: "Choose a video from Photos or Files to start editing."
             case .exports: "Export a video or audio track from the editor to find it here."
             case .pendingReviews: "Add a marker while reviewing a video to see it here."
@@ -181,7 +181,9 @@ struct LibraryView: View {
                 }
             }
             .onAppear { restoreSavedScroll(for: category, using: scroll) }
-            .onDisappear { libraryScroll.leaveLibrary() }
+            .onDisappear {
+                if reviewingVideo == nil { libraryScroll.leaveLibrary() }
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active { libraryScroll.saveOffsets() }
             }
@@ -193,7 +195,7 @@ struct LibraryView: View {
             .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
             .fullScreenCover(item: $downloadOptions) { video in
-                DownloadOptionsPanel(video: video).presentationBackground(.clear)
+                DownloadOptionsPanel(video: video)
             }
             .alert("Delete this local copy?", isPresented: Binding(
                 get: { removing != nil }, set: { if !$0 { removing = nil } }
@@ -411,7 +413,7 @@ struct LibraryView: View {
                     Button { filter = Category.imports.rawValue } label: { LocalizedText("Imports") }
                         .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .folder))
                 } else {
-                    Button(action: watchLessons) { LocalizedText("Watch lessons") }
+                    Button(action: watchLessons) { LocalizedText("Browse videos") }
                         .buttonStyle(EmptyStateActionStyle(symbol: .play))
                 }
             }
@@ -419,31 +421,13 @@ struct LibraryView: View {
     }
 
     private func archiveImport(for entry: Category, isEmpty: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             if isEmpty {
                 EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
-                    .padding(16)
-                    .trickoGlass(in: .rect(cornerRadius: 18), tint: TrickoStyle.ink.opacity(0.4),
-                                 fallback: TrickoStyle.surface, interactive: false)
-                    .padding(.top, 54)
             }
             LocalVideoImportButtons(onImport: edit)
         }
-        .padding(isEmpty ? 12 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            if isEmpty {
-                StagePhoto(asset: "VideoArchivePhoto", alignment: .trailing)
-                    .overlay {
-                        LinearGradient(stops: [
-                            .init(color: .clear, location: 0),
-                            .init(color: TrickoStyle.background.opacity(0.35), location: 0.48),
-                            .init(color: TrickoStyle.background, location: 1)
-                        ], startPoint: .top, endPoint: .bottom)
-                    }
-                    .clipShape(.rect(cornerRadius: 24))
-            }
-        }
     }
 
     private func localGallery(for entry: Category) -> some View {

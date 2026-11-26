@@ -7,13 +7,7 @@
 "%@ views · %@ saves left today" = "المتبقي اليوم: %@ مشاهدة · %@ حفظ";
 "%@, %@ per %@" = "%@، %@ لكل %@";
 "1. Copy your shared link" = "1. انسخ الرابط الذي وصلك";
-"2. Paste or type" = "٢. ألصقه أو اكتبه";
-"3. Open and watch" = "٣. ابحث عن الفيديو";
-"A better game\nstarts here." = "لعب أفضل\nيبدأ هنا.";
-"A closer look at your own game" = "ألقِ نظرة أدق على أدائك";
 "A full year of Plus" = "عام كامل من Plus";
-"No results? Check your input, or ask the sender for a new link." = "إذا لم تظهر نتائج، تحقّق من الرابط أو الرمز مع المرسل.";
-"A little knowledge for your next session." = "معرفة بسيطة لتدريبك القادم.";
 "A little luck, on us" = "أضيفت مكافأة";
 "Couldn’t connect securely. Check your network or VPN, then try again." = "تعذّر إنشاء اتصال آمن. تحقّق من الشبكة أو VPN ثم حاول مرة أخرى.";
 "Access password" = "كلمة مرور الوصول";
@@ -40,7 +34,6 @@
 "Back" = "رجوع";
 "Back to link" = "العودة إلى الرابط";
 "Browse Files" = "تصفّح الملفات";
-"Build your lesson collection." = "أنشئ مجموعتك من الفيديوهات.";
 "Cancel" = "إلغاء";
 "Cancel export" = "إلغاء التصدير";
 "Change" = "تغيير";
@@ -53,14 +46,11 @@
 "Choose a clip from your device. We’ll keep your original untouched." = "تُطبَّق التعديلات على نسخة من الفيديو.";
 "Choose from Photos" = "اختيار من الصور";
 "Choose your language" = "اختر لغة";
-"Choose your practice footage in Tools to keep a local working copy." = "اختر فيديو تدريبك في الأدوات للاحتفاظ بنسخة عمل على الجهاز.";
 "Clear" = "مسح";
 "The online service isn’t set up yet. You can still edit local videos." = "لم تُهيَّأ الخدمة عبر الإنترنت بعد. يمكنك تحرير الفيديوهات المحلية.";
 "Close" = "إغلاق";
 "Confirming your purchase…" = "جارٍ تأكيد الشراء…";
-"Connecting your lesson feed…" = "جارٍ الاتصال بقائمة الفيديوهات…";
 "Continue with %@" = "المتابعة مع %@";
-"Control before speed" = "التحكم قبل السرعة";
 "Copy a video link or short code first, then tap Paste link." = "انسخ رابط الفيديو أو الرمز المختصر أولًا، ثم اضغط لصق الرابط.";
 "Couldn’t open this link" = "تعذر فتح الرابط";
 "Couldn’t open this page" = "تعذّر تحميل هذه الصفحة";
@@ -90,31 +80,25 @@
 "Final duration · %@" = "المدة النهائية · %@";
 "Find the frame." = "ضبط الإطار";
 "Finding more clips…" = "جارٍ تحميل المزيد من الفيديوهات…";
-"Finding your next lesson…" = "جارٍ تحميل الفيديوهات…";
+"Loading videos…" = "جارٍ تحميل الفيديوهات…";
 "Finish a video or extract its audio in Tools. Your exports will be collected here." = "أكمل تحرير فيديو أو استخرج الصوت في الأدوات. ستجد ملفاتك المصدَّرة هنا.";
 "Folder" = "مجلد";
 "Frame" = "الإطار";
 "Frames crop from the center. Use Preview changes to inspect the result." = "يُقصّ الفيديو من المنتصف. اضغط على «معاينة التغييرات» للتحقّق من الإطار.";
 "Free plan" = "الخطة المجانية";
 "From raw to ready" = "من التسجيل إلى النتيجة";
-"From watching to playing" = "من المشاهدة إلى اللعب";
 "From your link" = "من رابطك";
 "Full editor" = "محرر الفيديو";
-"Further reading" = "للمزيد من القراءة";
-"Games make sets" = "الأشواط تكوّن المجموعات";
 "Get Plus" = "عرض خطط Plus";
 "Get more" = "احصل على المزيد";
 "Get more daily views and saves" = "احصل على مشاهدات وعمليات حفظ يومية إضافية";
 "Get more views" = "احصل على مشاهدات إضافية";
-"Give your swing a consistent ball to meet." = "اجعل رمي الكرة ثابتًا لتناسب حركة مضربك.";
 "Go" = "انتقال";
 "Go further with Plus." = "تقدّم أكثر مع Plus.";
 "Got it" = "فهمت";
 "Has a password?" = "هل توجد كلمة مرور؟";
-"Have a lesson link?" = "هل لديك رابط فيديو؟";
 "Hide password" = "إخفاء كلمة المرور";
 "Home" = "الرئيسية";
-"How to" = "مساعدة في استخدام الروابط";
 "ID · %@" = "معرّف الحساب %@";
 "If a payment is waiting to be confirmed, retry without purchasing again." = "إذا كان الدفع بانتظار التأكيد، فأعد محاولة التأكيد دون الشراء مجددًا.";
 "Imported video" = "فيديو مستورد";
@@ -123,24 +107,17 @@
 "Included with your membership" = "مشمول في عضويتك";
 "Keep exploring" = "متابعة الاستكشاف";
 "Keep it" = "الاحتفاظ به";
-"Keep learning, one session at a time." = "واصل التعلّم، تدريبًا بعد تدريب.";
 "Keep the best part" = "احتفظ بأفضل جزء";
 "Keep the good part." = "قصّ الفيديو";
 "Keep the sound as an M4A file." = "احفظ الصوت في ملف M4A.";
 "Keep the soundtrack." = "استخراج الصوت";
 "Keep watching" = "متابعة المشاهدة";
-"Keep your game growing." = "واصل تطوير لعبك.";
-"Know the game.\nEnjoy every point." = "افهم اللعبة.\nواستمتع بكل نقطة.";
-"Leave room for contact" = "اترك مساحة لضرب الكرة";
-"Lesson collections" = "مجموعات الفيديو";
-"Lesson link or short code" = "رابط الفيديو أو رمزه";
-"Lesson or collection link" = "رابط فيديو أو مجموعة";
+"Video collections" = "مجموعات الفيديو";
+"Video link or code" = "رابط الفيديو أو رمزه";
 "Let it speak. Or don’t." = "إعدادات الصوت";
-"Let the ball meet your motion" = "اجعل الكرة تناسب حركتك";
 "Let’s reconnect." = "تعذّر الاتصال";
 "Library" = "المكتبة";
 "Load more" = "تحميل المزيد";
-"Loading your lesson feed." = "جارٍ تحميل قائمة الفيديوهات.";
 "Loading…" = "جارٍ التحميل…";
 "MP4 · Up to the selected resolution · 30 fps\nSmaller resolutions reduce export size. Source videos are never upscaled." = "MP4 · حتى الدقة المحددة · 30 إطارًا/ث\nالدقة الأقل تصغّر الملف. لا تُرفع الدقة فوق دقة الفيديو الأصلي.";
 "Manage membership" = "إدارة Plus";
@@ -153,18 +130,13 @@
 "Mute" = "كتم الصوت";
 "No ad is available right now. %@" = "لم يتوفّر إعلان. %@";
 "No content was returned for this link. Check the code, including uppercase and lowercase letters, or try again later." = "لم يُعثر على فيديو لهذا الرابط. تحقّق من الرمز والأحرف الكبيرة والصغيرة، أو حاول مرة أخرى لاحقًا.";
-"No lessons are available here yet. Try another search or open a shared lesson link on Home." = "لا توجد فيديوهات هنا بعد. جرّب بحثًا آخر أو ألصق رابط فيديو في الصفحة الرئيسية.";
 "No reward was received. Finish a rewarded ad to get more views." = "لم تُستلم مكافأة. أكمل الإعلان بمكافأة للحصول على مشاهدات إضافية.";
 "Nothing here yet" = "لا يوجد شيء هنا بعد";
-"ONE THING TO REMEMBER" = "نقطة تستحق التذكّر";
 "Official sources · Opens online" = "مصادر رسمية · تُفتح عبر الإنترنت";
-"One idea for your next session" = "فكرة لتدريبك القادم";
 "One month of Plus" = "شهر من Plus";
 "Online streams stay online. Import a video you own to make an edit." = "البث عبر الإنترنت يبقى عبر الإنترنت. استورد فيديو تملكه لتحريره.";
 "Open Me and account settings" = "فتح إعدادات الحساب";
-"Open a lesson" = "فتح فيديو";
 "Open link" = "فتح الرابط";
-"Open your next lesson" = "طريقة استخدام رابط فيديو أو رمز";
 "Opening document…" = "جارٍ تحميل المستند…";
 "Opening link…" = "جارٍ فتح الرابط…";
 "Or, keep it free" = "احصل على استخدام إضافي عبر الإعلانات";
@@ -181,7 +153,6 @@
 "Please wait…" = "يرجى الانتظار…";
 "Plus" = "Plus";
 "Plus active" = "Plus مفعّل";
-"Points make a game" = "النقاط تكوّن الأشواط";
 "Preparing preview…" = "جارٍ تجهيز المعاينة…";
 "Preparing your subscription…" = "جارٍ تجهيز الشراء…";
 "Preparing your video…" = "جارٍ تجهيز الفيديو…";
@@ -202,7 +173,6 @@
 "Purchases are not allowed on this device." = "الشراء غير مسموح على هذا الجهاز.";
 "Purchases are temporarily unavailable. Please try again later." = "الشراء غير متاح مؤقتًا. حاول لاحقًا.";
 "Ready for its next screen." = "جودة التصدير";
-"Ready for your next session." = "جاهز لتدريبك القادم.";
 "Receipt refresh is already in progress. Please retry shortly." = "جارٍ تحديث الإيصال. أعد المحاولة بعد قليل.";
 "Recent imports" = "الملفات المستوردة مؤخرًا";
 "Recently opened" = "المفتوحة مؤخرًا";
@@ -214,41 +184,32 @@
 "Restore purchases" = "استعادة المشتريات";
 "Restoring purchases…" = "جارٍ استعادة المشتريات…";
 "Retry purchase confirmation" = "إعادة محاولة تأكيد الشراء";
-"Review a practice video" = "مراجعة فيديو تدريب";
-"Review practice" = "مراجعة التدريب";
 "Rewarded ads are not available right now. No views have been deducted." = "الإعلانات غير متاحة الآن. تبقى المشاهدات والتنزيلات المتبقية كما هي.";
 "Rewards are unavailable." = "المكافآت غير متاحة.";
 "Rotate 90° · %@°" = "تدوير 90° · %@°";
-"Rules" = "القواعد";
 "Save" = "حفظ";
 "Save a video or extract an audio track." = "احفظ فيديو أو استخرج مسارًا صوتيًا.";
 "Save video" = "إضافة إلى المفضّلة";
 "Saved" = "المحفوظات";
 "Saves left" = "عمليات الحفظ المتبقية";
 "Search videos" = "البحث عن فيديوهات";
-"See your game\nfrom a new angle." = "شاهد أداءك\nمن زاوية جديدة.";
 "Selected" = "محدد";
 "Set the pace." = "سرعة التشغيل";
 "Share" = "مشاركة";
 "Share video link" = "مشاركة رابط الفيديو";
 "Speed" = "السرعة";
 "Start" = "البداية";
-"Start with a shorter motion" = "ابدأ بحركة أقصر";
 "Start with a video." = "اختر فيديو";
-"Start with contact and control, then build your swing." = "ابدأ بضرب الكرة والتحكم فيها، ثم طوّر حركة مضربك.";
 "Subscription information is being prepared. Please try again later." = "جارٍ تجهيز معلومات الاشتراك. حاول لاحقًا.";
 "Subscriptions are temporarily unavailable. Please try again later." = "الاشتراكات غير متاحة مؤقتًا. حاول لاحقًا.";
 "Supported streams adjust quality to your connection." = "تتكيّف جودة الفيديو مع اتصالك في المقاطع التي تدعم ذلك.";
-"Tap Open link to find matching lessons, then swipe to watch." = "اضغط على «فتح الرابط» للعثور على الفيديوهات المطابقة، ثم اسحب للمشاهدة.";
 "Tap Paste link or enter the code exactly as received. Uppercase and lowercase letters matter." = "اضغط لصق الرابط أو أدخل الرمز كما وصلك تمامًا. الأحرف الكبيرة والصغيرة مختلفة.";
-"Technique" = "التقنيات";
 "Terms of Use" = "شروط الاستخدام";
 "Test ads require Google's sample iOS App ID." = "تتطلب الإعلانات التجريبية معرّف تطبيق iOS التجريبي من Google.";
 "The ad finished, but its reward could not be saved. %@" = "اكتمل الإعلان، لكن تعذر حفظ المكافأة. %@";
 "This removes the local copy. Your original file stays where it is." = "تُحذف النسخة المحلية. يبقى الملف الأصلي في مكانه.";
 "The document was interrupted. Please try again." = "انقطع تحميل المستند. أعد المحاولة.";
 "The export finished but could not be added to your library. %@" = "اكتمل التصدير. تعذّر إكمال الحفظ أو المشاركة. %@";
-"The other side" = "الجانب الآخر";
 "The request could not be completed." = "تعذر إكمال الطلب.";
 "The service is unavailable (%@). Please try again." = "الخدمة غير متاحة (%@). أعد المحاولة.";
 "The service returned an unreadable response. Please try again." = "تعذّرت قراءة الردّ. حاول مرة أخرى.";
@@ -271,7 +232,6 @@
 "Trim the timing, crop the frame, change the pace." = "قص المدة واضبط الإطار وغيّر السرعة.";
 "Review moments, trim clips or adjust playback speed." = "راجع لحظات محددة أو قصّ المقاطع أو اضبط سرعة التشغيل.";
 "Try again" = "إعادة المحاولة";
-"Turn together" = "أدر الجسم معًا";
 "USD reference prices. Apple confirms your local price before payment." = "أسعار مرجعية بالدولار الأمريكي. تؤكد Apple السعر المحلي قبل الدفع.";
 "Unlimited" = "غير محدود";
 "Unlimited viewing today" = "مشاهدة بلا حدود اليوم";
@@ -287,12 +247,8 @@
 "Watch a full ad for %@ more views and %@ more saves." = "شاهد إعلانًا كاملًا لإضافة %@ مشاهدة و%@ عملية حفظ.";
 "Watch a full ad for unlimited viewing until 5 AM and %@ more saves." = "شاهد إعلانًا كاملًا لمشاهدة بلا حدود حتى 5 صباحًا وإضافة %@ عملية حفظ.";
 "Watch an ad" = "مشاهدة إعلان";
-"Watch lessons" = "تصفّح الفيديوهات";
+"Browse videos" = "تصفّح الفيديوهات";
 "No link needed" = "لا حاجة إلى رابط";
-"Watch. Practise. Repeat." = "شاهد. تدرّب. كرّر.";
-"What happens at 40–40?" = "ماذا يحدث عند 40–40؟";
-"When reviewing your footage, pause at contact: is there space between the ball and your body?" = "أوقف الفيديو عند ضرب الكرة: هل توجد مساحة بين الكرة وجسمك؟";
-"YOUR DAILY PRACTICE" = "تدريبك اليومي";
 "Yearly" = "سنوي";
 "Your changes could not be saved on this device. Please try again." = "تعذّر حفظ تغييراتك على هذا الجهاز. حاول مرة أخرى.";
 "Your connection is not ready yet. Please try again." = "اتصل بالإنترنت، ثم حاول فتح الفيديو مرة أخرى.";
@@ -303,10 +259,8 @@
 "Your local library could not be read. Existing files have been preserved." = "تعذرت قراءة المكتبة المحلية. تم الاحتفاظ بالملفات الموجودة.";
 "Your membership is active" = "اشتراك Plus مفعّل";
 "Your membership is already active." = "عضويتك مفعّلة بالفعل.";
-"Your next session starts here." = "تدريبك القادم يبدأ هنا.";
 "Your original stays untouched. Exports are saved to your local library." = "تجد الملفات المصدّرة ضمن «الصادرات» في المكتبة. يبقى الملف الأصلي كما هو.";
-"Your practice space" = "حساب ضيف";
-"Your practice, in focus." = "تدريبك تحت التركيز.";
+"Guest account" = "حساب ضيف";
 "Your purchase is waiting for approval." = "بانتظار الموافقة على الشراء.";
 "Your session has expired. Please sign in again." = "انتهت صلاحية الجلسة. أعد الاتصال للمتابعة.";
 "Your viewing and save allowance has been updated." = "تم تحديث حصتك من المشاهدات وعمليات الحفظ.";
@@ -315,6 +269,7 @@
 "year" = "سنة";
 "Retry" = "إعادة المحاولة";
 "Playback" = "التشغيل";
+"Player" = "مشغّل الفيديو";
 "Downloads" = "التنزيلات";
 "Downloads left" = "التنزيلات المتبقية";
 "Get more downloads" = "احصل على تنزيلات إضافية";
@@ -339,7 +294,7 @@
 "Your viewing allowance has been updated." = "أضيفت مشاهدات.";
 "Your download allowance has been updated." = "أضيفت تنزيلات.";
 "Your download allowance is used up." = "استخدمت كل التنزيلات المتاحة لهذه الفترة.";
-"Download a lesson from its playback options to watch without a connection." = "نزّل الفيديو من خيارات التشغيل لمشاهدته دون اتصال.";
+"Download a video from its playback options to watch offline." = "نزّل الفيديو من خيارات التشغيل لمشاهدته دون اتصال.";
 "Offline downloads could not be read. Existing files have been preserved." = "تعذّرت قراءة التنزيلات. تم الاحتفاظ بالملفات الموجودة.";
 "Download interrupted. Please try again." = "انقطع التنزيل. حاول مرة أخرى.";
 "Download could not start. Please check your connection." = "تعذّر بدء التنزيل. تحقق من اتصالك.";
@@ -350,13 +305,11 @@
 "This download is no longer on this device. Download it again." = "الملف المنزّل مفقود. نزّل الفيديو مرة أخرى.";
 "Purchase status is waiting to sync. Please try again when connected." = "حالة الشراء بانتظار المزامنة. حاول مجددًا عند الاتصال.";
 "No reward was received. Finish the ad to receive your reward." = "لم تُضف مكافأة. شاهد الإعلان حتى النهاية لتحصل عليها.";
-"Practice" = "التدريب";
-"Sessions" = "الجلسات";
 "This change could not be saved. Please try again." = "تعذر حفظ التغيير. حاول مرة أخرى.";
 
 "Follow system" = "استخدام لغة الجهاز";
 
-"No more lessons are available right now. Try again." = "لا توجد فيديوهات إضافية حاليًا. حاول مرة أخرى.";
+"No more videos are available right now. Try again." = "لا توجد فيديوهات إضافية حاليًا. حاول مرة أخرى.";
 
 "Another download is being prepared." = "يجري تجهيز تنزيل آخر.";
 
@@ -435,16 +388,11 @@
 "Connect to refresh your allowance." = "اتصل بالإنترنت لمعرفة عدد التنزيلات المتبقية.";
 
 "Paste" = "لصق";
-"Open lesson" = "البحث عن فيديو";
-"Use the lesson link or code you received." = "استخدم رابط الفيديو أو الرمز الذي وصلك.";
-"Copy a lesson link or code, then tap Paste." = "انسخ رابط الفيديو أو رمزه، ثم اضغط على «لصق».";
-"1. Copy the link or code" = "١. انسخ الرابط أو الرمز";
-"On Home, tap Paste or enter the code as received. Codes are case-sensitive." = "في الصفحة الرئيسية، اضغط على «لصق» أو اكتب الرمز كما وصلك. انتبه إلى الأحرف الكبيرة والصغيرة.";
-"Tap Open lesson to find matching lessons, then swipe to watch." = "اضغط على «البحث عن فيديو». اسحب لأعلى أو لأسفل للتنقل بين الفيديوهات.";
+"Find video" = "البحث عن فيديو";
+"Copy a video link or code, then tap Paste." = "انسخ رابط الفيديو أو رمزه، ثم اضغط على «لصق».";
 
 "Search in browser" = "البحث على الويب";
 "The browser could not open. Please try again." = "تعذّر فتح الموقع. حاول مرة أخرى.";
-"No matching lessons. Search the web with your original input." = "لا توجد فيديوهات مطابقة. ابحث في الويب باستخدام النص الذي أدخلته.";
 
 "Official website" = "الموقع الرسمي";
 
@@ -464,33 +412,28 @@
 "Web search" = "بحث الويب";
 "Opening page…" = "جارٍ فتح الصفحة…";
 
-"Magic library" = "المكتبة";
 "Backstage pass" = "عضوية الكواليس";
 
 "Mirror" = "أمام المرآة";
 "Camera" = "أمام الكاميرا";
-"Open a magic lesson" = "فتح فيديو";
-"Review your practice" = "مراجعة التدريب";
-"Couldn’t load lessons" = "تعذّر تحميل الفيديوهات";
-"No matching lessons" = "لم يُعثر على فيديوهات مطابقة";
-"No lessons yet" = "لا توجد فيديوهات لعرضها";
-"Open a lesson link or short code from Home." = "ألصق رابط الفيديو أو أدخل رمزه في الصفحة الرئيسية.";
+"Couldn’t load videos" = "تعذّر تحميل الفيديوهات";
+"No videos found" = "لم يُعثر على فيديوهات مطابقة";
+"No videos to show" = "لا توجد فيديوهات لعرضها";
+"To play your own video, choose Files or Photos on Home." = "لتشغيل فيديو من جهازك، اختر «الملفات» أو «الصور» من «الرئيسية».";
 "Search the web with your original input." = "يمكنك البحث على الويب عمّا أدخلته.";
 
 "No favorites yet" = "لا توجد فيديوهات في المفضّلة بعد";
 "No offline videos yet" = "لا توجد تنزيلات بعد";
 "No imported videos yet" = "لا توجد فيديوهات مستوردة بعد";
 "No exports yet" = "لا توجد ملفات مصدّرة بعد";
-"Tap Favorite while watching a lesson to save it here." = "أضف الفيديو إلى المفضّلة أثناء مشاهدته ليظهر هنا.";
+"Add a video to Favorites while you watch. It’ll appear here." = "أضف الفيديو إلى المفضّلة أثناء مشاهدته ليظهر هنا.";
 "Choose a video from Photos or Files to start editing." = "استورد فيديو من الصور أو الملفات لبدء تحريره.";
 "Export a video or audio track from the editor to find it here." = "تظهر هنا الفيديوهات والمقاطع الصوتية التي تصدّرها من المحرر.";
 "Import a video" = "استيراد فيديو";
 
-"Couldn’t load lesson collections" = "تعذّر تحميل المجموعات";
+"Couldn’t load collections" = "تعذّر تحميل المجموعات";
 "Setting up your table…" = "جارٍ الاتصال…";
 "Slow down a move to check every frame." = "أبطئ الحركة لترى كيف تبدو.";
-"Bring your hands and props into focus." = "اقصص إطار الفيديو لإبراز يديك وأدواتك.";
-"Review notes" = "ملاحظات التدريب";
 "Opens online" = "يُفتح على الإنترنت";
 "Performance" = "الأداء";
 "Craft" = "الآداب";
@@ -509,17 +452,13 @@
 "View options for more views and downloads" = "عرض خيارات الحصول على مزيد من المشاهدات والتنزيلات";
 
 "Included with Plus" = "مزايا Plus";
-"Unlimited lesson views" = "مشاهدة بلا حدود";
-"Watch lessons without using a daily view allowance." = "شاهد الفيديوهات دون حد يومي للمشاهدة.";
 "Unlimited offline downloads" = "تنزيلات بلا حدود للمشاهدة دون اتصال";
 "Unlimited downloads for supported videos" = "تنزيلات غير محدودة للفيديوهات المدعومة";
-"Download supported lessons for offline viewing without a daily limit." = "نزّل الفيديوهات التي تدعم المشاهدة دون اتصال بلا حد يومي.";
 "Video and audio exports" = "تصدير الفيديو والصوت";
 "Share edited videos as MP4 or save the audio as M4A." = "شارك الفيديو المعدّل بصيغة MP4 أو احفظ الصوت بصيغة M4A.";
 "Skip opening ads" = "تخطّي إعلانات فتح التطبيق";
 "Open or return to the app without an opening ad." = "افتح التطبيق أو عُد إليه دون إعلان عند بدء الاستخدام.";
 "Review presets" = "إعدادات مسبقة للمراجعة";
-"In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "افتح محرّر الفيديو في «التدريب» لاستخدام إعدادات العرض البطيء أو إعادة تطبيق إعداداتك.";
 "Hide review presets" = "إخفاء الإعدادات المسبقة للمراجعة";
 "Presets keep your trim points. Play the preview to check the result." = "تحافظ الإعدادات المسبقة على نقطتي القصّ. شغّل المعاينة للتحقّق من النتيجة.";
 "Slow mirror" = "انعكاس بطيء";
@@ -539,7 +478,7 @@
 "Preview, trim or change the speed of a video on your device." = "شغّل فيديو من جهازك أو قصّه أو غيّر سرعته.";
 "View all" = "عرض الكل";
 "View more" = "عرض المزيد";
-"No lesson collections yet." = "لا توجد مجموعات فيديو بعد.";
+"No video collections yet." = "لا توجد مجموعات فيديو بعد.";
 "Play a clip slower or faster." = "شغّل المقطع بسرعة أبطأ أو أسرع.";
 "Crop, rotate or flip a video." = "اقتصّ إطار الفيديو أو دوّره أو اعكسه.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "طبّق إعدادات الحركة البطيئة أو أعد استخدام إعداداتك المحفوظة في محرّر الفيديو.";
