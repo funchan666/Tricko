@@ -18,7 +18,7 @@ workflows:
         XCODE_SCHEME: "Tricko"
         APP_STORE_APPLE_ID: "6835779732"
 
-      xcode: "27.1"
+      xcode: "27.2"
 
     scripts:
       - name: Verify native iOS project configuration
@@ -32,7 +32,7 @@ workflows:
             split(sdk, version, "[.]")
             exit !(version[1] > 27 || (version[1] == 27 && version[2] >= 1))
           }'; then
-            printf 'Tricko requires iOS SDK 27.1 or newer. Set environment.xcode to "27.1".\n' >&2
+            printf 'Tricko requires iOS SDK 27.1 or newer. Set environment.xcode to "27.2".\n' >&2
             exit 1
           fi
           test -f "$XCODE_PROJECT/project.pbxproj"
