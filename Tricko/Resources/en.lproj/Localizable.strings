@@ -454,9 +454,6 @@
 
 "Search in browser" = "Search the web";
 "The browser could not open. Please try again." = "Couldn’t open the website. Try again.";
-"Connect to verify your Plus membership before exporting." = "Connect to the internet to verify your Plus membership before exporting.";
-"Export is included with Plus." = "Video and audio export require Plus.";
-"Unlimited views, downloads and media exports." = "Unlimited streaming and downloads, plus video and audio exports.";
 "No matching lessons. Search the web with your original input." = "No matching videos. Search the web with your original input.";
 
 "Official website" = "Official website";
@@ -613,9 +610,7 @@
 "Open or return to the app without an opening ad." = "Open or return to the app without an opening ad.";
 "Review presets" = "Review presets";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "In Practice, open the video editor to use slow-motion presets or reuse your own settings.";
-"Review presets are included with Plus." = "Review presets are included with Plus.";
 "Hide review presets" = "Hide review presets";
-"Unlimited lessons, no opening ads and review presets." = "Unlimited viewing, no opening ads and review presets.";
 "Presets keep your trim points. Play the preview to check the result." = "Presets keep your trim points. Play the preview to check the result.";
 "Slow mirror" = "Slow mirror";
 "Half speed with a horizontal flip." = "Half speed with a horizontal flip.";
@@ -637,7 +632,6 @@
 "No lesson collections yet." = "No video collections yet.";
 "Play a clip slower or faster." = "Play a clip slower or faster.";
 "Crop, rotate or flip a video." = "Crop, rotate or flip a video.";
-"Video exports, editing presets and no opening ads." = "Video exports, editing presets and no opening ads.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Apply slow-motion presets or reuse your saved settings in the video editor.";
 
 "Review video" = "Review video";
@@ -672,3 +666,6 @@
 "Next marker" = "Next marker";
 "Marker %@ of %@" = "Marker %@ of %@";
 "No daily viewing or download limits" = "No daily viewing or download limits";
+"Settings" = "Settings";
+"Quick edits" = "Quick edits";
+"Latest import" = "Latest import";

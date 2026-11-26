@@ -454,9 +454,6 @@
 
 "Search in browser" = "웹에서 검색";
 "The browser could not open. Please try again." = "웹사이트를 열지 못했어요. 다시 시도하세요.";
-"Connect to verify your Plus membership before exporting." = "내보내기 전에 인터넷에 연결해 Plus 구독을 확인하세요.";
-"Export is included with Plus." = "영상과 오디오를 내보내려면 Plus가 필요해요.";
-"Unlimited views, downloads and media exports." = "영상 시청과 다운로드는 무제한이며, 영상과 오디오를 내보낼 수 있어요.";
 "No matching lessons. Search the web with your original input." = "일치하는 영상이 없어요. 입력한 내용으로 웹을 검색하세요.";
 
 "Official website" = "공식 웹사이트";
@@ -613,9 +610,7 @@
 "Open or return to the app without an opening ad." = "앱을 열거나 돌아올 때 시작 광고가 표시되지 않아요.";
 "Review presets" = "복습 프리셋";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "연습 탭의 영상 편집기에서 느린 재생 프리셋을 적용하거나 저장한 설정을 다시 쓰세요.";
-"Review presets are included with Plus." = "복습 프리셋은 Plus에서 이용할 수 있어요.";
 "Hide review presets" = "복습 프리셋 접기";
-"Unlimited lessons, no opening ads and review presets." = "영상 무제한 시청, 시작 광고 건너뛰기, 복습 프리셋.";
 "Presets keep your trim points. Play the preview to check the result." = "프리셋을 적용해도 자르기 구간은 유지돼요. 미리보기를 재생해 결과를 확인하세요.";
 "Slow mirror" = "느린 미러 모드";
 "Half speed with a horizontal flip." = "0.5배속과 좌우 반전을 적용해요.";
@@ -637,7 +632,6 @@
 "No lesson collections yet." = "아직 영상 모음이 없어요.";
 "Play a clip slower or faster." = "동영상을 느리게 또는 빠르게 재생하세요.";
 "Crop, rotate or flip a video." = "동영상의 화면을 자르거나, 회전하거나, 좌우로 뒤집으세요.";
-"Video exports, editing presets and no opening ads." = "동영상 내보내기와 편집 프리셋을 이용하고 시작 광고를 건너뛰세요.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "편집기에서 슬로 모션 프리셋을 적용하거나 저장한 설정을 다시 사용하세요.";
 
 "Review video" = "영상 돌아보기";
@@ -672,3 +666,6 @@
 "Next marker" = "다음 표시";
 "Marker %@ of %@" = "전체 %2$@개 중 %1$@번째 표시";
 "No daily viewing or download limits" = "일일 시청 및 다운로드 제한 없음";
+"Settings" = "설정";
+"Quick edits" = "빠른 편집";
+"Latest import" = "최근 가져온 동영상";

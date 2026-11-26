@@ -454,9 +454,6 @@
 
 "Search in browser" = "البحث على الويب";
 "The browser could not open. Please try again." = "تعذّر فتح الموقع. حاول مرة أخرى.";
-"Connect to verify your Plus membership before exporting." = "اتصل بالإنترنت للتحقّق من اشتراك Plus قبل التصدير.";
-"Export is included with Plus." = "يتطلّب تصدير الفيديو والصوت اشتراك Plus.";
-"Unlimited views, downloads and media exports." = "شاهد الفيديوهات ونزّلها بلا حدود، وصدّر الفيديو والصوت.";
 "No matching lessons. Search the web with your original input." = "لا توجد فيديوهات مطابقة. ابحث في الويب باستخدام النص الذي أدخلته.";
 
 "Official website" = "الموقع الرسمي";
@@ -613,9 +610,7 @@
 "Open or return to the app without an opening ad." = "افتح التطبيق أو عُد إليه دون إعلان عند بدء الاستخدام.";
 "Review presets" = "إعدادات مسبقة للمراجعة";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "افتح محرّر الفيديو في «التدريب» لاستخدام إعدادات العرض البطيء أو إعادة تطبيق إعداداتك.";
-"Review presets are included with Plus." = "الإعدادات المسبقة للمراجعة متاحة مع Plus.";
 "Hide review presets" = "إخفاء الإعدادات المسبقة للمراجعة";
-"Unlimited lessons, no opening ads and review presets." = "مشاهدة بلا حدود، وتخطٍّ لإعلانات فتح التطبيق، وإعدادات مسبقة للمراجعة.";
 "Presets keep your trim points. Play the preview to check the result." = "تحافظ الإعدادات المسبقة على نقطتي القصّ. شغّل المعاينة للتحقّق من النتيجة.";
 "Slow mirror" = "انعكاس بطيء";
 "Half speed with a horizontal flip." = "نصف السرعة مع قلب الصورة أفقيًا.";
@@ -637,7 +632,6 @@
 "No lesson collections yet." = "لا توجد مجموعات فيديو بعد.";
 "Play a clip slower or faster." = "شغّل المقطع بسرعة أبطأ أو أسرع.";
 "Crop, rotate or flip a video." = "اقتصّ إطار الفيديو أو دوّره أو اعكسه.";
-"Video exports, editing presets and no opening ads." = "تصدير الفيديو، وإعدادات تحرير مسبقة، وفتح التطبيق بلا إعلانات.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "طبّق إعدادات الحركة البطيئة أو أعد استخدام إعداداتك المحفوظة في محرّر الفيديو.";
 
 "Review video" = "مراجعة الفيديو";
@@ -672,3 +666,6 @@
 "Next marker" = "العلامة التالية";
 "Marker %@ of %@" = "العلامة %@ من %@";
 "No daily viewing or download limits" = "بلا حدود يومية للمشاهدة أو التنزيل";
+"Settings" = "الإعدادات";
+"Quick edits" = "تعديلات سريعة";
+"Latest import" = "آخر فيديو تم استيراده";

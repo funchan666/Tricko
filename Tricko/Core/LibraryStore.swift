@@ -31,9 +31,7 @@ final class LibraryStore: ObservableObject {
     var favorites: [LessonClip] { snapshot.favorites }
     var history: [LessonLinkVisit] { snapshot.history }
     func url(for movie: PracticeRecording) -> URL { root.appendingPathComponent(movie.filename) }
-    func shareFile(for movie: PracticeRecording, commerce: CommerceStore) async throws -> URL {
-        try commerce.requireMediaExport()
-        let exportOwner = commerce.api.session?.userId.value
+    func shareFile(for movie: PracticeRecording) async throws -> URL {
         let source = url(for: movie)
         let title = movie.title
         let fallbackTitle = L10n.text("Export")
@@ -69,8 +67,6 @@ final class LibraryStore: ObservableObject {
         } onCancel: { task.cancel() }
         do {
             try Task.checkCancellation()
-            try commerce.requireMediaExport()
-            guard exportOwner == commerce.api.session?.userId.value else { throw TrickoError.unauthorized }
             return destination
         } catch {
             try? FileManager.default.removeItem(at: destination.deletingLastPathComponent())

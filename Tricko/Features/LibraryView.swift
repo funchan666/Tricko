@@ -7,7 +7,6 @@ struct LibraryView: View {
     @EnvironmentObject private var offline: OfflineStore
     @EnvironmentObject private var commerce: CommerceStore
     @State private var showingMembership = false
-    @State private var showingExportMembership = false
     let edit: (PracticeRecording) -> Void
     let watchLessons: () -> Void
     let isActive: Bool
@@ -192,7 +191,6 @@ struct LibraryView: View {
                 VideoReviewView(movie: route.movie, startingAt: route.startingAt, startingPointID: route.startingPointID)
             }
             .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
-            .fullScreenCover(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
             .sheet(item: $downloadOptions) { DownloadOptionsSheet(video: $0) }
             .sheet(item: $removing) { movie in
@@ -785,14 +783,10 @@ struct LibraryView: View {
     }
 
     private func shareMovie(_ movie: PracticeRecording) {
-        guard commerce.canExportMedia else {
-            showingExportMembership = true
-            return
-        }
         sharingMovieID = movie.id
         Task {
             defer { sharingMovieID = nil }
-            do { sharing = SharedFile(url: try await library.shareFile(for: movie, commerce: commerce)) }
+            do { sharing = SharedFile(url: try await library.shareFile(for: movie)) }
             catch { library.error = error.localizedDescription }
         }
     }
@@ -910,27 +904,17 @@ struct OfflineDownloadButton: View {
                     ActionButton(title: "Retry", primary: false) { Task { await offline.retryCompletion() } }
                 }
             }
-        }.fullScreenCover(isPresented: $downloadGate) { MembershipView(rewardKind: .download) }
+        }.fullScreenCover(isPresented: $downloadGate) { AllowanceLimitPrompt(kind: .download) }
     }
 }
 
 struct VideoExportEntry: View {
     let clip: LessonClip
     @State private var showingExport = false
-    @State private var showingMembership = false
-    @EnvironmentObject private var commerce: CommerceStore
     var body: some View {
-        ActionButton(title: "Export video", primary: false) {
-            if commerce.canExportMedia { showingExport = true }
-            else { showingMembership = true }
-        }
+        ActionButton(title: "Export video", primary: false) { showingExport = true }
             .accessibilityIdentifier("player.openExport")
             .sheet(isPresented: $showingExport) { OfflineExportSheet(clip: clip) }
-            .fullScreenCover(isPresented: $showingMembership, onDismiss: {
-                if commerce.canExportMedia { showingExport = true }
-            }) {
-                MembershipView(exportRequired: true)
-            }
     }
 }
 
@@ -1031,6 +1015,7 @@ struct DownloadCompletionNotice: View {
 private struct OfflineExportButton: View {
     let clip: LessonClip
     @EnvironmentObject private var departure: ExportDeparture
+    @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var offline: OfflineStore
     @EnvironmentObject private var quota: QuotaStore
@@ -1061,20 +1046,33 @@ private struct OfflineExportButton: View {
             if let exportError { ErrorNote(message: exportError) }
         }
         .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
-        .fullScreenCover(isPresented: $downloadGate) { MembershipView(exportRequired: true) }
+        .fullScreenCover(isPresented: $downloadGate) { AllowanceLimitPrompt(kind: .download) }
         .onDisappear { exportTask?.cancel() }
+        .onChange(of: api.offlineOwnerID) { _, _ in
+            exportTask?.cancel()
+            sharing = nil
+            exportedFile = nil
+        }
     }
 
     private func startExport() {
         guard exportTask == nil else { return }
-        guard commerce.canExportMedia else { downloadGate = true; return }
-        if !clip.playbackURL.isFileURL, offline.cached(clip.id) == nil,
-           !quota.mayDownload(clip.id, premium: commerce.premium) {
-            downloadGate = true
-            return
-        }
         if let exportedFile, FileManager.default.fileExists(atPath: exportedFile.path) {
             sharing = SharedFile(url: exportedFile); return
+        }
+        let cached = offline.cached(clip.id)
+        let needsDownload = cached?.isHLS ?? true
+        if clip.playbackURL.isFileURL, cached == nil {
+            exportError = "This download is no longer on this device. Download it again."
+            return
+        }
+        guard let owner = api.offlineOwnerID, !needsDownload || api.session?.userId.value == owner else {
+            exportError = "Connect to your account before downloading."
+            return
+        }
+        if needsDownload, !quota.mayDownload(clip.id, premium: commerce.premium) {
+            downloadGate = true
+            return
         }
         exportError = nil
         exportTask = Task { @MainActor in
@@ -1083,9 +1081,7 @@ private struct OfflineExportButton: View {
             var converted: URL?
             defer { if let converted { try? FileManager.default.removeItem(at: converted) } }
             do {
-                try commerce.requireMediaExport()
-                var source = clip.playbackURL
-                if !source.isFileURL || offline.cached(clip.id)?.isHLS == true {
+                if needsDownload {
                     preparingSource = true
                     if offline.downloadingID == clip.id {
                         for await downloadID in offline.$downloadingID.values {
@@ -1101,15 +1097,18 @@ private struct OfflineExportButton: View {
                     }
                     for await downloadID in offline.$downloadingID.values {
                         try Task.checkCancellation()
-                        if let cached = offline.cached(clip.id), !cached.isHLS { source = cached.url; break }
+                        if let cached = offline.cached(clip.id), !cached.isHLS { break }
                         guard downloadID == clip.id else {
                             throw TrickoError.service(offline.error ?? "Download failed. No download allowance was used.")
                         }
                     }
                     try Task.checkCancellation()
-                    guard source.isFileURL else { throw TrickoError.storage }
                     preparingSource = false
                 }
+                guard let video = offline.cached(clip.id), !video.isHLS, video.owner == owner else {
+                    throw TrickoError.storage
+                }
+                let source = video.url
                 var output = source
                 if !["mp4", "mov", "m4v"].contains(source.pathExtension.lowercased()) {
                     let asset = AVURLAsset(url: source)
@@ -1134,11 +1133,13 @@ private struct OfflineExportButton: View {
                     output = destination
                 }
                 try Task.checkCancellation()
-                try commerce.requireMediaExport()
+                guard api.offlineOwnerID == owner else { throw TrickoError.unauthorized }
                 let recording = try await library.importMovie(output, exported: true, title: clip.title)
-                let url = try await library.shareFile(for: recording, commerce: commerce)
+                let url = try await library.shareFile(for: recording)
+                try Task.checkCancellation()
+                guard api.offlineOwnerID == owner else { throw TrickoError.unauthorized }
                 exportedFile = url
-                if !Task.isCancelled { sharing = SharedFile(url: url) }
+                sharing = SharedFile(url: url)
             } catch is CancellationError {
                 if ownsDownload, offline.downloadingID == clip.id { await offline.cancel() }
             }
@@ -1171,6 +1172,6 @@ struct DownloadAllowanceSummary: View {
             .accessibilityElement(children: .contain)
             .onAppear { quota.resetIfNeeded() }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in quota.resetIfNeeded() }
-            .fullScreenCover(isPresented: $showingReward) { MembershipView(rewardKind: .download) }
+            .fullScreenCover(isPresented: $showingReward) { AllowanceLimitPrompt(kind: .download) }
     }
 }

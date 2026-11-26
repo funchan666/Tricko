@@ -454,9 +454,6 @@
 
 "Search in browser" = "Buscar en internet";
 "The browser could not open. Please try again." = "No se pudo abrir el sitio web. Inténtalo de nuevo.";
-"Connect to verify your Plus membership before exporting." = "Conéctate a internet para verificar tu suscripción a Plus antes de exportar.";
-"Export is included with Plus." = "Para exportar vídeo y audio necesitas Plus.";
-"Unlimited views, downloads and media exports." = "Ve y descarga vídeos sin límite. También puedes exportar vídeo y audio.";
 "No matching lessons. Search the web with your original input." = "No se encontraron vídeos. Busca en la web con el texto que has introducido.";
 
 "Official website" = "Sitio web oficial";
@@ -613,9 +610,7 @@
 "Open or return to the app without an opening ad." = "Abre la app o vuelve a ella sin anuncios de apertura.";
 "Review presets" = "Preajustes de revisión";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "En Práctica, abre el editor de vídeo para aplicar preajustes de cámara lenta o reutilizar tus ajustes.";
-"Review presets are included with Plus." = "Los preajustes de revisión están incluidos en Plus.";
 "Hide review presets" = "Ocultar preajustes de revisión";
-"Unlimited lessons, no opening ads and review presets." = "Visualización ilimitada, sin anuncios de apertura y con preajustes de revisión.";
 "Presets keep your trim points. Play the preview to check the result." = "Los preajustes conservan los puntos de recorte. Reproduce la vista previa para comprobar el resultado.";
 "Slow mirror" = "Espejo lento";
 "Half speed with a horizontal flip." = "Mitad de velocidad con la imagen invertida en horizontal.";
@@ -637,7 +632,6 @@
 "No lesson collections yet." = "Aún no hay colecciones de vídeos.";
 "Play a clip slower or faster." = "Reproduce un clip más despacio o más rápido.";
 "Crop, rotate or flip a video." = "Recorta el encuadre, gira o voltea un vídeo.";
-"Video exports, editing presets and no opening ads." = "Exportación de vídeo, preajustes de edición y sin anuncios al abrir.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Aplica preajustes de cámara lenta o reutiliza tus ajustes guardados en el editor.";
 
 "Review video" = "Revisar vídeo";
@@ -672,3 +666,6 @@
 "Next marker" = "Marcador siguiente";
 "Marker %@ of %@" = "Marcador %@ de %@";
 "No daily viewing or download limits" = "Sin límites diarios de visualización ni descarga";
+"Settings" = "Ajustes";
+"Quick edits" = "Edición rápida";
+"Latest import" = "Último vídeo importado";

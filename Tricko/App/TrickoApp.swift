@@ -253,7 +253,7 @@ struct TrickoRootView: View {
             HomeView(openAccount: { showingAccount = true }, openVideo: openVideo,
                      showImports: showImports, link: $linkDraft, channel: $channel, searchRequest: $searchRequest)
         case .tools:
-            ToolsView()
+            ToolsView(openSettings: { showingAccount = true })
         case .library:
             LibraryView(edit: openVideo,
                         watchLessons: { searchRequest = LessonSearch(query: "") },
@@ -288,6 +288,7 @@ struct TrickoRootView: View {
 }
 
 struct ConnectionPanel: View {
+    var showsPolicyLinks = true
     @EnvironmentObject private var api: APIClient
     @State private var error: String?
     @State private var connecting = false
@@ -301,7 +302,7 @@ struct ConnectionPanel: View {
             } else {
                 AccountLoadingIndicator(title: "Setting up your table…")
             }
-            PolicyLinks()
+            if showsPolicyLinks { PolicyLinks() }
         }
         .frame(maxWidth: 440).frame(maxWidth: .infinity)
         .task(id: attempt) {

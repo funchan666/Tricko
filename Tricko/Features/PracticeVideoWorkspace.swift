@@ -41,201 +41,206 @@ enum VideoTool: String, Identifiable, CaseIterable {
 }
 
 struct ToolsView: View {
+    let openSettings: () -> Void
+    @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var commerce: CommerceStore
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var selectedTool: VideoTool?
-    @State private var showingPracticeResources = false
+    @Environment(\.locale) private var locale
+    @ScaledMetric(relativeTo: .subheadline) private var minimumToolWidth: CGFloat = 94
+    @State private var destination: Destination?
     @State private var showingMembership = false
 
+    private enum Destination: Hashable, Identifiable {
+        case editor(VideoTool, PracticeRecording?)
+        case journal, notes
+        var id: Self { self }
+    }
+
+    private var latestImport: PracticeRecording? { library.movies.first { !$0.isExport } }
+    private let shortcuts: [VideoTool] = [.speed, .frame, .audio]
+
     var body: some View {
-        GeometryReader { viewport in
-            let topInset = viewport.safeAreaInsets.top
-            let photoHeight = min((viewport.size.height + topInset) * (typeSize.isAccessibilitySize ? 0.48 : 0.40), 320)
-            let heroHeight = max(0, photoHeight - topInset)
-            ScrollView {
-                VStack(spacing: 0) {
-                    VStack(spacing: 12) {
-                        PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
-                            .accessibilityIdentifier("tools.membership")
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                        Spacer(minLength: 20)
-                        studioEntry
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                header
+                VStack(alignment: .leading, spacing: 10) {
+                    editorEntry
+                    LocalVideoImportButtons(prominent: true) { movie in
+                        if destination == nil, !showingMembership { destination = .editor(.studio, movie) }
                     }
-                    .trickoPage()
-                    .frame(minHeight: heroHeight, alignment: .top)
-
-                    VStack(alignment: .leading, spacing: 20) {
-                        shortcuts
-                        practiceResources
-                    }
-                    .trickoPage()
-                    .background(TrickoStyle.background)
                 }
+                quickEdits
+                practice
             }
-            .background {
-                studioPhoto
-                    .frame(height: photoHeight)
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .ignoresSafeArea(.container, edges: [.top, .horizontal])
-            }
+            .trickoPage()
         }
+        .foregroundStyle(TrickoStyle.paper)
         .trickoScreenBackground()
-        .sheet(item: $selectedTool) { EditorSheet(initialTool: $0) }
+        .sheet(item: $destination) { page in
+            switch page {
+            case let .editor(tool, movie): EditorSheet(initialMovie: movie, initialTool: tool)
+            case .journal: RoutinePracticeView()
+            case .notes: MagicGuideView()
+            }
+        }
         .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
-        .sheet(isPresented: $showingPracticeResources) {
-            PracticeResourcesSheet()
-                .presentationDetents([.medium, .large])
+    }
+
+    private var header: some View {
+        let title = LocalizedText("Tools").font(.stage(.largeTitle, weight: .bold)).accessibilityAddTraits(.isHeader)
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                title.fixedSize()
+                Spacer(minLength: 0)
+                headerActions.fixedSize()
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                title
+                headerActions
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var headerActions: some View {
+        TrickoGlassGroup {
+            HStack(spacing: 8) {
+                PlusEntryButton(active: commerce.premium, compact: true) { showingMembership = true }
+                    .accessibilityIdentifier("tools.membership")
+                IconButton(symbol: .settings, label: "Settings", action: openSettings)
+                    .accessibilityIdentifier("tools.settings")
+            }
         }
     }
 
-    private var studioPhoto: some View {
-        StagePhoto(asset: "VideoToolsPhoto", alignment: .trailing)
-            .environment(\.layoutDirection, .leftToRight)
-            .overlay {
-                LinearGradient(stops: [
-                    .init(color: TrickoStyle.background.opacity(0.35), location: 0),
-                    .init(color: .clear, location: 0.24),
-                    .init(color: .clear, location: 0.45),
-                    .init(color: TrickoStyle.background.opacity(0.72), location: 0.78),
-                    .init(color: TrickoStyle.background, location: 1)
-                ], startPoint: .top, endPoint: .bottom)
-            }
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-    }
-
-    private var studioEntry: some View {
-        Button { selectedTool = .studio } label: {
-            HStack(alignment: .bottom, spacing: 14) {
-                VStack(alignment: .leading, spacing: 6) {
-                    LocalizedText(VideoTool.studio.title).font(.stage(.title, weight: .bold))
-                    LocalizedText(VideoTool.studio.detail)
-                        .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.86))
+    private var editorEntry: some View {
+        let movie = latestImport
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        return Button { destination = .editor(.studio, movie) } label: {
+            HStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        LocalizedText(VideoTool.studio.title)
+                            .font(.stage(.title2, weight: .bold))
+                        Glyph(symbol: .back, size: 13, tint: TrickoStyle.ink)
+                            .rotationEffect(.degrees(180))
+                    }
+                    if let movie {
+                        LocalizedText("Latest import").font(.stage(.caption))
+                            .foregroundStyle(TrickoStyle.paperSecondary)
+                        Text(verbatim: movie.title)
+                            .font(.stage(.subheadline, weight: .semibold))
+                            .lineLimit(2).truncationMode(.middle)
+                    } else {
+                        LocalizedText(VideoTool.studio.detail).font(.stage(.subheadline))
+                            .foregroundStyle(TrickoStyle.paperSecondary)
+                    }
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 13, tint: TrickoStyle.accent)
-                    .rotationEffect(.degrees(180))
-                    .frame(width: 48, height: 48)
-                    .trickoGlass(in: Circle(), tint: TrickoStyle.accent.opacity(0.18), interactive: false)
+                .padding(16)
+                .frame(maxWidth: .infinity, minHeight: 124, alignment: .leading)
+                if !typeSize.isAccessibilitySize {
+                    Color.clear.frame(width: 104)
+                        .overlay {
+                            if let movie {
+                                LocalVideoCover(url: library.url(for: movie), cornerRadius: 0, maximumPixelSize: 480)
+                            } else {
+                                StagePhoto(asset: "VideoToolsPhoto", alignment: .trailing)
+                            }
+                        }
+                        .clipped()
+                        .accessibilityHidden(true)
+                }
             }
-            .foregroundStyle(TrickoStyle.paper)
-            .contentShape(.interaction, Rectangle())
+            .fixedSize(horizontal: false, vertical: true)
+            .foregroundStyle(TrickoStyle.ink)
+            .background(TrickoStyle.paper)
+            .clipShape(shape)
+            .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle())
         .accessibilityIdentifier("tools.studio")
     }
 
-    private var shortcuts: some View {
-        VStack(spacing: 0) {
-            ForEach([VideoTool.speed, .frame, .audio]) { tool in
-                if tool != .speed {
-                    Rectangle().fill(TrickoStyle.line)
-                        .frame(height: 1)
-                        .padding(.leading, 54)
-                        .accessibilityHidden(true)
+    private var quickEdits: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("Quick edits")
+            if typeSize.isAccessibilitySize {
+                shortcutList
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 8) {
+                        ForEach(shortcuts) { tool in
+                            shortcut(tool, stacked: true)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    shortcutList
                 }
-                shortcutRow(tool)
             }
         }
-        .background { StageSurface(tone: .smoke) }
     }
 
-    private func shortcutRow(_ tool: VideoTool) -> some View {
-        Button { selectedTool = tool } label: {
-            HStack(spacing: 12) {
-                Glyph(symbol: tool.glyph, size: 20, tint: TrickoStyle.coolAccent)
-                    .frame(width: 28)
-                VStack(alignment: .leading, spacing: 4) {
-                    LocalizedText(tool.title)
-                        .font(.stage(.subheadline, weight: .semibold))
-                        .foregroundStyle(TrickoStyle.paper)
-                    LocalizedText(tool.detail).font(.stage(.footnote))
-                        .foregroundStyle(TrickoStyle.secondary)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 10, tint: TrickoStyle.coolAccent)
-                    .rotationEffect(.degrees(180))
+    private var shortcutList: some View {
+        VStack(spacing: 8) {
+            ForEach(shortcuts) { tool in shortcut(tool, stacked: false) }
+        }
+    }
+
+    private func shortcut(_ tool: VideoTool, stacked: Bool) -> some View {
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
+                             : AnyLayout(HStackLayout(spacing: 12))
+        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        return Button { destination = .editor(tool, latestImport) } label: {
+            layout {
+                Glyph(symbol: tool.glyph, size: 23, tint: TrickoStyle.coolAccent)
+                LocalizedText(tool.title).font(.stage(.subheadline, weight: .semibold))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .frame(minHeight: 60)
-            .contentShape(Rectangle())
+            .padding(12)
+            .frame(minWidth: stacked ? minimumToolWidth : nil, maxWidth: .infinity,
+                   maxHeight: stacked ? .infinity : nil, alignment: .topLeading)
+            .frame(minHeight: 48, alignment: .leading)
+            .background { StageSurface(tone: .smoke, radius: 14) }
+            .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle())
+        .accessibilityHint(Text(verbatim: L10n.text(tool.detail, language: AppLanguage.from(locale))))
         .accessibilityIdentifier("tools.\(tool.rawValue)")
     }
 
-    private var practiceResources: some View {
+    private var practice: some View {
         VStack(alignment: .leading, spacing: 4) {
+            sectionTitle("Practice resources").padding(.bottom, 4)
+            resource("Practice log", detail: "Run a routine. Record every run. Review your notes.", symbol: .edit) {
+                destination = .journal
+            }
+            .accessibilityIdentifier("practice.openJournal")
             Divider().overlay(TrickoStyle.line)
-            Button { showingPracticeResources = true } label: {
-                HStack(spacing: 10) {
-                    Glyph(symbol: .library, size: 17, tint: TrickoStyle.secondary)
-                    LocalizedText("Practice resources")
-                        .font(.stage(.subheadline, weight: .medium))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Glyph(symbol: .back, size: 10, tint: TrickoStyle.secondary)
-                        .rotationEffect(.degrees(180))
-                }
-                .foregroundStyle(TrickoStyle.secondary)
-                .padding(.vertical, 6)
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+            resource("Magic field notes", detail: "Available offline", symbol: .library) {
+                destination = .notes
             }
-            .buttonStyle(PressStyle())
-            .accessibilityIdentifier("tools.practiceResources")
-        }
-    }
-}
-
-private struct PracticeResourcesSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedResource: Resource?
-
-    private enum Resource: String, Identifiable {
-        case journal, notes
-        var id: String { rawValue }
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: "Practice resources") { dismiss() }
-            ScrollView {
-                VStack(spacing: 0) {
-                    resourceRow("Practice log", symbol: .edit) { selectedResource = .journal }
-                        .accessibilityIdentifier("practice.openJournal")
-                    Divider().overlay(TrickoStyle.line)
-                    resourceRow("Magic field notes", symbol: .library) { selectedResource = .notes }
-                        .accessibilityIdentifier("magicGuide.open")
-                }
-                .trickoPage()
-            }
-        }
-        .trickoScreenBackground()
-        .sheet(item: $selectedResource) { resource in
-            switch resource {
-            case .journal: RoutinePracticeView()
-            case .notes: MagicGuideView()
-            }
+            .accessibilityIdentifier("magicGuide.open")
         }
     }
 
-    private func resourceRow(_ title: String, symbol: TrickoGlyph, action: @escaping () -> Void) -> some View {
+    private func sectionTitle(_ key: String) -> some View {
+        LocalizedText(key).font(.stage(.headline, weight: .semibold)).accessibilityAddTraits(.isHeader)
+    }
+
+    private func resource(_ title: String, detail: String, symbol: TrickoGlyph, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Glyph(symbol: symbol, size: 19, tint: TrickoStyle.coolAccent)
-                    .frame(width: 28)
-                LocalizedText(title)
-                    .font(.stage(.headline))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 11, tint: TrickoStyle.coolAccent)
-                    .rotationEffect(.degrees(180))
+                VStack(alignment: .leading, spacing: 4) {
+                    LocalizedText(title).font(.stage(.subheadline, weight: .semibold))
+                    LocalizedText(detail).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Glyph(symbol: .back, size: 11, tint: TrickoStyle.secondary).rotationEffect(.degrees(180))
             }
-            .foregroundStyle(TrickoStyle.paper)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
             .frame(minHeight: 52)
             .contentShape(Rectangle())
         }
@@ -409,9 +414,6 @@ struct EditorSheet: View {
     }
 }
 private struct EditorWorkspace: View {
-    @EnvironmentObject private var commerce: CommerceStore
-    @State private var showingExportMembership = false
-    @State private var showingPresetMembership = false
     @State private var showingPresets = false
     @EnvironmentObject private var departure: ExportDeparture
     @EnvironmentObject private var library: LibraryStore
@@ -457,12 +459,6 @@ private struct EditorWorkspace: View {
             }
             .sheet(item: $shareURL) { ShareSheet(items: [$0.url]) }
             .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0.movie, startingAt: $0.startingAt) }
-            .fullScreenCover(isPresented: $showingExportMembership) { MembershipView(exportRequired: true) }
-            .fullScreenCover(isPresented: $showingPresetMembership, onDismiss: {
-                showingPresets = commerce.hasVerifiedPlus && selected != nil
-            }) {
-                MembershipView(reviewPresetsRequired: true)
-            }
             .task(id: selected?.id) {
                 guard let selected else { return }
                 let source = library.url(for: selected)
@@ -472,7 +468,6 @@ private struct EditorWorkspace: View {
             }
             .onChange(of: scenePhase) { _, phase in if phase != .active { editor.preview.pause() } }
             .onDisappear {
-                guard !showingExportMembership, !showingPresetMembership else { return }
                 editor.close()
                 exportTask?.cancel()
             }
@@ -587,28 +582,18 @@ private struct EditorWorkspace: View {
     }
 
     private var reviewPresets: some View {
-        let expanded = showingPresets && commerce.hasVerifiedPlus
-        return VStack(alignment: .leading, spacing: 12) {
-            Button {
-                if commerce.hasVerifiedPlus { showingPresets.toggle() }
-                else {
-                    editor.preview.pause()
-                    showingPresetMembership = true
-                }
-            } label: {
-                LocalizedText(expanded ? "Hide review presets" : "Review presets")
+        VStack(alignment: .leading, spacing: 12) {
+            Button { showingPresets.toggle() } label: {
+                LocalizedText(showingPresets ? "Hide review presets" : "Review presets")
             }
             .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .settings))
-            .accessibilityAddTraits(expanded ? .isSelected : [])
+            .accessibilityAddTraits(showingPresets ? .isSelected : [])
             .accessibilityIdentifier("editor.reviewPresets")
-            if expanded {
+            if showingPresets {
                 ReviewPresetControls(recipe: editor.recipe, preparing: editor.isPreparingPreview) { updated in
-                    guard commerce.hasVerifiedPlus, canChangeReviewSettings else { return }
+                    guard canChangeReviewSettings else { return }
                     editor.recipe = updated
-                    Task {
-                        guard commerce.hasVerifiedPlus else { return }
-                        await editor.applyPreview(autoplay: false)
-                    }
+                    Task { await editor.applyPreview(autoplay: false) }
                 }
             }
         }
@@ -692,11 +677,6 @@ private struct EditorWorkspace: View {
     }
     private func export(audio: Bool, title: String) {
         guard exportTask == nil else { return }
-        guard commerce.canExportMedia else {
-            editor.preview.pause()
-            showingExportMembership = true
-            return
-        }
         error = nil
         exportTask = Task {
             defer { exportTask = nil; departure.finish() }
@@ -704,9 +684,8 @@ private struct EditorWorkspace: View {
             if Task.isCancelled { try? FileManager.default.removeItem(at: output); return }
             do {
                 defer { try? FileManager.default.removeItem(at: output) }
-                try commerce.requireMediaExport()
                 let saved = try await library.importMovie(output, exported: true, title: title + (audio ? " · Audio" : " · Edit"))
-                let share = try await library.shareFile(for: saved, commerce: commerce)
+                let share = try await library.shareFile(for: saved)
                 if !Task.isCancelled { shareURL = SharedFile(url: share) }
             } catch is CancellationError { }
             catch { self.error = "The export finished but could not be added to your library. \(error.localizedDescription)" }
@@ -719,7 +698,6 @@ private struct ReviewPresetControls: View {
     let recipe: EditRecipe
     let preparing: Bool
     let apply: (EditRecipe) -> Void
-    @EnvironmentObject private var commerce: CommerceStore
     @AppStorage("tricko.reviewPreset.v1") private var savedData: Data?
     @State private var status: String?
 
@@ -763,7 +741,6 @@ private struct ReviewPresetControls: View {
 
     private func presetRow(_ title: String, _ detail: String, update: @escaping (inout EditRecipe) -> Void) -> some View {
         Button {
-            guard commerce.hasVerifiedPlus else { return }
             var updated = recipe
             update(&updated)
             apply(updated)
@@ -784,7 +761,6 @@ private struct ReviewPresetControls: View {
     }
 
     private func save() {
-        guard commerce.hasVerifiedPlus else { return }
         let preset = ReviewPreset(recipe)
         guard preset.isValid, let data = try? JSONEncoder().encode(preset) else {
             status = "Couldn’t save the preset."

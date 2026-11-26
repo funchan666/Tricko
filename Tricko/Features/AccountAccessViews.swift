@@ -320,78 +320,98 @@ struct AccountSettingsSection: View {
     private var unavailable: Bool { accountAccess.isBusy || commerce.busy || commerce.preparingPurchase || ads.busy || ads.isPreparingAppOpen || ads.isPresenting }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Button { languagePicker = true } label: {
-                AccountMenuRow(title: "App language", detail: AppLanguage(rawValue: languageCode)?.nativeName ?? "Follow system")
-            }.buttonStyle(PressStyle())
-                .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        VStack(alignment: .leading, spacing: 22) {
+            VStack(spacing: 0) {
+                Button { languagePicker = true } label: {
+                    AccountMenuRow(title: "App language", detail: AppLanguage(rawValue: languageCode)?.nativeName ?? "Follow system")
+                }
                 .accessibilityIdentifier("account.language")
-            VStack(alignment: .leading, spacing: 12) {
-                LocalizedText("Privacy & terms").font(.stage(.headline))
-                VStack(spacing: 0) {
+                if let website = api.configuration.websiteURL {
+                    rowDivider
+                    Button {
+                        websiteError = nil
+                        openURL(website) { accepted in
+                            if !accepted { websiteError = "The browser could not open. Please try again." }
+                        }
+                    } label: {
+                        AccountMenuRow(title: "Official website", detail: website.host)
+                    }
+                    .disabled(unavailable)
+                    .accessibilityIdentifier("account.officialWebsite")
+                }
+            }
+            .padding(.horizontal, 15)
+            .background { StageSurface(tone: .smoke) }
+            .buttonStyle(PressStyle())
+            if let websiteError { ErrorNote(message: websiteError) }
+            if api.configuration.privacyURL != nil || api.configuration.termsURL != nil || ads.privacyOptionsRequired {
+                VStack(alignment: .leading, spacing: 3) {
+                    LocalizedText("Privacy & terms").font(.stage(.headline))
+                        .accessibilityAddTraits(.isHeader)
                     if let url = api.configuration.privacyURL {
                         Button { document = PolicyDocument(title: "Privacy Policy", url: url) } label: {
                             AccountMenuRow(title: "Privacy Policy")
                         }
+                        rowDivider
                     }
                     if let url = api.configuration.termsURL {
-                        if api.configuration.privacyURL != nil { rowDivider }
                         Button { document = PolicyDocument(title: "Terms of Use", url: url) } label: {
                             AccountMenuRow(title: "Terms of Use")
                         }
-                    }
-                    if let website = api.configuration.websiteURL {
-                        if api.configuration.privacyURL != nil || api.configuration.termsURL != nil { rowDivider }
-                        Button {
-                            websiteError = nil
-                            openURL(website) { accepted in
-                                if !accepted { websiteError = "The browser could not open. Please try again." }
-                            }
-                        } label: {
-                            AccountMenuRow(title: "Official website")
-                        }.accessibilityIdentifier("account.officialWebsite")
+                        rowDivider
                     }
                     if ads.privacyOptionsRequired {
-                        rowDivider
                         Button { Task { await ads.privacyOptions() } } label: {
                             AccountMenuRow(title: "Advertising privacy")
                         }.disabled(ads.isPresentingConsent)
+                        rowDivider
                     }
-                }.background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .buttonStyle(PressStyle()).disabled(unavailable)
+                }
+                .buttonStyle(PressStyle()).disabled(unavailable)
             }
-            if let websiteError { ErrorNote(message: websiteError) }
             if let error = ads.error { ErrorNote(message: error) }
         }
-            .sheet(item: $document) { PolicyBrowser(document: $0) }
-            .sheet(isPresented: $languagePicker) { LanguagePicker() }
+        .sheet(item: $document) { PolicyBrowser(document: $0) }
+        .sheet(isPresented: $languagePicker) { LanguagePicker() }
     }
 
     private var rowDivider: some View {
-        Divider().overlay(TrickoStyle.line).padding(.horizontal, 20)
+        Divider().overlay(TrickoStyle.line).accessibilityHidden(true)
     }
-
 }
 
 private struct AccountMenuRow: View {
     let title: String
     var detail: String? = nil
-    var destructive = false
+
     var body: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                LocalizedText(title).font(.stage(.subheadline, weight: .medium))
-                    .foregroundStyle(destructive ? TrickoStyle.danger : TrickoStyle.paper)
-                if let detail {
-                    LocalizedText(detail).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+            if let detail {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        rowTitle.fixedSize()
+                        Spacer(minLength: 0)
+                        LocalizedText(detail).fixedSize()
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        rowTitle
+                        LocalizedText(detail)
+                    }
                 }
-            }.fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
-            Glyph(symbol: .back, size: 12, tint: TrickoStyle.secondary)
-                .rotationEffect(.degrees(180)).frame(width: 20, height: 24)
-                .allowsHitTesting(false)
-        }.padding(.horizontal, 18).padding(.vertical, 12)
-            .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
-            .contentShape(.interaction, Rectangle())
+                .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                rowTitle.frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Glyph(symbol: .back, size: 11, tint: TrickoStyle.secondary).rotationEffect(.degrees(180))
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+        .contentShape(.interaction, Rectangle())
+    }
+
+    private var rowTitle: some View {
+        LocalizedText(title).font(.stage(.subheadline, weight: .medium)).foregroundStyle(TrickoStyle.paper)
     }
 }

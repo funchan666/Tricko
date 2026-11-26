@@ -56,16 +56,6 @@ final class CommerceStore: NSObject, ObservableObject {
     private var rightsRefreshTask: Task<Void, Never>?
     private var refreshingOwner: String?
     var premium: Bool { expiration.map { $0 > Date() } ?? false }
-    var hasVerifiedPlus: Bool {
-        rightsVerified && premium && ownerID != nil && ownerID == api.session?.userId.value
-    }
-    var canExportMedia: Bool { hasVerifiedPlus }
-    func requireMediaExport() throws {
-        guard rightsVerified, ownerID != nil, ownerID == api.session?.userId.value else {
-            throw TrickoError.service("Connect to verify your Plus membership before exporting.")
-        }
-        guard premium else { throw TrickoError.service("Export is included with Plus.") }
-    }
 
     init(api: APIClient, quota: QuotaStore) {
         self.api = api

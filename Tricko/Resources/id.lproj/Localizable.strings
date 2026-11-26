@@ -454,9 +454,6 @@
 
 "Search in browser" = "Cari di web";
 "The browser could not open. Please try again." = "Situs tidak dapat dibuka. Coba lagi.";
-"Connect to verify your Plus membership before exporting." = "Sambungkan ke internet untuk memeriksa langganan Plus sebelum mengekspor.";
-"Export is included with Plus." = "Ekspor video dan audio memerlukan Plus.";
-"Unlimited views, downloads and media exports." = "Tonton dan unduh video tanpa batas, serta ekspor video dan audio.";
 "No matching lessons. Search the web with your original input." = "Tidak ada video yang cocok. Cari di web dengan teks yang kamu masukkan.";
 
 "Official website" = "Situs resmi";
@@ -613,9 +610,7 @@
 "Open or return to the app without an opening ad." = "Buka aplikasi atau kembali ke aplikasi tanpa iklan pembuka.";
 "Review presets" = "Preset peninjauan";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "Buka editor video di Latihan untuk memakai preset gerak lambat atau menggunakan lagi pengaturanmu.";
-"Review presets are included with Plus." = "Preset peninjauan termasuk dalam Plus.";
 "Hide review presets" = "Sembunyikan preset peninjauan";
-"Unlimited lessons, no opening ads and review presets." = "Tonton video tanpa batas, lewati iklan pembuka, dan gunakan preset peninjauan.";
 "Presets keep your trim points. Play the preview to check the result." = "Preset mempertahankan titik potong. Putar pratinjau untuk melihat hasilnya.";
 "Slow mirror" = "Cermin lambat";
 "Half speed with a horizontal flip." = "Setengah kecepatan dengan gambar dibalik horizontal.";
@@ -637,7 +632,6 @@
 "No lesson collections yet." = "Belum ada koleksi video.";
 "Play a clip slower or faster." = "Putar klip lebih lambat atau lebih cepat.";
 "Crop, rotate or flip a video." = "Pangkas bingkai, putar, atau balik video.";
-"Video exports, editing presets and no opening ads." = "Ekspor video, preset pengeditan, dan bebas iklan saat membuka aplikasi.";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "Terapkan preset gerak lambat atau gunakan kembali pengaturan tersimpan di editor video.";
 
 "Review video" = "Tinjau video";
@@ -672,3 +666,6 @@
 "Next marker" = "Penanda berikutnya";
 "Marker %@ of %@" = "Penanda %@ dari %@";
 "No daily viewing or download limits" = "Tanpa batas harian menonton atau mengunduh";
+"Settings" = "Pengaturan";
+"Quick edits" = "Edit cepat";
+"Latest import" = "Video terakhir diimpor";

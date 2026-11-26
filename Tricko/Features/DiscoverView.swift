@@ -412,7 +412,7 @@ private struct PlayerPagingAccess: ViewModifier {
             .onAppear { admit(selectedID) }
             .onChange(of: selectedID) { _, value in admit(value) }
             .fullScreenCover(isPresented: $showingWatchOptions, onDismiss: finishWatchOptions) {
-                WatchLimitPrompt()
+                AllowanceLimitPrompt(kind: .watch)
             }
     }
     private func canWatch(_ id: String) -> Bool {
@@ -452,7 +452,8 @@ private struct PlayerPagingAccess: ViewModifier {
     }
 }
 
-private struct WatchLimitPrompt: View {
+struct AllowanceLimitPrompt: View {
+    let kind: AllowanceKind
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
     @EnvironmentObject private var ads: RewardedAds
@@ -463,7 +464,13 @@ private struct WatchLimitPrompt: View {
     @State private var previousRewardID: UUID?
     @State private var previousLuckyRewardID: UUID?
 
-    private var canWatchAd: Bool { quota.canRequestReward(for: .watch, premium: commerce.premium) }
+    private var canWatchAd: Bool { quota.canRequestReward(for: kind, premium: commerce.premium) }
+    private var heading: String {
+        switch kind {
+        case .watch: canWatchAd ? "Out of views" : "Playback unavailable"
+        case .download: canWatchAd ? "Get more downloads" : "Download options"
+        }
+    }
     private var adBusy: Bool { ads.busy || ads.isPresenting || ads.isPreparingAppOpen }
     private var adFeedback: String? {
         guard rewardTask != nil, !adBusy else { return nil }
@@ -501,7 +508,7 @@ private struct WatchLimitPrompt: View {
         .fullScreenCover(isPresented: $showingPlus, onDismiss: {
             if commerce.premium { dismiss() }
         }) {
-            MembershipView(showsRewardOptions: false)
+            MembershipView()
         }
         .onAppear(perform: finishAdIfRewarded)
         .onChange(of: ads.completedReward) { _, _ in finishAdIfRewarded() }
@@ -514,11 +521,11 @@ private struct WatchLimitPrompt: View {
     private var choices: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                LocalizedText(canWatchAd ? "Out of views" : "Playback unavailable")
+                LocalizedText(heading)
                     .font(.stage(.title2, weight: .bold))
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityFocused($headingFocused)
-                if let message = adFeedback ?? quota.error ?? (canWatchAd ? quota.rewardSummary(for: .watch) : nil) {
+                if let message = adFeedback ?? quota.error ?? (canWatchAd ? quota.rewardSummary(for: kind) : nil) {
                     LocalizedText(message)
                         .font(.stage(.subheadline))
                         .foregroundStyle(TrickoStyle.secondary)
@@ -560,7 +567,7 @@ private struct WatchLimitPrompt: View {
         rewardTask?.cancel()
         previousRewardID = ads.completedReward
         previousLuckyRewardID = ads.luckyReward?.id
-        rewardTask = Task { await ads.watch(commerce: commerce, quota: quota, kind: .watch) }
+        rewardTask = Task { await ads.watch(commerce: commerce, quota: quota, kind: kind) }
     }
 
     private func finishAdIfRewarded() {
@@ -779,7 +786,7 @@ struct ClipPage: View {
             .onChange(of: pagingGate) { _, presented in
                 if presented { playback.pause() } else if active { activate() }
             }
-            .fullScreenCover(isPresented: $gate, onDismiss: { if active { activate() } }) { WatchLimitPrompt() }
+            .fullScreenCover(isPresented: $gate, onDismiss: { if active { activate() } }) { AllowanceLimitPrompt(kind: .watch) }
             .sheet(isPresented: $options, onDismiss: resumeAfterControls) {
                 ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -816,7 +823,7 @@ struct ClipPage: View {
                     }.padding(22)
                 }.trickoScreenBackground().presentationDetents([.medium, .large])
             }
-            .fullScreenCover(isPresented: $downloadReward, onDismiss: resumeAfterControls) { MembershipView(rewardKind: .download) }
+            .fullScreenCover(isPresented: $downloadReward, onDismiss: resumeAfterControls) { AllowanceLimitPrompt(kind: .download) }
     }
     private var playerControls: some View {
         GeometryReader { viewport in

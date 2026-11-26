@@ -53,7 +53,7 @@ struct PlusEntryButton: View {
     private var copy: some View {
         VStack(alignment: .leading, spacing: 3) {
             LocalizedText(title).font(.stage(.title3, weight: .bold, display: true))
-            LocalizedText(active ? "Plus active" : "Video exports, editing presets and no opening ads.")
+            LocalizedText(active ? "Plus active" : "No daily viewing or download limits")
                 .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -69,26 +69,16 @@ struct PlusEntryButton: View {
 }
 
 struct MembershipView: View {
-    var rewardKind: AllowanceKind? = nil
-    var exportRequired = false
-    var reviewPresetsRequired = false
-    var showsRewardOptions = true
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var typeSize
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
-    @EnvironmentObject private var quota: QuotaStore
     @EnvironmentObject private var ads: RewardedAds
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
     @State private var selectedID: String?
     @State private var priceRequest = 0
     @State private var attemptedPurchaseAction = false
     @State private var purchaseTask: Task<Void, Never>?
-    @State private var rewardTask: Task<Void, Never>?
-    @State private var requestedReward = false
-    @State private var acknowledgedLuckyReward = false
 
     private struct Plan: Identifiable {
         let entry: CommerceConfiguration.Product
@@ -106,11 +96,6 @@ struct MembershipView: View {
     }
     private var purchasing: Bool { commerce.preparingPurchase || commerce.busy || purchaseTask != nil }
     private var interactionLocked: Bool { purchasing || commerce.loadingPlans || ads.busy || ads.isPresenting }
-    private var entryMessage: String? {
-        if reviewPresetsRequired { return "Review presets are included with Plus." }
-        if exportRequired { return "Export is included with Plus." }
-        return nil
-    }
     private var purchaseFeedback: String? {
         if attemptedPurchaseAction, let message = commerce.error ?? commerce.message { return message }
         return commerce.premium ? nil : commerce.plansError
@@ -151,33 +136,15 @@ struct MembershipView: View {
         .foregroundStyle(TrickoStyle.paper)
         .task { await commerce.refresh() }
         .task(id: priceRequest) { await commerce.loadPlans() }
-        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in quota.resetIfNeeded() }
         .onDisappear {
-            purchaseTask?.cancel(); purchaseTask = nil
-            if !ads.isPresenting { cancelRewardRequest() }
-        }
-        .onChange(of: ads.completedReward) { _, completion in
-            if requestedReward, completion != nil { dismiss() }
+            purchaseTask?.cancel()
+            purchaseTask = nil
         }
         .interactiveDismissDisabled(purchasing || ads.isPresenting)
-        .fullScreenCover(item: $ads.luckyReward, onDismiss: {
-            if acknowledgedLuckyReward && requestedReward { dismiss() }
-        }) { reward in
-            LuckyRewardView(message: reward.message) {
-                acknowledgedLuckyReward = true
-                ads.luckyReward = nil
-            }
-                .presentationBackground(.clear)
-        }
     }
 
     private func subscriptionOptions(plansSideBySide: Bool) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            if let entryMessage, !commerce.premium {
-                LocalizedText(entryMessage)
-                    .font(.stage(.subheadline, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
             if commerce.premium {
                 activeMembership
             } else if !plans.isEmpty {
@@ -200,7 +167,6 @@ struct MembershipView: View {
                 if api.session != nil || commerce.premium { PolicyLinks(compact: true) }
             }
             if api.session == nil, !commerce.premium { ConnectionPanel() }
-            if showsRewardOptions, entryMessage == nil, !commerce.premium, api.session != nil { rewardOption }
         }
     }
 
@@ -212,7 +178,6 @@ struct MembershipView: View {
                 .accessibilityAddTraits(.isHeader)
             Spacer()
             Button {
-                cancelRewardRequest()
                 dismiss()
             } label: {
                 Glyph(symbol: .close, size: 16, tint: TrickoStyle.paper)
@@ -241,8 +206,6 @@ struct MembershipView: View {
             LocalizedText("Included with Plus").font(.stage(.headline, weight: .bold))
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 8) {
-                benefit(.edit, "Video and audio exports")
-                benefit(.settings, "Review presets")
                 benefit(.exit, "Skip opening ads")
                 benefit(.play, "No daily viewing or download limits")
             }
@@ -408,54 +371,6 @@ struct MembershipView: View {
         }
     }
 
-    private var rewardOption: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            LocalizedText("Or, keep it free").font(.stage(.headline))
-            ForEach(rewardKind.map { [$0] } ?? AllowanceKind.allCases) { kind in
-                if quota.canRequestReward(for: kind, premium: commerce.premium) {
-                    LocalizedText(quota.rewardSummary(for: kind)).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
-                    ActionButton(title: kind == .watch ? "Watch an ad for views" : "Watch an ad for downloads",
-                                 primary: false, busy: ads.busy || ads.isPresenting) {
-                        requestedReward = true
-                        rewardTask = Task { await ads.watch(commerce: commerce, quota: quota, kind: kind) }
-                    }.disabled(purchasing || ads.isPreparingAppOpen || ads.busy || ads.isPresenting)
-                }
-            }
-            if ads.busy {
-                HStack(spacing: 12) {
-                    Image("TrickoLoadingMark").resizable().scaledToFit().frame(width: 28, height: 5)
-                        .phaseAnimator([false, true]) { mark, faded in
-                            mark.opacity(reduceMotion || scenePhase != .active ? 1 : (faded ? 0.35 : 1))
-                        } animation: { _ in
-                            reduceMotion || scenePhase != .active ? nil : .easeInOut(duration: 0.6)
-                        }
-                        .accessibilityHidden(true)
-                    LocalizedText("Loading ad…").font(.stage(.footnote))
-                    Spacer(minLength: 12)
-                    Button("Cancel") { cancelRewardRequest() }
-                        .buttonStyle(CompactActionStyle())
-                }
-            }
-            LocalizedText(quota.unlimited ? "Unlimited views today" : "\(quota.watchesLeft) views left today")
-            LocalizedText(quota.downloadsUnlimited ? "Unlimited downloads today" : "\(quota.downloadsLeft) downloads left today")
-            AllowanceResetText()
-            LocalizedText("Ad rewards unlock when the corresponding allowance runs out.")
-                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary).fixedSize(horizontal: false, vertical: true)
-            if let error = ads.error { ErrorNote(message: error) }
-            if let error = quota.error { ErrorNote(message: error) }
-            if let message = ads.message {
-                LocalizedText(message).font(.stage(.footnote)).foregroundStyle(TrickoStyle.accent)
-            }
-        }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-            .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 22))
-    }
-
-    private func cancelRewardRequest() {
-        rewardTask?.cancel()
-        rewardTask = nil
-        ads.cancelRewardLoading()
-    }
-
     private var restoreLink: some View {
         Button {
             attemptedPurchaseAction = true
@@ -475,52 +390,62 @@ struct MembershipView: View {
 struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
     @EnvironmentObject private var ads: RewardedAds
     @EnvironmentObject private var accountAccess: AccountAccessFlow
     @State private var paywall = false
+    @State private var rewardKind: AllowanceKind?
+    private var rewardKinds: [AllowanceKind] {
+        AllowanceKind.allCases.filter { quota.canRequestReward(for: $0, premium: commerce.premium) }
+    }
     private var unavailable: Bool {
         accountAccess.isBusy || commerce.busy || commerce.preparingPurchase || ads.busy || ads.isPresenting
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            SheetHeading(title: "Me") { dismiss() }
+            HStack(spacing: 12) {
+                LocalizedText("Settings").font(.stage(.largeTitle, weight: .bold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityAddTraits(.isHeader)
+                IconButton(symbol: .close, label: "Close") { dismiss() }
+            }
+            .pageHorizontalMargins().padding(.vertical, 10)
+            .frame(maxWidth: 680)
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    if let session = api.session {
-                        ViewThatFits(in: .horizontal) {
-                            HStack(alignment: .firstTextBaseline) {
-                                accountIdentity(session.userId.value)
-                                Spacer(minLength: 16)
-                                accountStatus
-                            }
-                            VStack(alignment: .leading, spacing: 8) {
-                                accountIdentity(session.userId.value)
-                                accountStatus
-                            }
-                        }
-                        membershipCard
-                        allowance
-                    } else { ConnectionPanel() }
+                    membershipCard
                     AccountSettingsSection()
-                    LocalizedText("Version \(api.configuration.version)")
-                        .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                        .frame(maxWidth: .infinity).padding(.top, 4)
-                }.trickoPage()
+                    if api.session != nil {
+                        allowance
+                    } else {
+                        ConnectionPanel(showsPolicyLinks: false)
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        if let session = api.session {
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                LocalizedText("Your practice space").font(.stage(.subheadline, weight: .semibold))
+                                if commerce.rightsVerified { accountStatus }
+                            }
+                            LocalizedText("ID · %@", session.userId.value).font(.caption.monospaced())
+                                .textSelection(.enabled)
+                        }
+                        LocalizedText("Version %@", api.configuration.version).font(.stage(.caption))
+                    }
+                    .foregroundStyle(TrickoStyle.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+                .trickoPage()
             }
-        }.trickoScreenBackground().foregroundStyle(.white)
+        }.trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
             .fullScreenCover(isPresented: $paywall) { MembershipView() }
-    }
-
-    private func accountIdentity(_ id: String) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            LocalizedText("Your practice space").font(.stage(.headline)).foregroundStyle(TrickoStyle.paper)
-            LocalizedText("ID · \(id)").font(.caption.monospaced()).foregroundStyle(TrickoStyle.secondary)
-                .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-        }
+            .fullScreenCover(item: $rewardKind) { kind in AllowanceLimitPrompt(kind: kind) }
+            .onAppear { quota.resetIfNeeded() }
+            .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in quota.resetIfNeeded() }
     }
 
     private var accountStatus: some View {
@@ -536,11 +461,15 @@ struct AccountView: View {
     }
 
     private var allowance: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        let columns = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 20))
+        return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 LocalizedText("Today").font(.stage(.headline))
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
-                if !commerce.premium {
+                if !commerce.premium, rewardKinds.isEmpty {
                     Button { paywall = true } label: { LocalizedText("View options") }
                         .font(.stage(.footnote, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
                         .frame(minHeight: 44).buttonStyle(PressStyle()).disabled(unavailable)
@@ -548,22 +477,43 @@ struct AccountView: View {
                                                                      language: AppLanguage.from(locale))))
                 }
             }
-            HStack(alignment: .top, spacing: 20) {
-                balance(value: commerce.premium || quota.unlimited ? "Unlimited" : "\(quota.watchesLeft)", label: "Views left")
-                balance(value: commerce.premium || quota.downloadsUnlimited ? "Unlimited" : "\(quota.downloadsLeft)", label: "Downloads left")
+            if let error = quota.error { ErrorNote(message: error) }
+            if commerce.premium || quota.usage != nil {
+                columns {
+                    balance(.watch)
+                    balance(.download)
+                }
+                if commerce.premium {
+                    LocalizedText("Included with your membership").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                } else { AllowanceResetText() }
+            } else if quota.error == nil {
+                LocalizedText("Checking your limits…").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
             }
-            if commerce.premium {
-                LocalizedText("Included with your membership").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-            } else { AllowanceResetText() }
         }
+        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+        .background { StageSurface(tone: .smoke) }
     }
 
-    private func balance(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            LocalizedText(value).font(value == "Unlimited" ? .headline : .title.weight(.semibold))
-                .monospacedDigit().foregroundStyle(TrickoStyle.paper)
-                .fixedSize(horizontal: false, vertical: true)
-            LocalizedText(label).font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+    private func balance(_ kind: AllowanceKind) -> some View {
+        let value = commerce.premium || quota.isUnlimited(kind) ? "Unlimited" : quota.remaining(kind).formatted(.number.locale(locale))
+        return VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
+                LocalizedText(kind == .watch ? "Views left" : "Downloads left")
+                    .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                LocalizedText(value).font(value == "Unlimited" ? .headline : .title.weight(.semibold))
+                    .monospacedDigit().foregroundStyle(TrickoStyle.paper)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
+            if rewardKinds.contains(kind) {
+                Button { rewardKind = kind } label: {
+                    LocalizedText(kind == .watch ? "Get more views" : "Get more downloads")
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(minHeight: 44)
+                }
+                .font(.stage(.footnote, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
+                .buttonStyle(PressStyle()).disabled(unavailable)
+            }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }

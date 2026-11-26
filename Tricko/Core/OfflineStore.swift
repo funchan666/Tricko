@@ -154,10 +154,6 @@ final class OfflineStore: NSObject, ObservableObject {
         }
     }
     func download(_ clip: LessonClip, forExport: Bool = false) async {
-        if forExport {
-            do { try commerce.requireMediaExport() }
-            catch { self.error = error.localizedDescription; return }
-        }
         guard preparingID == nil else { error = "Another download is being prepared."; return }
         preparingID = clip.id
         defer { preparingID = nil }
@@ -165,9 +161,12 @@ final class OfflineStore: NSObject, ObservableObject {
         await resumePending()
         guard readable else { error = "Offline downloads could not be read. Existing files have been preserved."; return }
         guard !restoring, downloadingID == nil else { error = "Another download is in progress."; return }
-        if let existing = cached(clip.id), !forExport || !existing.isHLS { return }
+        let existing = cached(clip.id)
+        if let existing, !forExport || !existing.isHLS { return }
         guard let owner = api.session?.userId.value else { error = "Connect to your account before downloading."; return }
-        guard forExport || !clip.playbackURL.isFileURL else { error = "This video is already stored on this device."; return }
+        guard !clip.playbackURL.isFileURL || (forExport && existing?.owner == owner) else {
+            error = "This download is no longer on this device. Download it again."; return
+        }
         guard quota.mayDownload(clip.id, premium: commerce.premium) else {
             error = "Your download allowance is used up."; return
         }
@@ -182,11 +181,7 @@ final class OfflineStore: NSObject, ObservableObject {
         catch { self.error = forExport ? error.localizedDescription : "Download could not start. Please check your connection."; return }
         guard owner == api.session?.userId.value else { error = "Connect to your account before downloading."; return }
         guard quota.mayDownload(clip.id, premium: commerce.premium) else { error = "Your download allowance is used up."; return }
-        if forExport {
-            do { try commerce.requireMediaExport() }
-            catch { self.error = error.localizedDescription; return }
-        }
-        let originalClip = clip.playbackURL.isFileURL ? (cached(clip.id)?.clip ?? clip) : clip
+        let originalClip = clip.playbackURL.isFileURL ? (existing?.clip ?? clip) : clip
         let transfer = OfflineTransfer(id: UUID(), clip: originalClip, owner: owner, premium: commerce.premium,
                                        isHLS: isHLS && !forExport, forExport: forExport)
         do {

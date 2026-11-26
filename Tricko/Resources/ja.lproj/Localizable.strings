@@ -454,9 +454,6 @@
 
 "Search in browser" = "ウェブで検索";
 "The browser could not open. Please try again." = "ウェブサイトを開けませんでした。もう一度お試しください。";
-"Connect to verify your Plus membership before exporting." = "書き出す前にインターネットに接続して、Plusの契約を確認してください。";
-"Export is included with Plus." = "動画と音声の書き出しにはPlusが必要です。";
-"Unlimited views, downloads and media exports." = "動画の視聴とダウンロードが無制限になり、動画や音声も書き出せます。";
 "No matching lessons. Search the web with your original input." = "一致する動画がありません。入力した内容でウェブを検索できます。";
 
 "Official website" = "公式サイト";
@@ -613,9 +610,7 @@
 "Open or return to the app without an opening ad." = "アプリの起動時や再表示時に広告が表示されません。";
 "Review presets" = "見直しプリセット";
 "In Practice, open the video editor to use slow-motion presets or reuse your own settings." = "「練習」の動画エディタでスロー再生のプリセットや保存した設定を使えます。";
-"Review presets are included with Plus." = "見直しプリセットはPlusで使えます。";
 "Hide review presets" = "見直しプリセットを閉じる";
-"Unlimited lessons, no opening ads and review presets." = "動画が見放題。起動時広告のスキップと見直しプリセットも使えます。";
 "Presets keep your trim points. Play the preview to check the result." = "プリセットを使ってもトリミングの開始点と終了点は変わりません。プレビューを再生して確認できます。";
 "Slow mirror" = "スロー反転";
 "Half speed with a horizontal flip." = "0.5倍速で左右を反転します。";
@@ -637,7 +632,6 @@
 "No lesson collections yet." = "動画コレクションはまだありません。";
 "Play a clip slower or faster." = "動画を遅くしたり速くしたりできます。";
 "Crop, rotate or flip a video." = "動画の切り抜き、回転、左右反転ができます。";
-"Video exports, editing presets and no opening ads." = "動画の書き出し、編集プリセット、起動時の広告なし。";
 "Apply slow-motion presets or reuse your saved settings in the video editor." = "動画エディタでスロー再生のプリセットや保存済みの設定を適用できます。";
 
 "Review video" = "動画を振り返る";
@@ -672,3 +666,6 @@
 "Next marker" = "次のマーカー";
 "Marker %@ of %@" = "%2$@件中%1$@件目";
 "No daily viewing or download limits" = "1日の視聴・ダウンロード制限なし";
+"Settings" = "設定";
+"Quick edits" = "クイック編集";
+"Latest import" = "最近読み込んだ動画";
