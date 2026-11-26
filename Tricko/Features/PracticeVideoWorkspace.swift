@@ -42,6 +42,7 @@ enum VideoTool: String, Identifiable, CaseIterable {
 
 struct ToolsView: View {
     @EnvironmentObject private var commerce: CommerceStore
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selectedTool: VideoTool?
     @State private var showingPracticeResources = false
     @State private var showingMembership = false
@@ -49,7 +50,7 @@ struct ToolsView: View {
     var body: some View {
         GeometryReader { viewport in
             let topInset = viewport.safeAreaInsets.top
-            let photoHeight = (viewport.size.height + topInset) * 0.5
+            let photoHeight = min((viewport.size.height + topInset) * (typeSize.isAccessibilitySize ? 0.48 : 0.40), 320)
             let heroHeight = max(0, photoHeight - topInset)
             ScrollView {
                 VStack(spacing: 0) {
@@ -61,7 +62,7 @@ struct ToolsView: View {
                         studioEntry
                     }
                     .trickoPage()
-                    .frame(minHeight: heroHeight, idealHeight: heroHeight, alignment: .top)
+                    .frame(minHeight: heroHeight, alignment: .top)
 
                     VStack(alignment: .leading, spacing: 20) {
                         shortcuts
@@ -107,16 +108,16 @@ struct ToolsView: View {
         Button { selectedTool = .studio } label: {
             HStack(alignment: .bottom, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    LocalizedText(VideoTool.studio.title).font(.stage(.largeTitle, weight: .bold))
+                    LocalizedText(VideoTool.studio.title).font(.stage(.title, weight: .bold))
                     LocalizedText(VideoTool.studio.detail)
                         .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.paper.opacity(0.86))
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Glyph(symbol: .back, size: 13, tint: TrickoStyle.paper)
+                Glyph(symbol: .back, size: 13, tint: TrickoStyle.accent)
                     .rotationEffect(.degrees(180))
                     .frame(width: 48, height: 48)
-                    .trickoGlass(in: Circle())
+                    .trickoGlass(in: Circle(), tint: TrickoStyle.accent.opacity(0.18), interactive: false)
             }
             .foregroundStyle(TrickoStyle.paper)
             .contentShape(.interaction, Rectangle())
@@ -260,7 +261,7 @@ struct LocalVideoImportButtons: View {
             photosButton
         }
         VStack(alignment: .leading, spacing: 12) {
-            Group {
+            TrickoGlassGroup {
                 if typeSize.isAccessibilitySize {
                     stackedButtons
                 } else {
@@ -325,7 +326,7 @@ struct LocalVideoImportButtons: View {
     ) -> some View {
         if prominent {
             let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-            let foreground = primary ? TrickoStyle.ink : TrickoStyle.paper
+            let foreground = primary ? TrickoStyle.accent : TrickoStyle.paper
             Button(action: action) {
                 let label = HStack(spacing: 10) {
                     Glyph(symbol: symbol, size: 23, tint: foreground)
@@ -336,11 +337,8 @@ struct LocalVideoImportButtons: View {
                 .padding(.horizontal, 16).padding(.vertical, 12)
                 .frame(maxWidth: .infinity, minHeight: 64)
 
-                Group {
-                    if primary { label.background(TrickoStyle.accent, in: shape) }
-                    else { label.trickoGlass(in: shape) }
-                }
-                .contentShape(.interaction, shape)
+                label.trickoGlass(in: shape, tint: primary ? TrickoStyle.accent.opacity(0.24) : nil)
+                    .contentShape(.interaction, shape)
             }.buttonStyle(PressStyle())
         } else {
             Button(action: action) { LocalizedText(title) }

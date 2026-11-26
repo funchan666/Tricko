@@ -671,3 +671,4 @@
 "Previous marker" = "前のマーカー";
 "Next marker" = "次のマーカー";
 "Marker %@ of %@" = "%2$@件中%1$@件目";
+"No daily viewing or download limits" = "1日の視聴・ダウンロード制限なし";

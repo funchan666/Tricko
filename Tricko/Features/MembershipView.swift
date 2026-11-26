@@ -20,7 +20,7 @@ struct PlusEntryButton: View {
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .frame(minWidth: 44, minHeight: 44)
                         .foregroundStyle(TrickoStyle.accent)
-                        .trickoGlass(in: Capsule())
+                        .trickoGlass(in: Capsule(), tint: TrickoStyle.accent.opacity(0.18))
                 } else {
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) {
@@ -36,8 +36,8 @@ struct PlusEntryButton: View {
                     }
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .foregroundStyle(TrickoStyle.ink)
-                    .background { StageSurface(tone: .ivory, radius: 16) }
+                    .foregroundStyle(TrickoStyle.paper)
+                    .trickoGlass(in: .rect(cornerRadius: 18), tint: TrickoStyle.accent.opacity(0.12))
                 }
             }
             .contentShape(Rectangle())
@@ -54,7 +54,7 @@ struct PlusEntryButton: View {
         VStack(alignment: .leading, spacing: 3) {
             LocalizedText(title).font(.stage(.title3, weight: .bold, display: true))
             LocalizedText(active ? "Plus active" : "Video exports, editing presets and no opening ads.")
-                .font(.stage(.caption)).foregroundStyle(TrickoStyle.paperSecondary)
+                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -207,8 +207,7 @@ struct MembershipView: View {
     private var header: some View {
         HStack(spacing: 16) {
             LocalizedText("Plus")
-                .font(.stage(.largeTitle, weight: .heavy))
-                .tracking(-0.6)
+                .font(.stage(.largeTitle, weight: .bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Spacer()
@@ -245,8 +244,7 @@ struct MembershipView: View {
                 benefit(.edit, "Video and audio exports")
                 benefit(.settings, "Review presets")
                 benefit(.exit, "Skip opening ads")
-                benefit(.play, "Unlimited lesson views")
-                benefit(.download, "Unlimited downloads for supported videos")
+                benefit(.play, "No daily viewing or download limits")
             }
             .padding(12)
             .background { StageSurface(tone: .smoke) }
@@ -280,8 +278,10 @@ struct MembershipView: View {
     private func planPicker(sideBySide: Bool) -> some View {
         let layout = sideBySide ? AnyLayout(HStackLayout(alignment: .top, spacing: 10))
                                : AnyLayout(VStackLayout(spacing: 8))
-        return layout {
-            ForEach(plans) { planOption($0, sideBySide: sideBySide) }
+        return TrickoGlassGroup {
+            layout {
+                ForEach(plans) { planOption($0, sideBySide: sideBySide) }
+            }
         }
     }
 
@@ -289,11 +289,11 @@ struct MembershipView: View {
         let selected = selectedPlan?.id == plan.id
         let price = plan.product.map { commerce.price($0) } ?? "USD \(plan.entry.displayPriceUSD)"
         let period = plan.product.map { commerce.period($0, locale: locale) }
-        let title = plan.product?.localizedTitle ?? L10n.text(plan.entry.label, language: AppLanguage.from(locale))
+        let title = L10n.text(plan.entry.label, language: AppLanguage.from(locale))
         let planLabel = Text(verbatim: title).font(.stage(.subheadline, weight: .semibold))
         let stackedDetails = VStack(alignment: .leading, spacing: 6) {
             planLabel.fixedSize(horizontal: false, vertical: true)
-            planPrice(price, period: period, alignment: .leading, onPaper: selected)
+            planPrice(price, period: period, alignment: .leading)
         }.frame(maxWidth: .infinity, alignment: .leading)
 
         return Button { selectedID = plan.id } label: {
@@ -305,30 +305,36 @@ struct MembershipView: View {
                         HStack(alignment: .firstTextBaseline, spacing: 12) {
                             planLabel.fixedSize(horizontal: true, vertical: false)
                             Spacer(minLength: 0)
-                            planPrice(price, period: period, alignment: .trailing, onPaper: selected, intrinsicWidth: true)
+                            planPrice(price, period: period, alignment: .trailing, intrinsicWidth: true)
                         }
                         stackedDetails
                     }
                 }
-                Glyph(symbol: .saved, size: 16, tint: TrickoStyle.ink)
+                Glyph(symbol: .saved, size: 16, tint: TrickoStyle.accent)
                     .opacity(selected ? 1 : 0)
                     .accessibilityHidden(true)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: sideBySide ? 102 : 60, alignment: sideBySide ? .topLeading : .leading)
-            .foregroundStyle(selected ? TrickoStyle.ink : TrickoStyle.paper)
-            .background { StageSurface(tone: selected ? .ivory : .smoke, radius: 16) }
-            .contentShape(.rect(cornerRadius: 16))
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: sideBySide ? 112 : 64, alignment: sideBySide ? .topLeading : .leading)
+            .foregroundStyle(TrickoStyle.paper)
+            .trickoGlass(in: .rect(cornerRadius: 18), tint: selected ? TrickoStyle.accent.opacity(0.22) : nil)
+            .overlay {
+                if selected {
+                    RoundedRectangle(cornerRadius: 18).strokeBorder(TrickoStyle.accent.opacity(0.75), lineWidth: 1.5)
+                        .allowsHitTesting(false).accessibilityHidden(true)
+                }
+            }
+            .contentShape(.rect(cornerRadius: 18))
         }.buttonStyle(PressStyle(disabledOpacity: 0.9)).disabled(interactionLocked)
             .accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityIdentifier("membership.plan.\(plan.id)")
     }
 
-    private func planPrice(_ price: String, period: String?, alignment: HorizontalAlignment, onPaper: Bool,
+    private func planPrice(_ price: String, period: String?, alignment: HorizontalAlignment,
                             intrinsicWidth: Bool = false) -> some View {
         VStack(alignment: alignment, spacing: 3) {
             Text(verbatim: price).environment(\.layoutDirection, .leftToRight)
-                .font(.stage(.title3, weight: .bold)).monospacedDigit()
+                .font(.stage(.title2, weight: .bold)).monospacedDigit()
             Group {
                 if let period {
                     LocalizedText("Billed every %@", period)
@@ -337,7 +343,7 @@ struct MembershipView: View {
                 }
             }
             .font(.stage(.caption))
-            .foregroundStyle(onPaper ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
+            .foregroundStyle(TrickoStyle.secondary)
         }.fixedSize(horizontal: intrinsicWidth, vertical: true)
     }
 
@@ -366,15 +372,15 @@ struct MembershipView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .font(.stage(.footnote, weight: .medium))
-                        .foregroundStyle(TrickoStyle.paperSecondary)
+                        .foregroundStyle(TrickoStyle.paper.opacity(0.85))
                     }
                 }
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 18).padding(.vertical, 10)
                 .frame(maxWidth: .infinity, minHeight: 51)
-                .foregroundStyle(TrickoStyle.ink)
-                .background(TrickoStyle.accent, in: Capsule())
+                .foregroundStyle(TrickoStyle.accent)
+                .trickoGlass(in: Capsule(), tint: TrickoStyle.accent.opacity(0.24))
                 .contentShape(Capsule())
             }
             .buttonStyle(PressStyle())

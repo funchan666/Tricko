@@ -26,16 +26,18 @@ struct VideoReviewButton: View {
         let pendingDescription = count > 0
             ? L10n.format("%@ pending review", [countText], language: AppLanguage.from(locale))
             : nil
-        HStack(spacing: 6) {
-            Button(action: action) { LocalizedText("Review video") }
-                .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .bookmark, minHeight: 44, horizontalPadding: 10))
-                .accessibilityValue(Text(verbatim: pendingDescription.map { "\(movie.title), \($0)" } ?? movie.title))
-            if count > 0 {
-                CountBadge(text: countText)
-                    .accessibilityHidden(true)
-                    .allowsHitTesting(false)
+        Button(action: action) {
+            HStack(spacing: 8) {
+                LocalizedText("Review video")
+                if count > 0 {
+                    CountBadge(text: countText)
+                        .accessibilityHidden(true)
+                        .allowsHitTesting(false)
+                }
             }
         }
+        .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .bookmark, minHeight: 44, horizontalPadding: 12))
+        .accessibilityValue(Text(verbatim: pendingDescription.map { "\(movie.title), \($0)" } ?? movie.title))
     }
 }
 

@@ -39,32 +39,21 @@ struct HomeView: View {
     private var homePage: some View {
         GeometryReader { viewport in
             let topInset = viewport.safeAreaInsets.top
-            let photoHeight = min((viewport.size.height + topInset) * 0.42, 336)
-            let photoOverlap = photoHeight * 0.28
+            let photoHeight = min((viewport.size.height + topInset) * 0.36, 280)
             ScrollView {
                 VStack(spacing: 0) {
-                    headerActions
-                        .trickoPage()
-                        .frame(minHeight: max(0, photoHeight - topInset - photoOverlap), alignment: .top)
+                    VStack(alignment: .leading, spacing: 18) {
+                        headerActions
+                        linkComposer
+                    }
+                    .trickoPage()
 
-                    VStack(alignment: .leading, spacing: 24) {
-                        lessonAccess
+                    VStack(alignment: .leading, spacing: 28) {
                         localVideoSection
+                        browseVideosButton
                         lessonResources
                     }
                     .trickoPage()
-                    .background {
-                        VStack(spacing: 0) {
-                            LinearGradient(
-                                colors: [TrickoStyle.background.opacity(0.42), TrickoStyle.background],
-                                startPoint: .top, endPoint: .bottom
-                            )
-                            .frame(height: photoOverlap)
-                            TrickoStyle.background
-                        }
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                    }
                 }
                 .foregroundStyle(TrickoStyle.paper)
             }
@@ -97,10 +86,12 @@ struct HomeView: View {
     }
 
     private var headerActions: some View {
-        HStack(spacing: 8) {
-            Spacer(minLength: 0)
-            PlusEntryButton(active: commerce.premium, compact: true) { paywall = true }
-            accountButton
+        TrickoGlassGroup {
+            HStack(spacing: 10) {
+                Spacer(minLength: 0)
+                PlusEntryButton(active: commerce.premium, compact: true) { paywall = true }
+                accountButton
+            }
         }
     }
 
@@ -259,13 +250,6 @@ struct HomeView: View {
         }.buttonStyle(PressStyle())
     }
 
-    private var lessonAccess: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            linkComposer
-            browseVideosButton
-        }
-    }
-
     private var browseVideosButton: some View {
         let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
         return Button {
@@ -288,8 +272,7 @@ struct HomeView: View {
 
                 Glyph(symbol: .play, size: 19, tint: TrickoStyle.accent)
                     .frame(width: 48, height: 48)
-                    .trickoGlass(in: Circle())
-                    .background(TrickoStyle.ink.opacity(0.78), in: Circle())
+                    .trickoGlass(in: Circle(), tint: TrickoStyle.accent.opacity(0.18), interactive: false)
                     .allowsHitTesting(false)
             }
             .padding(.leading, 18)
@@ -440,9 +423,11 @@ struct HomeView: View {
 
     private var linkComposer: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                linkField
-                openLessonButton
+            TrickoGlassGroup {
+                HStack(spacing: 8) {
+                    linkField
+                    openLessonButton
+                }
             }
             if let composerError { ErrorNote(message: composerError) }
             ViewThatFits(in: .horizontal) {
@@ -478,13 +463,10 @@ struct HomeView: View {
     private var openLessonButton: some View {
         Button(action: resolve) {
             let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-            let label = Glyph(symbol: .search, size: 20, tint: canOpenLink ? TrickoStyle.ink : TrickoStyle.secondary)
+            let label = Glyph(symbol: .search, size: 20, tint: canOpenLink ? TrickoStyle.coolAccent : TrickoStyle.secondary)
                 .frame(width: 52, height: 52)
-            Group {
-                if canOpenLink { label.background(TrickoStyle.coolAccent, in: shape) }
-                else { label.trickoGlass(in: shape) }
-            }
-            .contentShape(.interaction, shape)
+            label.trickoGlass(in: shape, tint: canOpenLink ? TrickoStyle.coolAccent.opacity(0.25) : nil)
+                .contentShape(.interaction, shape)
         }
         .buttonStyle(PressStyle(disabledOpacity: 1))
         .disabled(!canOpenLink)
@@ -495,14 +477,14 @@ struct HomeView: View {
     private var linkField: some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         let prompt = Text(verbatim: L10n.text("Lesson link or short code", language: AppLanguage.from(locale)))
-            .foregroundStyle(TrickoStyle.paperSecondary)
+            .foregroundStyle(TrickoStyle.secondary)
         return HStack(spacing: 10) {
-            Glyph(symbol: .link, size: 16, tint: TrickoStyle.paperSecondary)
+            Glyph(symbol: .link, size: 18, tint: TrickoStyle.coolAccent)
             TextField("", text: $link, prompt: prompt)
                 .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                 .submitLabel(.go).onSubmit { resolve() }
-                .focused($focused).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.ink)
-                .tint(TrickoStyle.ink)
+                .focused($focused).font(.stage(.body)).foregroundStyle(TrickoStyle.paper)
+                .tint(TrickoStyle.coolAccent)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, minHeight: 52)
                 .environment(\.layoutDirection, .leftToRight)
@@ -514,7 +496,7 @@ struct HomeView: View {
                     composerError = nil
                     focused = true
                 } label: {
-                    Glyph(symbol: .close, size: 13, tint: TrickoStyle.ink.opacity(0.65))
+                    Glyph(symbol: .close, size: 13, tint: TrickoStyle.secondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }.buttonStyle(PressStyle())
@@ -523,12 +505,11 @@ struct HomeView: View {
             }
         }
             .padding(.leading, 14).padding(.trailing, link.isEmpty ? 14 : 4)
-            .background(TrickoStyle.paper, in: shape)
+            .trickoGlass(in: shape, interactive: false)
             .overlay {
                 shape.strokeBorder(focused ? TrickoStyle.coolAccent : .clear, lineWidth: 2)
                     .allowsHitTesting(false).accessibilityHidden(true)
             }
-            .environment(\.colorScheme, .light)
             .keyboardInputRegion("home-link-input")
     }
 

@@ -671,3 +671,4 @@
 "Previous marker" = "이전 표시";
 "Next marker" = "다음 표시";
 "Marker %@ of %@" = "전체 %2$@개 중 %1$@번째 표시";
+"No daily viewing or download limits" = "일일 시청 및 다운로드 제한 없음";

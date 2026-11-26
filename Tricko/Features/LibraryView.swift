@@ -335,40 +335,38 @@ struct LibraryView: View {
     private var categoryIndex: some View {
         let columns = Array(repeating: GridItem(.flexible(minimum: 0), spacing: 4),
                             count: typeSize.isAccessibilitySize ? 1 : 2)
-        return LazyVGrid(columns: columns, spacing: 4) {
-            ForEach(Category.allCases.filter { $0 != .pendingReviews }) { entry in
-                let selected = category == entry
-                let total = count(in: entry)
-                let labelColor = selected ? TrickoStyle.ink : TrickoStyle.paper
-                Button { filter = entry.rawValue } label: {
-                    HStack(spacing: 7) {
-                        Glyph(symbol: entry.glyph, size: 16, tint: selected ? TrickoStyle.ink : TrickoStyle.coolAccent)
-                        LocalizedText(entry.title).font(.stage(.subheadline, weight: .semibold))
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        if total > 0 {
-                            Text(total, format: .number.locale(locale))
-                                .font(.stage(.footnote, weight: .medium).monospacedDigit())
-                                .foregroundStyle(selected ? TrickoStyle.paperSecondary : TrickoStyle.secondary)
-                                .fixedSize(horizontal: true, vertical: false)
+        return TrickoGlassGroup {
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(Category.allCases.filter { $0 != .pendingReviews }) { entry in
+                    let selected = category == entry
+                    let total = count(in: entry)
+                    let labelColor = selected ? TrickoStyle.accent : TrickoStyle.paper
+                    Button { filter = entry.rawValue } label: {
+                        HStack(spacing: 7) {
+                            Glyph(symbol: entry.glyph, size: 16, tint: selected ? TrickoStyle.accent : TrickoStyle.coolAccent)
+                            LocalizedText(entry.title).font(.stage(.subheadline, weight: .semibold))
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if total > 0 {
+                                Text(total, format: .number.locale(locale))
+                                    .font(.stage(.footnote, weight: .medium).monospacedDigit())
+                                    .foregroundStyle(TrickoStyle.secondary)
+                                    .fixedSize(horizontal: true, vertical: false)
+                            }
                         }
+                        .foregroundStyle(labelColor)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .frame(minHeight: 48)
+                        .trickoGlass(in: .rect(cornerRadius: 14), tint: selected ? TrickoStyle.accent.opacity(0.20) : nil)
+                        .contentShape(.rect(cornerRadius: 14))
                     }
-                    .foregroundStyle(labelColor)
-                    .padding(.horizontal, 10).padding(.vertical, 6)
-                    .frame(minHeight: 44)
-                    .background {
-                        if selected { StageSurface(tone: .ivory, radius: 12) }
-                    }
-                    .contentShape(.rect(cornerRadius: 12))
+                    .buttonStyle(PressStyle())
+                    .accessibilityLabel(Text(verbatim: L10n.text(entry.title, language: AppLanguage.from(locale))))
+                    .accessibilityValue(Text(total, format: .number.locale(locale)))
+                    .accessibilityAddTraits(selected ? .isSelected : [])
                 }
-                .buttonStyle(PressStyle())
-                .accessibilityLabel(Text(verbatim: L10n.text(entry.title, language: AppLanguage.from(locale))))
-                .accessibilityValue(Text(total, format: .number.locale(locale)))
-                .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
-        .padding(5)
-        .background { StageSurface(tone: .smoke, radius: 17) }
     }
 
     private func librarySection(for entry: Category) -> some View {

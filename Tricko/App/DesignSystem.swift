@@ -159,10 +159,9 @@ struct IconButton: View {
     var action: () -> Void
     var body: some View {
         Button(action: action) {
-            Glyph(symbol: symbol, size: 20).frame(width: 44, height: 44)
-                .background {
-                    if selected { StageSurface(tone: .velvet) }
-                }
+            Glyph(symbol: symbol, size: 18, tint: selected ? TrickoStyle.accent : TrickoStyle.paper)
+                .frame(width: 44, height: 44)
+                .trickoGlass(in: Circle(), tint: selected ? TrickoStyle.accent.opacity(0.20) : nil)
                 .contentShape(.interaction, Rectangle())
         }.buttonStyle(PressStyle())
             .accessibilityLabel(Text(verbatim: L10n.text(label, language: AppLanguage.from(locale))))
@@ -213,7 +212,7 @@ struct CompactActionStyle: ButtonStyle {
             .lineLimit(1).fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 16).frame(minHeight: 44)
             .foregroundStyle(TrickoStyle.paper)
-            .background { StageSurface(tone: .velvet, radius: 22) }
+            .trickoGlass(in: Capsule())
             .contentShape(.interaction, Rectangle())
             .opacity(!isEnabled ? 0.55 : (configuration.isPressed ? 0.7 : 1))
     }
@@ -228,9 +227,11 @@ struct ActionButton: View {
             LocalizedText(busy ? "Please wait…" : title).font(.stage(.subheadline, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center).padding(.horizontal, 16).padding(.vertical, 12)
-                .foregroundStyle(primary ? TrickoStyle.ink : TrickoStyle.paper)
-                .frame(maxWidth: .infinity, minHeight: 48)
-                .background { StageSurface(tone: primary ? .gold : .velvet, radius: 12) }
+                .foregroundStyle(primary ? TrickoStyle.accent : TrickoStyle.paper)
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .trickoGlass(in: .rect(cornerRadius: 16),
+                             tint: primary ? TrickoStyle.accent.opacity(0.24) : nil,
+                             fallback: primary ? TrickoStyle.raised : TrickoStyle.surface)
                 .contentShape(.interaction, Rectangle())
         }.buttonStyle(PressStyle()).disabled(busy)
     }
@@ -261,7 +262,7 @@ struct EmptyStateActionStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
-        let foreground = primary ? TrickoStyle.ink : TrickoStyle.paper
+        let foreground = primary ? TrickoStyle.accent : TrickoStyle.paper
         let label = HStack(spacing: 8) {
             if let symbol { Glyph(symbol: symbol, size: 17, tint: foreground) }
             configuration.label
@@ -272,10 +273,7 @@ struct EmptyStateActionStyle: ButtonStyle {
         .frame(minWidth: 44, minHeight: minHeight)
         .foregroundStyle(foreground)
 
-        return Group {
-            if primary { label.background(TrickoStyle.paper, in: Capsule()) }
-            else { label.trickoGlass(in: Capsule()) }
-        }
+        return label.trickoGlass(in: Capsule(), tint: primary ? TrickoStyle.accent.opacity(0.24) : nil)
         .contentShape(Capsule())
         .opacity(!isEnabled ? 0.55 : (configuration.isPressed ? 0.72 : 1))
     }
@@ -351,14 +349,9 @@ extension View {
     }
     func trickoField() -> some View { modifier(FieldStyle()) }
 
-    @ViewBuilder
-    func trickoGlass(in shape: some InsettableShape) -> some View {
-        if #available(iOS 26.0, *) {
-            glassEffect(.regular.interactive(), in: shape)
-        } else {
-            background(.regularMaterial, in: shape)
-                .overlay { shape.strokeBorder(TrickoStyle.line).allowsHitTesting(false).accessibilityHidden(true) }
-        }
+    func trickoGlass<S: InsettableShape>(in shape: S, tint: Color? = nil, fallback: Color = TrickoStyle.raised,
+                                       interactive: Bool = true) -> some View {
+        modifier(TrickoGlass(shape: shape, tint: tint, fallback: fallback, interactive: interactive))
     }
 
     func trickoScreenBackground(_ color: Color = TrickoStyle.background) -> some View {
@@ -389,6 +382,53 @@ extension View {
     }
 }
 
+private struct TrickoGlass<Surface: InsettableShape>: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.isEnabled) private var isEnabled
+    let shape: Surface
+    let tint: Color?
+    let fallback: Color
+    let interactive: Bool
+
+    func body(content: Content) -> some View {
+        Group {
+            if #available(iOS 26.0, *), !reduceTransparency, contrast != .increased {
+                content.glassEffect(.regular.tint(tint).interactive(interactive && isEnabled && !reduceMotion), in: shape)
+            } else {
+                content.background {
+                    if reduceTransparency || contrast == .increased {
+                        shape.fill(fallback)
+                    } else {
+                        shape.fill(.regularMaterial).overlay { shape.fill(tint ?? .clear) }
+                    }
+                }
+                .overlay {
+                    shape.strokeBorder(TrickoStyle.paper.opacity(contrast == .increased ? 0.55 : 0.14))
+                        .allowsHitTesting(false).accessibilityHidden(true)
+                }
+            }
+        }
+    }
+}
+
+struct TrickoGlassGroup<Content: View>: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        if #available(iOS 26.0, *), !reduceTransparency {
+            GlassEffectContainer(spacing: 12) { content }
+        } else {
+            content
+        }
+    }
+}
 
 struct MediaCover: View {
     let url: URL?
@@ -397,13 +437,12 @@ struct MediaCover: View {
         TrickoStyle.raised.overlay {
             GeometryReader { geometry in
                 Group {
-                    if folder { Glyph(symbol: .folder, size: 28, tint: TrickoStyle.secondary) }
-                    else if let url {
+                    if let url {
                         AsyncImage(url: url) { phase in
                             if let image = phase.image { image.resizable().scaledToFill() }
-                            else { Glyph(symbol: .feed, size: 28, tint: TrickoStyle.secondary) }
+                            else { Glyph(symbol: folder ? .folder : .feed, size: 28, tint: TrickoStyle.secondary) }
                         }
-                    } else { Glyph(symbol: .feed, size: 28, tint: TrickoStyle.secondary) }
+                    } else { Glyph(symbol: folder ? .folder : .feed, size: 28, tint: TrickoStyle.secondary) }
                 }.frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
             }
@@ -514,29 +553,31 @@ struct StageFilter: View {
     let select: (String) -> Void
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(values, id: \.self) { value in
-                    let count = counts[value, default: 0]
-                    let countText = count > 0 ? count.formatted(.number.locale(locale)) : nil
-                    Button { select(value) } label: {
-                        HStack(spacing: 6) {
-                            LocalizedText(value).font(.stage(.footnote, weight: .semibold))
-                                .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)
-                                .padding(.horizontal, 16).padding(.vertical, 10)
-                                .frame(minHeight: 44)
-                                .foregroundStyle(selected == value ? TrickoStyle.ink : TrickoStyle.paper)
-                                .background { StageSurface(tone: selected == value ? .gold : .velvet, radius: 22) }
-                            if let countText {
-                                CountBadge(text: countText)
-                                    .accessibilityHidden(true)
-                                    .allowsHitTesting(false)
+            TrickoGlassGroup {
+                HStack(spacing: 8) {
+                    ForEach(values, id: \.self) { value in
+                        let count = counts[value, default: 0]
+                        let countText = count > 0 ? count.formatted(.number.locale(locale)) : nil
+                        Button { select(value) } label: {
+                            HStack(spacing: 6) {
+                                LocalizedText(value).font(.stage(.footnote, weight: .semibold))
+                                    .lineLimit(1)
+                                    .fixedSize(horizontal: true, vertical: false)
+                                if let countText {
+                                    CountBadge(text: countText)
+                                        .accessibilityHidden(true)
+                                        .allowsHitTesting(false)
+                                }
                             }
-                        }
-                        .contentShape(Rectangle())
-                    }.buttonStyle(PressStyle())
-                        .accessibilityAddTraits(selected == value ? .isSelected : [])
-                        .accessibilityValue(Text(verbatim: countText ?? ""))
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .frame(minHeight: 44)
+                            .foregroundStyle(selected == value ? TrickoStyle.accent : TrickoStyle.paper)
+                            .trickoGlass(in: Capsule(), tint: selected == value ? TrickoStyle.accent.opacity(0.20) : nil)
+                            .contentShape(Rectangle())
+                        }.buttonStyle(PressStyle())
+                            .accessibilityAddTraits(selected == value ? .isSelected : [])
+                            .accessibilityValue(Text(verbatim: countText ?? ""))
+                    }
                 }
             }
         }
