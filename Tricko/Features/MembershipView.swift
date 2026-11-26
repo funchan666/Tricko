@@ -77,8 +77,12 @@ struct MembershipView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedID: String?
     @State private var priceRequest = 0
-    @State private var attemptedPurchaseAction = false
+    @State private var purchaseAction: PurchaseAction?
     @State private var purchaseTask: Task<Void, Never>?
+
+    private enum PurchaseAction {
+        case subscribe, restore
+    }
 
     private struct Plan: Identifiable {
         let entry: CommerceConfiguration.Product
@@ -95,9 +99,10 @@ struct MembershipView: View {
         plans.first(where: { $0.id == selectedID }) ?? plans.first
     }
     private var purchasing: Bool { commerce.preparingPurchase || commerce.busy || purchaseTask != nil }
+    private var restoring: Bool { purchaseAction == .restore && commerce.busy }
     private var interactionLocked: Bool { purchasing || commerce.loadingPlans || ads.busy || ads.isPresenting }
     private var purchaseFeedback: String? {
-        if attemptedPurchaseAction, let message = commerce.error ?? commerce.message { return message }
+        if purchaseAction != nil, let message = commerce.error ?? commerce.message { return message }
         return commerce.premium ? nil : commerce.plansError
     }
 
@@ -112,7 +117,7 @@ struct MembershipView: View {
                             .trickoPage()
                     }
                     .onChange(of: purchaseFeedback) { _, feedback in
-                        if feedback != nil, attemptedPurchaseAction || priceRequest > 0 {
+                        if feedback != nil, purchaseAction != nil || priceRequest > 0 {
                             scroll.scrollTo("membership.feedback", anchor: .bottom)
                         }
                     }
@@ -152,8 +157,12 @@ struct MembershipView: View {
             }
             if let purchaseFeedback {
                 Group {
-                    if attemptedPurchaseAction, commerce.error == nil, commerce.message != nil {
+                    if purchaseAction != nil, commerce.error == nil, commerce.message != nil {
                         LocalizedText(purchaseFeedback).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.accent)
+                    } else if !commerce.premium, plans.isEmpty, purchaseFeedback == commerce.plansError {
+                        EmptyStatePanel(symbol: .saved) {
+                            EmptyStateCopy(title: "Subscription unavailable", message: purchaseFeedback)
+                        }
                     } else {
                         ErrorNote(message: purchaseFeedback)
                     }
@@ -164,9 +173,12 @@ struct MembershipView: View {
             if !commerce.premium { renewalDisclosure }
             VStack(alignment: .leading, spacing: 0) {
                 restoreLink
-                if api.session != nil || commerce.premium { PolicyLinks(compact: true) }
+                if api.session == nil, !commerce.premium {
+                    ConnectionPanel(showsPolicyLinks: false).padding(.vertical, 14)
+                }
+                PolicyLinks(compact: api.session != nil || commerce.premium)
+                    .disabled(purchasing || ads.isPresenting)
             }
-            if api.session == nil, !commerce.premium { ConnectionPanel() }
         }
     }
 
@@ -193,10 +205,15 @@ struct MembershipView: View {
         .frame(maxWidth: 680).frame(maxWidth: .infinity)
     }
 
-    private var purchaseButtonTitle: String {
-        if commerce.loadingProducts || commerce.loadingPlans { return "Checking with Apple…" }
+    private var purchaseActivityTitle: String? {
         if commerce.preparingPurchase { return "Preparing your subscription…" }
-        if commerce.busy { return "Confirming your purchase…" }
+        if commerce.busy && !restoring { return "Confirming your purchase…" }
+        if commerce.loadingProducts || commerce.loadingPlans { return "Checking with Apple…" }
+        if purchaseTask != nil { return "Preparing your subscription…" }
+        return nil
+    }
+
+    private var purchaseButtonTitle: String {
         guard let plan = selectedPlan else { return "Subscription unavailable" }
         return plan.product == nil ? "Check Apple price" : "Subscribe"
     }
@@ -322,8 +339,11 @@ struct MembershipView: View {
                 .accessibilityHidden(true)
             Button(action: subscribe) {
                 VStack(spacing: 3) {
-                    LocalizedText(purchaseButtonTitle)
-                        .font(.stage(.headline, weight: .semibold))
+                    HStack(spacing: 8) {
+                        if purchaseActivityTitle != nil { StageActivityMark(size: 18) }
+                        LocalizedText(purchaseActivityTitle ?? purchaseButtonTitle)
+                            .font(.stage(.headline, weight: .semibold))
+                    }
                     if let plan = selectedPlan, let product = plan.product {
                         HStack(spacing: 5) {
                             Text(verbatim: commerce.price(product))
@@ -346,7 +366,7 @@ struct MembershipView: View {
                 .trickoGlass(in: Capsule(), tint: TrickoStyle.accent.opacity(0.24))
                 .contentShape(Capsule())
             }
-            .buttonStyle(PressStyle())
+            .buttonStyle(PressStyle(disabledOpacity: purchaseActivityTitle != nil ? 0.92 : 0.55))
             .disabled(interactionLocked || selectedPlan == nil)
             .accessibilityIdentifier("membership.subscribe")
             .pageHorizontalMargins()
@@ -360,11 +380,11 @@ struct MembershipView: View {
     private func subscribe() {
         guard !interactionLocked, let plan = selectedPlan else { return }
         guard plan.product != nil else {
-            attemptedPurchaseAction = false
+            purchaseAction = nil
             priceRequest += 1
             return
         }
-        attemptedPurchaseAction = true
+        purchaseAction = .subscribe
         purchaseTask = Task {
             await commerce.purchase(planID: plan.id)
             purchaseTask = nil
@@ -373,16 +393,19 @@ struct MembershipView: View {
 
     private var restoreLink: some View {
         Button {
-            attemptedPurchaseAction = true
+            purchaseAction = .restore
             commerce.restore()
         } label: {
-            LocalizedText("Restore purchases")
-                .font(.stage(.subheadline, weight: .semibold))
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(minHeight: 44)
-                .foregroundStyle(TrickoStyle.accent)
-                .contentShape(Rectangle())
-        }.disabled(interactionLocked).buttonStyle(PressStyle())
+            HStack(spacing: 8) {
+                if restoring { StageActivityMark(size: 16) }
+                LocalizedText(restoring ? "Restoring purchases…" : "Restore purchases")
+                    .font(.stage(.subheadline, weight: .semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(minHeight: 44)
+            .foregroundStyle(TrickoStyle.accent)
+            .contentShape(Rectangle())
+        }.disabled(interactionLocked).buttonStyle(PressStyle(disabledOpacity: restoring ? 0.92 : 0.55))
             .accessibilityIdentifier("membership.restore")
     }
 }
@@ -406,16 +429,7 @@ struct AccountView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                LocalizedText("Settings").font(.stage(.largeTitle, weight: .bold))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityAddTraits(.isHeader)
-                IconButton(symbol: .close, label: "Close") { dismiss() }
-            }
-            .pageHorizontalMargins().padding(.vertical, 10)
-            .frame(maxWidth: 680)
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     membershipCard
@@ -441,7 +455,16 @@ struct AccountView: View {
                 }
                 .trickoPage()
             }
-        }.trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { dismiss() } label: { Label("Close", systemImage: "xmark") }
+                }
+            }
+            .trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+        }
+            .trickoImmersiveChrome()
             .fullScreenCover(isPresented: $paywall) { MembershipView() }
             .fullScreenCover(item: $rewardKind) { kind in AllowanceLimitPrompt(kind: kind) }
             .onAppear { quota.resetIfNeeded() }
@@ -487,7 +510,7 @@ struct AccountView: View {
                     LocalizedText("Included with your membership").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
                 } else { AllowanceResetText() }
             } else if quota.error == nil {
-                LocalizedText("Checking your limits…").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+                StageLoadingIndicator(title: "Checking your limits…", compact: true)
             }
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
@@ -537,7 +560,7 @@ struct LuckyRewardView: View {
                         .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                     ActionButton(title: "Keep exploring", action: dismiss)
                 }.padding(20).frame(maxWidth: 360)
-                    .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 28))
+                    .trickoGlass(in: .rect(cornerRadius: 28), fallback: TrickoStyle.surface, interactive: false)
                     .padding(24).frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
         }.background(Color.black.opacity(0.68).ignoresSafeArea())

@@ -156,9 +156,8 @@ struct DiscoverView: View {
                                     }.frame(width: geometry.size.width, height: geometry.size.height).clipped().id(entry.id)
                                 }
                                 if !feed.entries.isEmpty {
-                                    VStack(spacing: 16) {
-                                        LocalizedText(feed.error ?? "Finding more clips…").foregroundStyle(TrickoStyle.secondary)
-                                        ActionButton(title: "Load more", primary: false, busy: feed.loading) { Task { await feed.load(api: api) } }
+                                    MoreLessonsStatus(loading: feed.loading, error: feed.error) {
+                                        Task { await feed.load(api: api) }
                                     }.padding(28).padding(controlInsets)
                                         .frame(width: geometry.size.width, height: geometry.size.height).id(morePageID)
                                 }
@@ -223,19 +222,24 @@ struct DiscoverView: View {
             if api.session == nil {
                 ConnectionPanel()
             } else if feed.loading || !feed.hasLoaded {
-                AccountLoadingIndicator(title: "Finding your next lesson…")
+                StageLoadingIndicator(title: "Finding your next lesson…")
                     .frame(maxWidth: .infinity)
             } else if let error = feed.error {
-                EmptyStateCopy(title: "Couldn’t load lessons", message: error)
-                retryButton
+                EmptyStatePanel(symbol: .feed) {
+                    EmptyStateCopy(title: "Couldn’t load lessons", message: error)
+                    retryButton
+                }
             } else if let request = feed.emptySearch {
-                EmptyStateCopy(title: "No matching lessons", message: "Search the web with your original input.")
-                Button { openBrowserSearch(request) } label: { LocalizedText("Search in browser") }
-                    .buttonStyle(EmptyStateActionStyle(symbol: .search))
+                EmptyStatePanel(symbol: .search) {
+                    EmptyStateCopy(title: "No matching lessons", message: "Search the web with your original input.")
+                    Button { openBrowserSearch(request) } label: { LocalizedText("Search in browser") }
+                        .buttonStyle(EmptyStateActionStyle())
+                }
             } else {
-                EmptyStateCopy(title: "No lessons yet",
-                               message: "Open a lesson link or short code from Home.")
-                retryButton
+                EmptyStatePanel(symbol: .feed) {
+                    EmptyStateCopy(title: "No lessons yet", message: "Open a lesson link or short code from Home.")
+                    retryButton
+                }
             }
         }
         .frame(maxWidth: 460, alignment: .leading)
@@ -281,6 +285,25 @@ private struct FeedRequest: Equatable {
     let retry: Int
 }
 
+private struct MoreLessonsStatus: View {
+    let loading: Bool
+    let error: String?
+    let load: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            if let error {
+                MessagePanel(title: "Couldn’t load lessons", message: error, actionTitle: "Try again", action: load)
+            } else if loading {
+                StageLoadingIndicator(title: "Finding more clips…")
+            } else {
+                Button(action: load) { LocalizedText("Load more") }
+                    .buttonStyle(EmptyStateActionStyle(primary: false))
+            }
+        }.frame(maxWidth: 460)
+    }
+}
+
 struct PlayerScreen: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var offline: OfflineStore
@@ -320,11 +343,8 @@ struct PlayerScreen: View {
                             }.containerRelativeFrame([.horizontal, .vertical]).clipped().id(entry.id)
                         }
                         if route.continuesRecommendations {
-                            VStack(spacing: 16) {
-                                LocalizedText(feed.error ?? "Finding more clips…")
-                                ActionButton(title: "Load more", primary: false, busy: feed.loading) {
-                                    Task { await feed.load(api: api) }
-                                }
+                            MoreLessonsStatus(loading: feed.loading, error: feed.error) {
+                                Task { await feed.load(api: api) }
                             }.padding(28).padding(container.safeAreaInsets)
                                 .containerRelativeFrame([.horizontal, .vertical]).id(morePageID)
                         }
@@ -535,8 +555,10 @@ struct AllowanceLimitPrompt: View {
             VStack(spacing: 8) {
                 if canWatchAd {
                     Button(action: watchAd) {
-                        LocalizedText(ads.busy ? "Loading ad…" : "Watch an ad")
-                            .frame(maxWidth: .infinity)
+                        HStack(spacing: 8) {
+                            if ads.busy { StageActivityMark(size: 16) }
+                            LocalizedText(ads.busy ? "Loading ad…" : "Watch an ad")
+                        }.frame(maxWidth: .infinity)
                     }
                     .buttonStyle(EmptyStateActionStyle())
                     .disabled(adBusy)
@@ -737,13 +759,13 @@ struct ClipPage: View {
                 .padding(.trailing, controlInsets.trailing + 72)
             if active, visible, !pagingGate, !gate, !options, !editor, !downloadPanel, !downloadReward {
                 if accessChecked, !allowed {
-                    VStack(spacing: 16) {
+                    EmptyStatePanel(symbol: .play) {
                         LocalizedText(quota.canRequestReward(for: .watch, premium: commerce.premium)
                                       ? "Out of views" : "Playback unavailable")
                             .font(.stage(.title3, weight: .semibold))
+                            .accessibilityAddTraits(.isHeader)
                         ActionButton(title: "View options") { gate = true }
-                    }.padding(20).frame(maxWidth: 320)
-                        .background { StageSurface(tone: .velvet) }.padding(24)
+                    }.frame(maxWidth: 320).padding(24)
                 } else if let error = playback.error {
                     MessagePanel(title: "This clip couldn’t load", message: error, actionTitle: "Retry") { activate(reload: true) }.padding(24)
                 } else if allowed, playback.isLoading || (!firstFrameReady && playback.intendsPlayback) {
@@ -787,44 +809,35 @@ struct ClipPage: View {
                 if presented { playback.pause() } else if active { activate() }
             }
             .fullScreenCover(isPresented: $gate, onDismiss: { if active { activate() } }) { AllowanceLimitPrompt(kind: .watch) }
-            .sheet(isPresented: $options, onDismiss: resumeAfterControls) {
-                ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    SheetHeading(title: "Playback") { options = false }
-                    VideoExportEntry(clip: clip)
-                    LocalizedText("Speed").font(.stage(.headline))
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach([Float(0.5), 1, 1.5, 2], id: \.self) { speed in
-                                Button("\(speed, specifier: "%g")×") { playback.setSpeed(speed) }
-                                    .font(.stage(.subheadline, weight: .semibold))
-                                    .lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                                    .padding(.horizontal, 16).frame(minHeight: 44)
-                                    .foregroundStyle(playback.speed == speed ? TrickoStyle.ink : TrickoStyle.paper)
-                                    .background { StageSurface(tone: playback.speed == speed ? .gold : .velvet) }
-                                    .accessibilityAddTraits(playback.speed == speed ? .isSelected : [])
-                            }
-                        }
-                    }.buttonStyle(PressStyle())
-                    LocalizedText("Supported streams adjust quality to your connection.").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                    ActionButton(title: "Edit a local video", primary: false) { options = false; editor = true }
-                    OfflineDownloadButton(clip: clip)
-                    Spacer()
-                }.padding(22)
-                }.trickoScreenBackground().presentationDetents([.medium, .large])
-            }
-            .sheet(isPresented: $editor, onDismiss: resumeAfterControls) { EditorSheet() }
-            .sheet(isPresented: $downloadPanel, onDismiss: resumeAfterControls) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        SheetHeading(title: "Downloads") { downloadPanel = false }
-                        Text(verbatim: clip.title).font(.stage(.subheadline)).lineLimit(2)
-                        OfflineDownloadButton(clip: clip, starting: downloadStarting)
-                    }.padding(22)
-                }.trickoScreenBackground().presentationDetents([.medium, .large])
-            }
+            .onChange(of: options) { _, open in if !open { resumeAfterControls() } }
+            .onChange(of: downloadPanel) { _, open in if !open { resumeAfterControls() } }
             .fullScreenCover(isPresented: $downloadReward, onDismiss: resumeAfterControls) { AllowanceLimitPrompt(kind: .download) }
     }
+
+    private var playbackOptions: some View {
+        PlayerControlPopover(title: "Playback", close: { options = false }) {
+            LocalizedText("Speed").font(.stage(.headline))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 56), spacing: 6)], spacing: 6) {
+                ForEach([Float(0.5), 1, 1.5, 2], id: \.self) { speed in
+                    Button("\(speed, specifier: "%g")×") { playback.setSpeed(speed) }
+                        .font(.stage(.subheadline, weight: .semibold).monospacedDigit())
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .foregroundStyle(playback.speed == speed ? TrickoStyle.ink : TrickoStyle.paper)
+                        .background { StageSurface(tone: playback.speed == speed ? .gold : .velvet, radius: 12) }
+                        .accessibilityAddTraits(playback.speed == speed ? .isSelected : [])
+                }
+            }.buttonStyle(PressStyle())
+            LocalizedText("Supported streams adjust quality to your connection.")
+                .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+            VideoExportEntry(clip: clip)
+            ActionButton(title: "Edit a local video", primary: false) { editor = true }
+            DisclosureGroup("Downloads") {
+                OfflineDownloadButton(clip: clip, showsExport: false).padding(.top, 8)
+            }
+        }
+        .fullScreenCover(isPresented: $editor, onDismiss: resumeAfterControls) { EditorSheet() }
+    }
+
     private var playerControls: some View {
         GeometryReader { viewport in
             let insets = resolvedControlInsets(in: viewport)
@@ -859,10 +872,17 @@ struct ClipPage: View {
                                      accessibilityTitle: library.isSaved(clip) ? "Remove saved video" : "Save video",
                                      selected: library.isSaved(clip), action: save)
                     PlayerCacheButton(clip: clip, action: cacheVideo)
+                        .popover(isPresented: $downloadPanel) {
+                            PlayerControlPopover(title: "Downloads", close: { downloadPanel = false }) {
+                                Text(verbatim: clip.title).font(.stage(.headline))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                OfflineDownloadButton(clip: clip, starting: downloadStarting)
+                            }
+                        }
                     PlayerRailButton(artwork: .more, title: "More", accessibilityTitle: "Playback options") {
                         resumeAfterSheet = playback.intendsPlayback
                         playback.pause(); options = true
-                    }
+                    }.popover(isPresented: $options) { playbackOptions }
                 }.padding(.bottom, 8)
             }.padding(.leading, 4)
             PlayerProgressControl(playback: playback, timeline: playback.timeline,
@@ -980,6 +1000,31 @@ struct ClipPage: View {
         }
     }
 }
+
+private struct PlayerControlPopover<Content: View>: View {
+    let title: String
+    let close: () -> Void
+    @ViewBuilder let content: Content
+    @State private var contentHeight: CGFloat = 320
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                StageSheetHeader(title: title, close: close)
+                content
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(idealWidth: 340, idealHeight: contentHeight)
+        .foregroundStyle(TrickoStyle.paper)
+        .presentationCompactAdaptation(.popover)
+        .accessibilityAction(.escape, close)
+    }
+}
+
 private struct PlayerExitButton: View {
     let action: () -> Void
     var body: some View {
@@ -1004,16 +1049,20 @@ private struct PlayerCacheButton: View {
     @Environment(\.locale) private var locale
     private var cached: Bool { offline.cached(clip.id) != nil || clip.playbackURL.isFileURL }
     var body: some View {
+        let preparing = !cached && offline.preparingID == clip.id
+        let progress = !cached && offline.downloadingID == clip.id ? offline.progress : nil
+        let percentage = progress?.formatted(.percent.precision(.fractionLength(0)).rounded(rule: .down).locale(locale))
         Button(action: action) {
-            PlayerRailLabel(artwork: .download, selected: cached) {
+            PlayerRailLabel(artwork: .download, selected: cached, preparing: preparing, progress: progress) {
                 if cached { LocalizedText("Offline") }
-                else if offline.preparingID == clip.id { LocalizedText("Loading…") }
-                else if offline.downloadingID == clip.id { Text(verbatim: "\(Int(offline.progress * 100))%") }
+                else if preparing { LocalizedText("Loading…") }
+                else if let percentage { Text(verbatim: percentage).monospacedDigit() }
                 else { LocalizedText("Download") }
             }
         }.buttonStyle(PressStyle())
             .accessibilityLabel(Text(verbatim: L10n.text(cached ? "Available offline" : "Download for offline",
                                                          language: AppLanguage.from(locale))))
+            .accessibilityValue(Text(verbatim: preparing ? L10n.text("Loading…", language: AppLanguage.from(locale)) : percentage ?? ""))
             .accessibilityIdentifier("player.cacheVideo")
     }
 }
@@ -1082,22 +1131,10 @@ private struct PlayerPoster: View {
 
 private struct PlayerLoadingFeedback: View {
     let buffering: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var phase
     @State private var revealed = false
     var body: some View {
-        VStack(spacing: 10) {
-            Image("TrickoLoadingMark").resizable().scaledToFit()
-                .frame(width: 36, height: 5)
-                .phaseAnimator([false, true]) { content, dimmed in
-                    content.opacity(reduceMotion || phase != .active ? 1 : (dimmed ? 0.3 : 1))
-                } animation: { _ in
-                    reduceMotion || phase != .active ? nil : .easeInOut(duration: 0.6)
-                }.accessibilityHidden(true)
-            LocalizedText(buffering ? "Buffering…" : "Loading…")
-                .font(.stage(.caption)).foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.8), radius: 3, y: 1)
-        }.opacity(revealed ? 1 : 0).accessibilityHidden(!revealed)
+        StageLoadingIndicator(title: buffering ? "Buffering…" : "Loading…", compact: true)
+            .opacity(revealed ? 1 : 0).accessibilityHidden(!revealed)
             .task {
                 do { try await Task.sleep(for: .milliseconds(250)); try Task.checkCancellation(); revealed = true }
                 catch { }
@@ -1159,18 +1196,36 @@ private enum PlayerArtwork: CaseIterable, Hashable {
 private struct PlayerRailLabel<Label: View>: View {
     let artwork: PlayerArtwork
     let selected: Bool
+    let preparing: Bool
+    let progress: Double?
     private let label: Label
     @ScaledMetric(relativeTo: .caption2) private var labelHeight: CGFloat = 16
-    init(artwork: PlayerArtwork, selected: Bool, @ViewBuilder label: () -> Label) {
+    init(artwork: PlayerArtwork, selected: Bool, preparing: Bool = false, progress: Double? = nil,
+         @ViewBuilder label: () -> Label) {
         self.artwork = artwork
         self.selected = selected
+        self.preparing = preparing
+        self.progress = progress
         self.label = label()
     }
     var body: some View {
         VStack(spacing: 4) {
-            Glyph(symbol: artwork.glyph, size: 22, tint: selected ? TrickoStyle.accent : TrickoStyle.paper)
+            if preparing {
+                StageActivityMark(size: 17)
+                    .frame(width: 30, height: 30)
+                    .trickoGlass(in: Circle(), interactive: false)
+            } else if let progress {
+                VStack(spacing: 2) {
+                    Glyph(symbol: artwork.glyph, size: 16, tint: TrickoStyle.paper)
+                    StageProgressTrack(value: progress).frame(width: 20)
+                }
                 .frame(width: 30, height: 30)
-                .background { StageSurface(tone: .velvet, radius: 6).opacity(0.85) }
+                .trickoGlass(in: .rect(cornerRadius: 8), interactive: false)
+            } else {
+                Glyph(symbol: artwork.glyph, size: 22, tint: selected ? TrickoStyle.accent : TrickoStyle.paper)
+                    .frame(width: 30, height: 30)
+                    .background { StageSurface(tone: .velvet, radius: 6).opacity(0.85) }
+            }
             label.font(.stage(.caption2, weight: .semibold, display: true))
                 .foregroundStyle(selected ? TrickoStyle.accent : .white)
                 .lineLimit(1).minimumScaleFactor(0.65).multilineTextAlignment(.center)

@@ -212,6 +212,7 @@
 "Remove saved video" = "즐겨찾기에서 삭제";
 "Restore cancelled. Your purchases have not changed." = "복원이 취소되었습니다. 구매 내역은 변경되지 않았습니다.";
 "Restore purchases" = "구매 복원";
+"Restoring purchases…" = "구매 내역 복원 중…";
 "Retry purchase confirmation" = "구매 확인 재시도";
 "Review a practice video" = "연습 영상 살펴보기";
 "Review practice" = "연습 돌아보기";

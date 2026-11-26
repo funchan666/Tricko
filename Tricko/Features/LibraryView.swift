@@ -187,22 +187,22 @@ struct LibraryView: View {
             }
             .trickoScreenBackground()
             .sheet(item: $sharing) { ShareSheet(items: [$0.url]) }
-            .sheet(item: $reviewingVideo, onDismiss: { restorePendingReviewScroll(using: scroll) }) { route in
+            .fullScreenCover(item: $reviewingVideo, onDismiss: { restorePendingReviewScroll(using: scroll) }) { route in
                 VideoReviewView(movie: route.movie, startingAt: route.startingAt, startingPointID: route.startingPointID)
             }
             .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
             .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
-            .sheet(item: $downloadOptions) { DownloadOptionsSheet(video: $0) }
-            .sheet(item: $removing) { movie in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        SheetHeading(title: "Delete this local copy?") { removing = nil }
-                        Text(verbatim: movie.title).font(.stage(.headline))
-                        LocalizedText("This removes the local copy. Your original file stays where it is.").foregroundStyle(TrickoStyle.secondary)
-                        ActionButton(title: "Delete local copy") { library.delete(movie); removing = nil }
-                        ActionButton(title: "Keep it", primary: false) { removing = nil }
-                    }.padding(24)
-                }.trickoScreenBackground().presentationDetents([.medium, .large])
+            .fullScreenCover(item: $downloadOptions) { video in
+                DownloadOptionsPanel(video: video).presentationBackground(.clear)
+            }
+            .alert("Delete this local copy?", isPresented: Binding(
+                get: { removing != nil }, set: { if !$0 { removing = nil } }
+            ), presenting: removing) { movie in
+                Button("Delete local copy", role: .destructive) { library.delete(movie) }
+                Button("Keep it", role: .cancel) {}
+            } message: { movie in
+                let explanation = L10n.text("This removes the local copy. Your original file stays where it is.", language: AppLanguage.from(locale))
+                Text(verbatim: "\(movie.title)\n\n\(explanation)")
             }
     }
 
@@ -372,8 +372,8 @@ struct LibraryView: View {
         return VStack(alignment: .leading, spacing: 16) {
             if total == 0 {
                 if entry == .offline, offline.isRestoring {
-                    AccountLoadingIndicator(title: "Loading downloads…").frame(maxWidth: .infinity)
-                } else if entry != .imports, entry != .offline || offline.downloadingID == nil {
+                    StageLoadingIndicator(title: "Loading downloads…").frame(maxWidth: .infinity)
+                } else if entry != .imports, entry != .offline || !offline.busy {
                     emptyCategory(for: entry)
                 }
                 if entry == .offline {
@@ -401,11 +401,11 @@ struct LibraryView: View {
         }
     }
 
-    private func emptyCategory(for entry: Category) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if entry == .exports {
-                archiveImport(for: entry, isEmpty: true)
-            } else {
+    @ViewBuilder private func emptyCategory(for entry: Category) -> some View {
+        if entry == .exports {
+            archiveImport(for: entry, isEmpty: true)
+        } else {
+            EmptyStatePanel(symbol: entry.glyph) {
                 EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
                 if entry == .pendingReviews {
                     Button { filter = Category.imports.rawValue } label: { LocalizedText("Imports") }
@@ -419,14 +419,17 @@ struct LibraryView: View {
     }
 
     private func archiveImport(for entry: Category, isEmpty: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             if isEmpty {
                 EmptyStateCopy(title: entry.emptyTitle, message: entry.emptyMessage)
-                    .padding(.top, 64)
+                    .padding(16)
+                    .trickoGlass(in: .rect(cornerRadius: 18), tint: TrickoStyle.ink.opacity(0.4),
+                                 fallback: TrickoStyle.surface, interactive: false)
+                    .padding(.top, 54)
             }
             LocalVideoImportButtons(onImport: edit)
         }
-        .padding(isEmpty ? 16 : 0)
+        .padding(isEmpty ? 12 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             if isEmpty {
@@ -434,11 +437,11 @@ struct LibraryView: View {
                     .overlay {
                         LinearGradient(stops: [
                             .init(color: .clear, location: 0),
-                            .init(color: TrickoStyle.background.opacity(0.84), location: 0.40),
+                            .init(color: TrickoStyle.background.opacity(0.35), location: 0.48),
                             .init(color: TrickoStyle.background, location: 1)
                         ], startPoint: .top, endPoint: .bottom)
                     }
-                    .clipShape(.rect(cornerRadius: 18))
+                    .clipShape(.rect(cornerRadius: 24))
             }
         }
     }
@@ -595,13 +598,12 @@ struct LibraryView: View {
 
     @ViewBuilder private var downloadStatus: some View {
         if offline.downloadingID != nil || offline.error != nil {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 if offline.downloadingID != nil {
                     if let title = offline.currentTitle {
                         Text(verbatim: title).font(.stage(.subheadline, weight: .semibold)).lineLimit(2)
                     }
-                    LocalizedText("Downloading · \(Int(offline.progress * 100))%")
-                        .font(.stage(.caption)).monospacedDigit()
+                    DownloadProgress(value: offline.progress)
                     Button("Cancel download") { Task { await offline.cancel() } }
                         .buttonStyle(LibraryActionStyle())
                 }
@@ -612,8 +614,10 @@ struct LibraryView: View {
                             .buttonStyle(LibraryActionStyle())
                     }
                 }
-            }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                .background(TrickoStyle.surface, in: RoundedRectangle(cornerRadius: 9))
+            }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                .trickoGlass(in: .rect(cornerRadius: 18), fallback: TrickoStyle.surface, interactive: false)
+        } else if offline.preparingID != nil && !offline.isRestoring {
+            StageLoadingIndicator(title: "Preparing download…", compact: true)
         }
     }
 
@@ -707,7 +711,10 @@ struct LibraryView: View {
             }
             HStack(spacing: 2) {
                 Button { shareMovie(movie) } label: {
-                    LocalizedText(sharingMovieID == movie.id ? "Preparing export…" : "Share")
+                    HStack(spacing: 6) {
+                        if sharingMovieID == movie.id { StageActivityMark(size: 16) }
+                        LocalizedText(sharingMovieID == movie.id ? "Preparing export…" : "Share")
+                    }
                         .font(.stage(.footnote, weight: .semibold))
                         .foregroundStyle(TrickoStyle.coolAccent)
                         .fixedSize(horizontal: false, vertical: true)
@@ -792,38 +799,30 @@ struct LibraryView: View {
     }
 }
 
-private struct DownloadOptionsSheet: View {
+private struct DownloadOptionsPanel: View {
     let video: OfflineVideo
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var offline: OfflineStore
     @State private var confirmingRemoval = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: confirmingRemoval ? "Remove offline video?" : "Download options") { dismiss() }
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(verbatim: video.clip.title)
-                        .font(.stage(.subheadline, weight: .semibold))
-                        .foregroundStyle(TrickoStyle.paper)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if confirmingRemoval {
-                        LocalizedText("This removes only the offline copy. Your favorite stays saved.")
-                            .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
-                        removeDownloadButton {
-                            offline.remove(video)
-                            dismiss()
-                        }
-                        ActionButton(title: "Keep it", primary: false) { confirmingRemoval = false }
-                    } else {
-                        VideoExportEntry(clip: offline.playable(video.clip))
-                        removeDownloadButton { confirmingRemoval = true }
-                    }
-                }.trickoPage()
+        StageFloatingPanel(title: confirmingRemoval ? "Remove offline video?" : "Download options", close: { dismiss() }) {
+            Text(verbatim: video.clip.title)
+                .font(.stage(.headline))
+                .fixedSize(horizontal: false, vertical: true)
+            if confirmingRemoval {
+                LocalizedText("This removes only the offline copy. Your favorite stays saved.")
+                    .font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+                removeDownloadButton {
+                    offline.remove(video)
+                    dismiss()
+                }
+                ActionButton(title: "Keep it", primary: false) { confirmingRemoval = false }
+            } else {
+                VideoExportEntry(clip: offline.playable(video.clip))
+                removeDownloadButton { confirmingRemoval = true }
             }
         }
-        .trickoScreenBackground()
-        .presentationDetents([.medium, .large])
     }
 
     private func removeDownloadButton(action: @escaping () -> Void) -> some View {
@@ -866,9 +865,23 @@ private struct LibraryActionStyle: ButtonStyle {
     }
 }
 
+private struct DownloadProgress: View {
+    let value: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            LocalizedText("Downloading · \(Int(value * 100))%")
+                .font(.stage(.footnote, weight: .medium).monospacedDigit())
+                .foregroundStyle(TrickoStyle.paper)
+            StageProgressTrack(value: value)
+        }
+    }
+}
+
 struct OfflineDownloadButton: View {
     let clip: LessonClip
     var starting = false
+    var showsExport = true
     @EnvironmentObject private var offline: OfflineStore
     @EnvironmentObject private var quota: QuotaStore
     @EnvironmentObject private var commerce: CommerceStore
@@ -880,9 +893,9 @@ struct OfflineDownloadButton: View {
                 LocalizedText("Available offline").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.accent)
                 DownloadCompletionNotice()
             } else if starting || offline.preparingID == clip.id {
-                LocalizedText("Preparing download…").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+                StageLoadingIndicator(title: "Preparing download…", compact: true)
             } else if offline.downloadingID == clip.id {
-                LocalizedText("Downloading · \(Int(offline.progress * 100))%").font(.stage(.caption))
+                DownloadProgress(value: offline.progress)
                 ActionButton(title: "Cancel download", primary: false) { Task { await offline.cancel() } }
             } else {
                 ActionButton(title: "Download for offline", primary: false) {
@@ -892,12 +905,12 @@ struct OfflineDownloadButton: View {
                 }.disabled(offline.busy || clip.playbackURL.isFileURL)
                     .accessibilityIdentifier("player.downloadOffline")
                 if offline.isRestoring {
-                    LocalizedText("Restoring downloads…").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+                    StageLoadingIndicator(title: "Restoring downloads…", compact: true)
                 } else if offline.busy {
                     LocalizedText("Another download is in progress.").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
                 }
             }
-            VideoExportEntry(clip: clip)
+            if showsExport { VideoExportEntry(clip: clip) }
             if let error = offline.error {
                 ErrorNote(message: error)
                 if offline.downloadingID == clip.id {
@@ -914,22 +927,33 @@ struct VideoExportEntry: View {
     var body: some View {
         ActionButton(title: "Export video", primary: false) { showingExport = true }
             .accessibilityIdentifier("player.openExport")
-            .sheet(isPresented: $showingExport) { OfflineExportSheet(clip: clip) }
+            .fullScreenCover(isPresented: $showingExport) { OfflineExportView(clip: clip) }
     }
 }
 
-private struct OfflineExportSheet: View {
+private struct OfflineExportView: View {
     let clip: LessonClip
     @Environment(\.dismiss) private var dismiss
     @StateObject private var departure = ExportDeparture()
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                SheetHeading(title: "Export video") { departure.request { dismiss() } }
-                Text(verbatim: clip.title).font(.stage(.subheadline)).lineLimit(2)
-                OfflineExportButton(clip: clip)
-            }.padding(22)
-        }.trickoScreenBackground().presentationDetents([.medium, .large])
+        VStack(spacing: 0) {
+            StageSheetHeader(title: "Export video") { departure.request { dismiss() } }
+                .trickoPage()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(spacing: 14) {
+                        MediaCover(url: clip.coverURL)
+                            .frame(width: 72, height: 54).clipShape(.rect(cornerRadius: 10))
+                            .accessibilityHidden(true)
+                        Text(verbatim: clip.title).font(.stage(.headline))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                    Divider().overlay(TrickoStyle.line)
+                    OfflineExportButton(clip: clip)
+                }.trickoPage()
+            }
+        }.trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
             .environmentObject(departure)
             .modifier(ExportDepartureProtection(departure: departure))
     }
@@ -1029,8 +1053,8 @@ private struct OfflineExportButton: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ActionButton(title: preparingSource ? "Preparing export…" : exportTask == nil ? "Export video" : "Exporting…",
-                         primary: false, busy: exportTask != nil, action: startExport)
+            ActionButton(title: "Export video", primary: false, busy: exportTask != nil,
+                         busyTitle: preparingSource ? "Preparing export…" : "Exporting…", action: startExport)
                 .accessibilityIdentifier("player.exportVideo")
             if !clip.playbackURL.isFileURL, offline.cached(clip.id) == nil {
                 LocalizedText("We download the video before exporting. Existing downloads are reused.")
@@ -1038,7 +1062,7 @@ private struct OfflineExportButton: View {
                 DownloadAllowanceSummary()
             }
             if preparingSource, offline.downloadingID == clip.id {
-                LocalizedText("Downloading · \(Int(offline.progress * 100))%").font(.stage(.caption))
+                DownloadProgress(value: offline.progress)
             }
             if exportTask != nil {
                 Button("Cancel export") { departure.request() }.buttonStyle(CompactActionStyle())
@@ -1159,10 +1183,17 @@ struct DownloadAllowanceSummary: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             LocalizedText("Downloads left").font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-            LocalizedText(api.session == nil ? "Connect to refresh your allowance." :
-                            commerce.premium || quota.downloadsUnlimited ? "Unlimited" :
-                            quota.usage == nil ? "Checking your limits…" : "\(quota.downloadsLeft) downloads left today")
-                .font(.stage(.subheadline, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+            if api.session != nil, !commerce.premium, quota.usage == nil {
+                if let error = quota.error {
+                    ErrorNote(message: error)
+                } else {
+                    StageLoadingIndicator(title: "Checking your limits…", compact: true)
+                }
+            } else {
+                LocalizedText(api.session == nil ? "Connect to refresh your allowance." :
+                                commerce.premium || quota.downloadsUnlimited ? "Unlimited" : "\(quota.downloadsLeft) downloads left today")
+                    .font(.stage(.subheadline, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+            }
             if quota.usage != nil, !commerce.premium { AllowanceResetText() }
             if quota.canRequestReward(for: .download, premium: commerce.premium) {
                 ActionButton(title: "Download options", primary: false) { showingReward = true }

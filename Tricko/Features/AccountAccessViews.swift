@@ -15,28 +15,6 @@ final class AccountAccessFlow: ObservableObject {
     }
 }
 
-struct AccountLoadingIndicator: View {
-    let title: String
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    var body: some View {
-        VStack(spacing: 20) {
-            Image("TrickoLoadingMark").resizable().scaledToFill()
-                .frame(width: 48, height: 6).clipped()
-                .phaseAnimator([false, true]) { content, dimmed in
-                    content.opacity(reduceMotion || scenePhase != .active ? 1 : (dimmed ? 0.3 : 1))
-                } animation: { _ in
-                    reduceMotion || scenePhase != .active ? nil : .easeInOut(duration: 0.6)
-                }
-                .accessibilityHidden(true)
-            LocalizedText(title).font(.stage(.subheadline, weight: .semibold)).multilineTextAlignment(.center)
-        }.padding(22).frame(maxWidth: 250)
-            .foregroundStyle(.white)
-            .background { StageSurface(tone: .velvet) }
-            .accessibilityElement(children: .combine)
-    }
-}
-
 struct AccountBusyModifier: ViewModifier {
     @EnvironmentObject private var accountAccess: AccountAccessFlow
     func body(content: Content) -> some View {
@@ -45,8 +23,8 @@ struct AccountBusyModifier: ViewModifier {
             .overlay {
                 if let message = accountAccess.busyMessage {
                     ZStack {
-                        Color.black.opacity(0.58).ignoresSafeArea()
-                        AccountLoadingIndicator(title: message).padding(24)
+                        Color.black.opacity(0.42).ignoresSafeArea()
+                        StageLoadingIndicator(title: message).padding(24)
                     }.accessibilityAddTraits(.isModal)
                 }
             }
@@ -130,7 +108,7 @@ struct PolicyLinks: View {
         Group {
             if compact { linkLayout.buttonStyle(PressStyle()) }
             else { linkLayout.buttonStyle(CompactActionStyle()) }
-        }.sheet(item: $document) { PolicyBrowser(document: $0) }
+        }.fullScreenCover(item: $document) { PolicyBrowser(document: $0) }
     }
     private var linkLayout: some View {
         ViewThatFits(in: .horizontal) {
@@ -169,35 +147,67 @@ struct PolicyBrowser: View {
     let document: PolicyDocument
     var webSearch = false
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var state = PolicyBrowserState()
+
     var body: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: document.title) { dismiss() }
-            if webSearch {
-                HStack(spacing: 12) {
-                    IconButton(symbol: .back, label: "Back") { state.goBack() }
-                        .disabled(!state.canGoBack)
+        NavigationStack {
+            PolicyReader(document: document, webSearch: webSearch)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { dismiss() } label: { Label("Close", systemImage: "xmark") }
+                    }
+                }
+        }
+        .trickoImmersiveChrome()
+    }
+}
+
+private struct PolicyReader: View {
+    let document: PolicyDocument
+    var webSearch = false
+    @Environment(\.locale) private var locale
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @StateObject private var state = PolicyBrowserState()
+
+    var body: some View {
+        ZStack {
+            PolicyWebView(url: document.url, state: state, webSearch: webSearch)
+                .allowsHitTesting(!state.loading && state.error == nil)
+                .accessibilityHidden(state.loading || state.error != nil)
+            if let error = state.error {
+                TrickoStyle.background
+                ScrollView {
+                    EmptyStatePanel(symbol: webSearch ? .search : .link) {
+                        EmptyStateCopy(title: "Couldn’t open this page", message: error)
+                        Button { state.retry() } label: { LocalizedText("Try again") }
+                            .buttonStyle(EmptyStateActionStyle(primary: false))
+                    }
+                    .frame(maxWidth: 480).padding(24).frame(maxWidth: .infinity)
+                }
+            } else if state.loading {
+                TrickoStyle.background.opacity(state.currentURL == nil || reduceTransparency ? 1 : 0.80)
+                StageLoadingIndicator(title: webSearch ? "Opening page…" : "Opening document…").padding(24)
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if webSearch || state.canGoBack {
+                HStack(spacing: 10) {
+                    Button { state.goBack() } label: {
+                        Label("Back", systemImage: "chevron.backward")
+                            .labelStyle(.iconOnly).frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(PressStyle()).disabled(!state.canGoBack)
                     Text(verbatim: state.currentURL?.host ?? document.url.host ?? "")
                         .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
                         .lineLimit(1).truncationMode(.middle)
-                    Spacer(minLength: 0)
-                }.padding(.horizontal, 16).padding(.bottom, 8)
-            }
-            ZStack {
-                PolicyWebView(url: document.url, state: state, webSearch: webSearch)
-                    .accessibilityHidden(state.loading || state.error != nil)
-                if let error = state.error {
-                    TrickoStyle.background
-                    ScrollView {
-                        MessagePanel(title: "Couldn’t open this page", message: error,
-                                     actionTitle: "Try again", action: { state.retry() }).padding(24)
-                    }
-                } else if state.loading {
-                    TrickoStyle.background
-                    AccountLoadingIndicator(title: webSearch ? "Opening page…" : "Opening document…").padding(24)
                 }
+                .padding(.trailing, 16)
+                .trickoGlass(in: Capsule(), fallback: TrickoStyle.surface, interactive: false)
+                .padding(.horizontal, 16).padding(.vertical, 6)
             }
-        }.trickoScreenBackground().foregroundStyle(.white)
+        }
+        .navigationTitle(Text(verbatim: L10n.text(document.title, language: AppLanguage.from(locale))))
+        .navigationBarTitleDisplayMode(.inline)
+        .trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
     }
 }
 
@@ -213,7 +223,7 @@ struct PolicyWebView: UIViewRepresentable {
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
         view.allowsBackForwardNavigationGestures = true
-        view.allowsLinkPreview = !webSearch
+        view.allowsLinkPreview = false
         view.isOpaque = false
         state.webView = view
         return view
@@ -272,28 +282,26 @@ struct PolicyWebView: UIViewRepresentable {
         }
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-            guard let url = navigationAction.request.url else { decisionHandler(.cancel); return }
-            if !webSearch, url.scheme == "mailto", navigationAction.navigationType == .linkActivated {
-                UIApplication.shared.open(url)
+            guard let url = navigationAction.request.url,
+                  url.scheme == "https" || (webSearch && url.scheme == "http") || url.absoluteString == "about:blank" else {
                 decisionHandler(.cancel)
-            } else if url.scheme == "https" || (webSearch && url.scheme == "http") || url.absoluteString == "about:blank" {
-                if navigationAction.targetFrame?.isMainFrame != false { state.retryURL = url }
-                if webSearch, navigationAction.targetFrame?.isMainFrame != false {
-                    if navigationAction.navigationType == .backForward ||
-                        (navigationAction.targetFrame != nil && appNavigationURL == url) {
-                        appNavigationURL = nil
-                        decisionHandler(.allow)
-                    } else {
-                        decisionHandler(.cancel)
-                        load(navigationAction.request, in: webView)
-                    }
-                    return
-                }
-                if navigationAction.targetFrame == nil {
-                    webView.load(navigationAction.request)
-                    decisionHandler(.cancel)
-                } else { decisionHandler(.allow) }
-            } else { decisionHandler(.cancel) }
+                return
+            }
+            guard navigationAction.targetFrame?.isMainFrame != false else {
+                decisionHandler(.allow)
+                return
+            }
+            state.retryURL = url
+            let isPageLink = webSearch || navigationAction.navigationType == .linkActivated
+            if navigationAction.targetFrame == nil ||
+                (isPageLink && navigationAction.navigationType != .backForward && appNavigationURL != url) {
+                // Load tapped links ourselves so Universal Links also stay in this web view.
+                decisionHandler(.cancel)
+                load(navigationAction.request, in: webView)
+            } else {
+                appNavigationURL = nil
+                decisionHandler(.allow)
+            }
         }
         func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse,
                      decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
@@ -308,31 +316,26 @@ struct PolicyWebView: UIViewRepresentable {
 }
 
 struct AccountSettingsSection: View {
-    @Environment(\.openURL) private var openURL
-    @State private var websiteError: String?
     @AppStorage(AppLanguage.preferenceKey) private var languageCode = AppLanguage.systemSelection
-    @State private var languagePicker = false
     @EnvironmentObject private var api: APIClient
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var ads: RewardedAds
     @EnvironmentObject private var accountAccess: AccountAccessFlow
-    @State private var document: PolicyDocument?
     private var unavailable: Bool { accountAccess.isBusy || commerce.busy || commerce.preparingPurchase || ads.busy || ads.isPreparingAppOpen || ads.isPresenting }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             VStack(spacing: 0) {
-                Button { languagePicker = true } label: {
+                NavigationLink {
+                    LanguagePicker()
+                } label: {
                     AccountMenuRow(title: "App language", detail: AppLanguage(rawValue: languageCode)?.nativeName ?? "Follow system")
                 }
                 .accessibilityIdentifier("account.language")
                 if let website = api.configuration.websiteURL {
                     rowDivider
-                    Button {
-                        websiteError = nil
-                        openURL(website) { accepted in
-                            if !accepted { websiteError = "The browser could not open. Please try again." }
-                        }
+                    NavigationLink {
+                        PolicyReader(document: PolicyDocument(title: "Official website", url: website))
                     } label: {
                         AccountMenuRow(title: "Official website", detail: website.host)
                     }
@@ -343,19 +346,22 @@ struct AccountSettingsSection: View {
             .padding(.horizontal, 15)
             .background { StageSurface(tone: .smoke) }
             .buttonStyle(PressStyle())
-            if let websiteError { ErrorNote(message: websiteError) }
             if api.configuration.privacyURL != nil || api.configuration.termsURL != nil || ads.privacyOptionsRequired {
                 VStack(alignment: .leading, spacing: 3) {
                     LocalizedText("Privacy & terms").font(.stage(.headline))
                         .accessibilityAddTraits(.isHeader)
                     if let url = api.configuration.privacyURL {
-                        Button { document = PolicyDocument(title: "Privacy Policy", url: url) } label: {
+                        NavigationLink {
+                            PolicyReader(document: PolicyDocument(title: "Privacy Policy", url: url))
+                        } label: {
                             AccountMenuRow(title: "Privacy Policy")
                         }
                         rowDivider
                     }
                     if let url = api.configuration.termsURL {
-                        Button { document = PolicyDocument(title: "Terms of Use", url: url) } label: {
+                        NavigationLink {
+                            PolicyReader(document: PolicyDocument(title: "Terms of Use", url: url))
+                        } label: {
                             AccountMenuRow(title: "Terms of Use")
                         }
                         rowDivider
@@ -371,8 +377,6 @@ struct AccountSettingsSection: View {
             }
             if let error = ads.error { ErrorNote(message: error) }
         }
-        .sheet(item: $document) { PolicyBrowser(document: $0) }
-        .sheet(isPresented: $languagePicker) { LanguagePicker() }
     }
 
     private var rowDivider: some View {

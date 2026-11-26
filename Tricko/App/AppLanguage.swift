@@ -128,49 +128,78 @@ struct LocalizedText: View {
 
 struct LanguagePicker: View {
     @AppStorage(AppLanguage.preferenceKey) private var languageCode = AppLanguage.systemSelection
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: "App language") { dismiss() }
-            ScrollView {
-                VStack(spacing: 0) {
-                    Button { languageCode = AppLanguage.systemSelection } label: {
-                        HStack(spacing: 16) {
-                            LocalizedText("Follow system").font(.stage(.body, weight: .medium))
-                            Spacer(minLength: 8)
-                            if languageCode == AppLanguage.systemSelection {
-                                LocalizedText("Selected").font(.stage(.caption, weight: .semibold)).foregroundStyle(TrickoStyle.accent)
-                            }
-                        }.padding(20).frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-                            .background { StageSurface(tone: languageCode == AppLanguage.systemSelection ? .velvet : .smoke) }
-                            .contentShape(Rectangle())
-                    }.buttonStyle(PressStyle())
-                        .accessibilityAddTraits(languageCode == AppLanguage.systemSelection ? .isSelected : [])
-                        .accessibilityIdentifier("language.system")
-                    ForEach(AppLanguage.allCases) { language in
-                        Button {
-                            languageCode = language.rawValue
-                        } label: {
-                            HStack(spacing: 16) {
-                                Text(verbatim: language.nativeName).font(.stage(.body, weight: .medium))
-                                    .environment(\.layoutDirection, language.direction)
-                                Spacer(minLength: 8)
-                                if languageCode == language.rawValue {
-                                    LocalizedText("Selected").font(.stage(.caption, weight: .semibold))
-                                        .foregroundStyle(TrickoStyle.accent)
-                                }
-                            }.padding(20).frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-                                .background(languageCode == language.rawValue ? TrickoStyle.raised : Color.clear)
-                                .contentShape(Rectangle())
-                        }.buttonStyle(PressStyle())
-                            .accessibilityAddTraits(languageCode == language.rawValue ? .isSelected : [])
-                            .accessibilityIdentifier("language.\(language.rawValue)")
-                        if language != AppLanguage.allCases.last { Divider().overlay(TrickoStyle.line) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Button { languageCode = AppLanguage.systemSelection } label: {
+                    HStack(spacing: 12) {
+                        Glyph(symbol: .settings, size: 20, tint: TrickoStyle.coolAccent)
+                        LocalizedText("Follow system")
+                            .font(.stage(.body, weight: .semibold))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 4)
+                        selectionMark(selected: languageCode == AppLanguage.systemSelection)
                     }
-                }.background(TrickoStyle.surface).clipShape(RoundedRectangle(cornerRadius: 22))
-                    .trickoPage()
+                    .padding(16)
+                    .trickoGlass(in: .rect(cornerRadius: 18))
+                    .contentShape(.rect(cornerRadius: 18))
+                }
+                .accessibilityAddTraits(languageCode == AppLanguage.systemSelection ? .isSelected : [])
+                .accessibilityIdentifier("language.system")
+
+                let columns = typeSize.isAccessibilitySize
+                    ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 146), spacing: 12)]
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                    ForEach(AppLanguage.allCases) { language in
+                        languageButton(language)
+                    }
+                }
             }
-        }.foregroundStyle(TrickoStyle.paper).trickoScreenBackground()
+            .buttonStyle(PressStyle())
+            .trickoPage()
+        }
+        .foregroundStyle(TrickoStyle.paper).trickoScreenBackground()
+        .navigationTitle("App language")
+        .navigationBarTitleDisplayMode(.large)
+    }
+
+    private func languageButton(_ language: AppLanguage) -> some View {
+        let selected = languageCode == language.rawValue
+        let translatedName = locale.localizedString(forLanguageCode: language.rawValue)
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        return Button { languageCode = language.rawValue } label: {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(verbatim: language.nativeName)
+                        .font(.stage(.headline)).layoutPriority(1)
+                        .environment(\.layoutDirection, language.direction)
+                    Spacer(minLength: 0)
+                    selectionMark(selected: selected)
+                }
+                if let translatedName, translatedName.localizedCaseInsensitiveCompare(language.nativeName) != .orderedSame {
+                    Text(verbatim: translatedName)
+                        .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 78, alignment: .leading)
+            .background(selected ? TrickoStyle.raised : TrickoStyle.surface, in: shape)
+            .overlay { shape.strokeBorder(selected ? TrickoStyle.coolAccent : TrickoStyle.line) }
+            .contentShape(shape)
+        }
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("language.\(language.rawValue)")
+    }
+
+    private func selectionMark(selected: Bool) -> some View {
+        Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+            .font(.stage(.subheadline, weight: .semibold))
+            .foregroundStyle(selected ? TrickoStyle.coolAccent : TrickoStyle.secondary)
+            .accessibilityHidden(true)
     }
 }
 

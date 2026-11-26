@@ -50,6 +50,34 @@ struct StageSheetHeader: View {
     }
 }
 
+struct StageFloatingPanel<Content: View>: View {
+    let title: String
+    let close: () -> Void
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    StageSheetHeader(title: title, close: close)
+                    content
+                }
+                .padding(22)
+                .frame(maxWidth: 460, alignment: .leading)
+                .trickoGlass(in: .rect(cornerRadius: 28), tint: TrickoStyle.ink.opacity(0.68),
+                             fallback: TrickoStyle.surface, interactive: false)
+                .padding(18)
+                .frame(maxWidth: .infinity, minHeight: geometry.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        .background { Color.black.opacity(0.56).ignoresSafeArea() }
+        .foregroundStyle(TrickoStyle.paper)
+        .accessibilityAction(.escape, close)
+        .trickoImmersiveChrome()
+    }
+}
+
 enum TrickoGlyph: String, CaseIterable {
     case feed, edit, library, link, search, bookmark, download
     case play, pause, close, back, sound, folder, settings
@@ -141,10 +169,15 @@ struct ActionButton: View {
     let title: String
     var primary = true
     var busy = false
+    var busyTitle = "Please wait…"
     var action: () -> Void
     var body: some View {
         Button(action: action) {
-            LocalizedText(busy ? "Please wait…" : title).font(.stage(.subheadline, weight: .semibold))
+            HStack(spacing: 8) {
+                if busy { StageActivityMark(size: 18) }
+                LocalizedText(busy ? busyTitle : title)
+            }
+                .font(.stage(.subheadline, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center).padding(.horizontal, 16).padding(.vertical, 12)
                 .foregroundStyle(primary ? TrickoStyle.accent : TrickoStyle.paper)
@@ -153,7 +186,104 @@ struct ActionButton: View {
                              tint: primary ? TrickoStyle.accent.opacity(0.24) : nil,
                              fallback: primary ? TrickoStyle.raised : TrickoStyle.surface)
                 .contentShape(.interaction, Rectangle())
-        }.buttonStyle(PressStyle()).disabled(busy)
+        }.buttonStyle(PressStyle(disabledOpacity: busy ? 1 : 0.55)).disabled(busy)
+    }
+}
+
+struct StageActivityMark: View {
+    var size: CGFloat = 20
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || scenePhase != .active)) { context in
+            let cycle = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.5) / 1.5
+            let stroke = StrokeStyle(lineWidth: max(2, size * 0.10), lineCap: .round)
+            ZStack {
+                Circle().stroke(TrickoStyle.coolAccent.opacity(0.22), style: stroke)
+                Circle().trim(from: 0, to: 0.68)
+                    .stroke(AngularGradient(colors: [TrickoStyle.coolAccent.opacity(0.30), TrickoStyle.coolAccent, TrickoStyle.accent],
+                                            center: .center, startAngle: .zero, endAngle: .degrees(245)), style: stroke)
+                    .rotationEffect(.degrees(reduceMotion ? -90 : cycle * 360))
+            }
+            .padding(stroke.lineWidth / 2)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true).allowsHitTesting(false)
+    }
+}
+
+struct StageLoadingIndicator: View {
+    let title: String
+    var compact = false
+
+    var body: some View {
+        let layout = compact ? AnyLayout(HStackLayout(spacing: 10)) : AnyLayout(VStackLayout(spacing: 12))
+        layout {
+            StageActivityMark(size: compact ? 18 : 32)
+            LocalizedText(title)
+                .font(.stage(compact ? .footnote : .subheadline, weight: .semibold))
+                .foregroundStyle(TrickoStyle.paper)
+                .multilineTextAlignment(compact ? .leading : .center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, compact ? 14 : 22)
+        .padding(.vertical, compact ? 9 : 18)
+        .trickoGlass(in: .rect(cornerRadius: compact ? 18 : 24), tint: TrickoStyle.ink.opacity(0.58),
+                     fallback: TrickoStyle.surface, interactive: false)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+// The accompanying localized percentage supplies the accessible progress value.
+struct StageProgressTrack: View {
+    let value: Double
+
+    var body: some View {
+        let fraction = value.isFinite ? min(max(value, 0), 1) : 0
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(TrickoStyle.paper.opacity(0.16))
+                Capsule().fill(LinearGradient(colors: [TrickoStyle.coolAccent, TrickoStyle.accent],
+                                              startPoint: .leading, endPoint: .trailing))
+                    .frame(width: geometry.size.width * CGFloat(fraction))
+            }
+        }
+        .frame(height: 5)
+        .accessibilityHidden(true).allowsHitTesting(false)
+    }
+}
+
+struct StageStateSymbol: View {
+    let symbol: TrickoGlyph
+    var size: CGFloat = 48
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.33, style: .continuous)
+        Glyph(symbol: symbol, size: size * 0.49, tint: TrickoStyle.coolAccent)
+            .frame(width: size, height: size)
+            .background {
+                shape.fill(LinearGradient(colors: [TrickoStyle.coolAccent.opacity(0.22), TrickoStyle.ink.opacity(0.55)],
+                                          startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+            .overlay { shape.strokeBorder(TrickoStyle.coolAccent.opacity(0.23)) }
+            .accessibilityHidden(true).allowsHitTesting(false)
+    }
+}
+
+struct EmptyStatePanel<Content: View>: View {
+    let symbol: TrickoGlyph
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StageStateSymbol(symbol: symbol)
+            content
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .trickoGlass(in: .rect(cornerRadius: 24), tint: TrickoStyle.surface.opacity(0.48),
+                     fallback: TrickoStyle.surface, interactive: false)
     }
 }
 
@@ -162,8 +292,8 @@ struct EmptyStateCopy: View {
     let message: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            LocalizedText(title).font(.stage(.title2, weight: .bold))
+        VStack(alignment: .leading, spacing: 6) {
+            LocalizedText(title).font(.stage(.title3, weight: .semibold))
                 .foregroundStyle(TrickoStyle.paper)
                 .accessibilityAddTraits(.isHeader)
             LocalizedText(message).font(.stage(.subheadline))
@@ -210,7 +340,8 @@ struct MessagePanel: View {
             LocalizedText(message).font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary).fixedSize(horizontal: false, vertical: true)
             if let actionTitle, let action { ActionButton(title: actionTitle, primary: false, action: action) }
         }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-            .background { StageSurface(tone: .smoke, radius: 22) }
+            .trickoGlass(in: .rect(cornerRadius: 22), tint: TrickoStyle.ink.opacity(0.54),
+                         fallback: TrickoStyle.surface, interactive: false)
     }
 }
 struct ErrorNote: View {
@@ -350,21 +481,33 @@ struct TrickoGlassGroup<Content: View>: View {
     }
 }
 
+struct StageCoverPlaceholder: View {
+    let symbol: TrickoGlyph?
+
+    var body: some View {
+        LinearGradient(colors: [TrickoStyle.raised, TrickoStyle.surface, TrickoStyle.background],
+                       startPoint: .topLeading, endPoint: .bottomTrailing)
+            .overlay {
+                if let symbol { Glyph(symbol: symbol, size: 23, tint: TrickoStyle.coolAccent) }
+            }
+            .accessibilityHidden(true).allowsHitTesting(false)
+    }
+}
+
 struct MediaCover: View {
     let url: URL?
     var folder = false
     var body: some View {
-        TrickoStyle.raised.overlay {
+        StageCoverPlaceholder(symbol: folder ? .folder : .feed).overlay {
             GeometryReader { geometry in
-                Group {
-                    if let url {
-                        AsyncImage(url: url) { phase in
-                            if let image = phase.image { image.resizable().scaledToFill() }
-                            else { Glyph(symbol: folder ? .folder : .feed, size: 28, tint: TrickoStyle.secondary) }
+                if let url {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image {
+                            image.resizable().scaledToFill()
+                                .frame(width: geometry.size.width, height: geometry.size.height).clipped()
                         }
-                    } else { Glyph(symbol: folder ? .folder : .feed, size: 28, tint: TrickoStyle.secondary) }
-                }.frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
+                    }
+                }
             }
         }.clipped()
     }

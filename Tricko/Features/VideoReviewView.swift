@@ -100,6 +100,7 @@ struct VideoReviewView: View {
         let isConfirmingRestart = restartConfirmation != nil
         VStack(spacing: 0) {
             reviewHeading
+            Divider().overlay(TrickoStyle.line).accessibilityHidden(true)
             if restoredReview {
                 if let draft {
                     draftWorkspace(draft)
@@ -108,6 +109,7 @@ struct VideoReviewView: View {
                 }
             }
         }
+        .frame(maxWidth: 1160).frame(maxWidth: .infinity)
         .trickoScreenBackground()
         .foregroundStyle(TrickoStyle.paper)
         .allowsHitTesting(!isConfirmingRestart)
@@ -139,24 +141,30 @@ struct VideoReviewView: View {
 
     private var reviewHeading: some View {
         HStack(spacing: 8) {
-            LocalizedText("Video review")
-                .font(.stage(.title3, display: true))
-                .lineLimit(2)
-                .accessibilityAddTraits(.isHeader)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 4) {
+                LocalizedText(draft == nil ? "Video review" : "Edit marker")
+                    .font(.stage(.caption, weight: .semibold)).foregroundStyle(TrickoStyle.coolAccent)
+                Text(verbatim: movie.title)
+                    .font(.stage(.headline, weight: .semibold)).lineLimit(2)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .frame(maxWidth: .infinity, alignment: .leading)
             if draft == nil {
                 Button(action: requestRestart) { LocalizedText("Start over") }
                     .buttonStyle(EmptyStateActionStyle(primary: false, minHeight: 44, horizontalPadding: 12))
                     .disabled(!restoredReview || !canJumpToMarker)
-            }
-            IconButton(symbol: .close, label: "Close") {
-                playback.pause()
-                saveReviewResume()
-                dismiss()
+                IconButton(symbol: .close, label: "Close") {
+                    playback.pause()
+                    saveReviewResume()
+                    dismiss()
+                }
+            } else {
+                IconButton(symbol: .back, label: "Cancel", action: clearDraft)
             }
         }
         .pageHorizontalMargins()
-        .padding(.top, 8)
+        .padding(.vertical, 6)
     }
 
     private func reviewWorkspace(
@@ -167,25 +175,18 @@ struct VideoReviewView: View {
     ) -> some View {
         GeometryReader { viewport in
             let shortViewport = viewport.size.height < 460
-            let sideBySide = viewport.size.width >= 520 && shortViewport
+            let sideBySide = usesVideoWorkspaceColumns(in: viewport.size, typeSize: typeSize)
             let compact = shortViewport || typeSize.isAccessibilitySize
-            let videoFraction: CGFloat = sideBySide ? 0.4 : (compact ? 0.22 : 0.32)
-            let videoHeight = min(320, viewport.size.height * videoFraction)
+            let videoHeight = sideBySide ? max(75, viewport.size.height - 80)
+                : min(415, viewport.size.height * (compact ? 0.22 : 0.36))
             let layout = sideBySide
-                ? AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+                ? AnyLayout(HStackLayout(alignment: .top, spacing: 20))
                 : AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
 
             layout {
-                VStack(alignment: .leading, spacing: 8) {
-                    if !shortViewport {
-                        Text(verbatim: movie.title)
-                            .font(.stage(.headline, weight: .semibold))
-                            .lineLimit(1)
-                    }
-                    playerTray(maxVideoHeight: videoHeight, compactControls: compact)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(width: sideBySide ? viewport.size.width * 0.47 : nil, alignment: .topLeading)
+                playerTray(maxVideoHeight: videoHeight, compactControls: compact)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: sideBySide ? viewport.size.width * 0.51 : nil, alignment: .topLeading)
 
                 VStack(alignment: .leading, spacing: 8) {
                     reviewMarkerLists(points: points, pendingPoints: pendingPoints, filter: filter, compact: compact)
@@ -195,7 +196,7 @@ struct VideoReviewView: View {
             }
             .frame(maxHeight: .infinity, alignment: .top)
         }
-        .trickoPage()
+        .pageHorizontalMargins().padding(.top, 12).padding(.bottom, 8)
     }
 
     private func reviewMarkerLists(
@@ -238,15 +239,8 @@ struct VideoReviewView: View {
             let content = ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if visiblePoints.isEmpty && !finishedPendingReview {
-                        HStack(alignment: .top, spacing: 10) {
-                            Glyph(symbol: hasMarkers ? .saved : .bookmark, size: 17, tint: TrickoStyle.coolAccent)
-                                .padding(.top, 2)
-                            LocalizedText(hasMarkers ? Self.completionMessage : "Mark a moment to revisit it later.")
-                                .font(.stage(.subheadline))
-                                .foregroundStyle(TrickoStyle.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.vertical, 12)
+                        markerNotice(hasMarkers ? Self.completionMessage : "Mark a moment to revisit it later.",
+                                     symbol: hasMarkers ? .saved : .bookmark)
                     }
                     ForEach(visiblePoints) { point in
                         VStack(spacing: 0) {
@@ -297,22 +291,28 @@ struct VideoReviewView: View {
         }
     }
 
+    private func markerNotice(_ title: String, symbol: TrickoGlyph) -> some View {
+        HStack(spacing: 10) {
+            Glyph(symbol: symbol, size: 17, tint: TrickoStyle.coolAccent)
+            LocalizedText(title)
+                .font(.stage(.subheadline, weight: .medium))
+                .foregroundStyle(TrickoStyle.paper)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .trickoGlass(in: .rect(cornerRadius: 15), fallback: TrickoStyle.surface, interactive: false)
+    }
+
     private func reviewFooter(_ activePoint: VideoReviewPoint?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             if finishedPendingReview {
-                HStack(spacing: 8) {
-                    Glyph(symbol: .saved, size: 17, tint: TrickoStyle.coolAccent)
-                    LocalizedText(Self.completionMessage)
-                        .font(.stage(.subheadline, weight: .semibold))
-                        .foregroundStyle(TrickoStyle.coolAccent)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                markerNotice(Self.completionMessage, symbol: .saved)
             }
             if let saveError { ErrorNote(message: saveError) }
             if let activePoint {
                 HStack(spacing: 8) {
                     IconButton(symbol: .bookmark, label: "Mark this moment", action: markMoment)
-                        .trickoGlass(in: Circle())
                         .disabled(!canMark)
                     reviewStatusButton(activePoint)
                 }
@@ -324,34 +324,42 @@ struct VideoReviewView: View {
     }
 
     private func draftWorkspace(_ draft: VideoReviewPoint) -> some View {
-        ScrollViewReader { scroll in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(verbatim: movie.title)
-                        .font(.stage(.headline, weight: .semibold))
-                        .fixedSize(horizontal: false, vertical: true)
-                    playerTray()
-                    pointEditor(draft).id(Section.draft)
+        GeometryReader { viewport in
+            if usesVideoWorkspaceColumns(in: viewport.size, typeSize: typeSize) {
+                HStack(alignment: .top, spacing: 20) {
+                    playerTray(maxVideoHeight: max(72, viewport.size.height - 76), compactControls: true)
+                        .frame(width: viewport.size.width * 0.51)
+                    ScrollView { pointEditor(draft).padding(.bottom, 16) }
+                        .scrollDismissesKeyboard(.interactively)
                 }
-                .trickoPage()
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .onChange(of: draft.id, initial: true) { _, _ in
-                scroll.scrollTo(Section.draft, anchor: .bottom)
+            } else {
+                ScrollViewReader { scroll in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 14) {
+                            playerTray(maxVideoHeight: min(280, viewport.size.height * 0.32))
+                            pointEditor(draft).id(Section.draft)
+                        }.padding(.bottom, 16)
+                    }
+                    .scrollDismissesKeyboard(.interactively)
+                    .onChange(of: draft.id, initial: true) { _, _ in
+                        scroll.scrollTo(Section.draft, anchor: .bottom)
+                    }
+                }
             }
         }
+        .pageHorizontalMargins().padding(.top, 12)
     }
 
     private func playerTray(maxVideoHeight: CGFloat = 320, compactControls: Bool = false) -> some View {
         VStack(spacing: 0) {
             VideoSurface(player: playback.player, fill: false)
                 .aspectRatio(aspectRatio, contentMode: .fit)
-                .frame(maxWidth: min(540, maxVideoHeight * aspectRatio))
+                .frame(maxWidth: maxVideoHeight * aspectRatio)
                 .frame(maxWidth: .infinity)
                 .background(.black)
                 .overlay {
                     if playback.isLoading && !unavailable {
-                        AccountLoadingIndicator(title: "Preparing your video…")
+                        StageLoadingIndicator(title: "Preparing your video…", compact: true)
                     }
                 }
             if unavailable || playback.error != nil {
@@ -415,7 +423,6 @@ struct VideoReviewView: View {
             if compact {
                 IconButton(symbol: .back, label: title, action: jump)
                     .rotationEffect(.degrees(forward ? 180 : 0))
-                    .trickoGlass(in: Circle())
             } else {
                 ActionButton(title: title, primary: false, action: jump)
             }

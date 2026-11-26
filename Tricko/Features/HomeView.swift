@@ -6,6 +6,7 @@ struct HomeView: View {
     @EnvironmentObject private var commerce: CommerceStore
     @EnvironmentObject private var quota: QuotaStore
     @Environment(\.locale) private var locale
+    @Environment(\.calendar) private var calendar
     @Environment(\.layoutDirection) private var direction
     @Environment(\.dynamicTypeSize) private var typeSize
     let openAccount: () -> Void
@@ -30,10 +31,12 @@ struct HomeView: View {
 
     var body: some View {
         homePage
-            .sheet(isPresented: $showingLinkGuide) { LinkGuideSheet() }
-            .sheet(isPresented: $showingLinkHistory, onDismiss: openSelectedHistoryLink) { linkHistorySheet }
+            .fullScreenCover(isPresented: $showingLinkGuide) {
+                LinkGuidePanel().presentationBackground(.clear)
+            }
+            .fullScreenCover(isPresented: $showingLinkHistory, onDismiss: openSelectedHistoryLink) { linkHistoryPage }
             .fullScreenCover(isPresented: $paywall) { MembershipView() }
-            .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0) }
+            .fullScreenCover(item: $reviewingVideo) { VideoReviewView(movie: $0) }
     }
 
     private var homePage: some View {
@@ -194,15 +197,18 @@ struct HomeView: View {
                 .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             }
         } else {
-            HStack(spacing: 8) {
-                Glyph(symbol: .feed, size: 15, tint: TrickoStyle.coolAccent)
-                LocalizedText("No imported videos yet")
-                    .font(.stage(.footnote))
-                    .foregroundStyle(TrickoStyle.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            inlineEmptyState("No imported videos yet", symbol: .feed)
         }
+    }
+
+    private func inlineEmptyState(_ title: String, symbol: TrickoGlyph) -> some View {
+        HStack(spacing: 10) {
+            StageStateSymbol(symbol: symbol, size: 32)
+            LocalizedText(title)
+                .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func recentVideo(_ movie: PracticeRecording) -> some View {
@@ -367,9 +373,9 @@ struct HomeView: View {
                 MessagePanel(title: "Couldn’t load lesson collections", message: error, actionTitle: "Try again") { channelRetry += 1 }
             } else if channels.isEmpty {
                 if loadingCollections {
-                    AccountLoadingIndicator(title: "Loading…").frame(maxWidth: .infinity)
+                    StageLoadingIndicator(title: "Loading…", compact: true)
                 } else {
-                    LocalizedText("No lesson collections yet.").font(.stage(.subheadline)).foregroundStyle(TrickoStyle.secondary)
+                    inlineEmptyState("No lesson collections yet.", symbol: .library)
                 }
             } else {
                 lessonIndex
@@ -516,10 +522,22 @@ struct HomeView: View {
     private var canOpenLink: Bool { searchRequest == nil && link.nilIfBlank != nil }
     @ViewBuilder private var allowanceLabel: some View {
         if api.session != nil {
-            LocalizedText(commerce.premium ? "Unlimited" : quota.usage == nil ? "Checking your limits…"
-                          : quota.unlimited ? "Unlimited views today" : "\(quota.watchesLeft) views left today")
-                .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Group {
+                if !commerce.premium, quota.usage == nil {
+                    if let error = quota.error {
+                        LocalizedText(error).foregroundStyle(TrickoStyle.danger)
+                    } else {
+                        HStack(spacing: 6) {
+                            StageActivityMark(size: 14)
+                            LocalizedText("Checking your limits…")
+                        }
+                    }
+                } else {
+                    LocalizedText(commerce.premium ? "Unlimited" : quota.unlimited ? "Unlimited views today" : "\(quota.watchesLeft) views left today")
+                }
+            }
+            .font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
     private var pasteButton: some View {
@@ -557,24 +575,44 @@ struct HomeView: View {
         }
     }
 
-    private var linkHistorySheet: some View {
+    private var linkHistoryPage: some View {
         let visits = linkHistory
-        return VStack(alignment: .leading, spacing: 12) {
-            StageSheetHeader(title: "Recently opened") { showingLinkHistory = false }
+        let days = Dictionary(grouping: visits) { calendar.startOfDay(for: $0.date) }
+        return NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(visits) { visit in
-                        historyLinkRow(visit) {
-                            pendingHistoryLink = visit.link
-                            showingLinkHistory = false
+                    ForEach(days.keys.sorted(by: >), id: \.self) { day in
+                        Section {
+                            ForEach(days[day] ?? []) { visit in
+                                historyLinkRow(visit) {
+                                    pendingHistoryLink = visit.link
+                                    showingLinkHistory = false
+                                }
+                                .padding(.bottom, 6)
+                                .overlay(alignment: .bottom) { Divider().overlay(TrickoStyle.line) }
+                            }
+                        } header: {
+                            LocalizedDateText(date: day)
+                                .font(.stage(.subheadline, weight: .semibold))
+                                .foregroundStyle(TrickoStyle.coolAccent)
+                                .padding(.top, 8)
+                                .accessibilityAddTraits(.isHeader)
                         }
                     }
+                }.trickoPage()
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !visits.isEmpty { clearHistoryButton.padding(.vertical, 8) }
+            }
+            .trickoScreenBackground()
+            .navigationTitle(Text(verbatim: L10n.text("Recently opened", language: AppLanguage.from(locale))))
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showingLinkHistory = false } label: { Label("Close", systemImage: "xmark") }
                 }
             }
-            if !visits.isEmpty { clearHistoryButton }
         }
-        .trickoPage()
-        .trickoScreenBackground()
         .foregroundStyle(TrickoStyle.paper)
         .onChange(of: visits.isEmpty) { _, isEmpty in
             if isEmpty { showingLinkHistory = false }
@@ -585,7 +623,7 @@ struct HomeView: View {
         HStack {
             Button(action: open) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(verbatim: visit.title).font(.stage(.headline)).lineLimit(1)
+                    Text(verbatim: visit.title).font(.stage(.headline)).lineLimit(typeSize.isAccessibilitySize ? nil : 2)
                     Text(verbatim: visit.link).font(.stage(.caption)).foregroundStyle(TrickoStyle.secondary).lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -633,85 +671,119 @@ private struct ChannelRequest: Equatable {
 }
 
 struct ChannelView: View {
-    @EnvironmentObject private var api: APIClient
     @Environment(\.dismiss) private var dismiss
     let route: ChannelRoute
+    @State private var folders: [ChannelRoute] = []
+
+    var body: some View {
+        NavigationStack(path: $folders) {
+            ChannelDirectory(route: route, back: { dismiss() })
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { dismiss() } label: { Label("Close", systemImage: "xmark") }
+                    }
+                }
+                .navigationDestination(for: ChannelRoute.self) { child in
+                    ChannelDirectory(route: child, back: {
+                        if !folders.isEmpty { folders.removeLast() }
+                    })
+                }
+        }
+        .trickoImmersiveChrome()
+    }
+}
+
+private struct ChannelDirectory: View {
+    @EnvironmentObject private var api: APIClient
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let route: ChannelRoute
+    let back: () -> Void
     @State private var items: [RemoteLessonFile] = []
     @State private var page = 1
     @State private var hasMore = true
     @State private var loading = false
     @State private var loaded = false
     @State private var error: String?
-    @State private var child: ChannelRoute?
     @State private var player: PlayerRoute?
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollView {
             if items.isEmpty {
-                VStack(spacing: 0) {
-                    SheetHeading(title: route.title) { dismiss() }
-                    ScrollView { channelStatus.trickoPage() }
-                }
-                .trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+                channelStatus.trickoPage()
             } else {
-                channelList
+                channelList.trickoPage()
             }
         }
-            .task { if items.isEmpty { await load() } }
-            .sheet(item: $child) { ChannelView(route: $0) }
-            .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
-            .overlay(alignment: .top) { DownloadCompletionNotice().padding(.top, 54) }
+        .safeAreaInset(edge: .top, spacing: 0) { DownloadCompletionNotice() }
+        .trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+        .navigationTitle(Text(verbatim: route.title))
+        .navigationBarTitleDisplayMode(.large)
+        .task { if items.isEmpty && !loaded { await load() } }
+        .fullScreenCover(item: $player) { PlayerScreen(route: $0) }
     }
 
-    private var channelStatus: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if loading || (!loaded && error == nil) {
-                AccountLoadingIndicator(title: "Finding your next lesson…")
-                    .frame(maxWidth: .infinity)
-            } else if let error {
-                EmptyStateCopy(title: "Couldn’t load lessons", message: error)
-                Button { Task { await load() } } label: { LocalizedText("Try again") }
-                    .buttonStyle(EmptyStateActionStyle(primary: false))
-            } else {
-                EmptyStateCopy(title: "No lessons yet", message: "This channel has no available videos.")
-                if hasMore {
-                    Button { Task { await load() } } label: { LocalizedText("Load more") }
+    @ViewBuilder private var channelStatus: some View {
+        if loading || (!loaded && error == nil) {
+            StageLoadingIndicator(title: "Finding your next lesson…")
+                .frame(maxWidth: .infinity)
+        } else {
+            EmptyStatePanel(symbol: .feed) {
+                if let error {
+                    EmptyStateCopy(title: "Couldn’t load lessons", message: error)
+                    Button { Task { await load() } } label: { LocalizedText("Try again") }
                         .buttonStyle(EmptyStateActionStyle(primary: false))
                 } else {
-                    Button { dismiss() } label: { LocalizedText("Back") }
-                        .buttonStyle(EmptyStateActionStyle(primary: false))
+                    EmptyStateCopy(title: "No lessons yet", message: "This channel has no available videos.")
+                    if hasMore {
+                        Button { Task { await load() } } label: { LocalizedText("Load more") }
+                            .buttonStyle(EmptyStateActionStyle(primary: false))
+                    } else {
+                        Button(action: back) { LocalizedText("Back") }
+                            .buttonStyle(EmptyStateActionStyle(primary: false, symbol: .back))
+                    }
                 }
             }
         }
     }
 
     private var channelList: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: route.title) { dismiss() }
-            ScrollView {
-                LazyVStack(spacing: 18) {
-                    ForEach(items, id: \.stableID) { item in
-                        Button { open(item) } label: {
-                            HStack(spacing: 16) {
-                                MediaCover(url: WebAddress.media(item.coverImage), folder: item.isFolder == true)
-                                    .frame(width: 80, height: 94).clipShape(RoundedRectangle(cornerRadius: 14))
-                                VStack(alignment: .leading, spacing: 7) {
-                                    Text(verbatim: item.name ?? L10n.text("Untitled")).font(.stage(.headline)).lineLimit(3)
-                                    LocalizedText(item.isFolder == true ? "\(item.childrenFileNum ?? 0) videos" : durationLabel(item.length ?? 0))
-                                        .font(.caption.monospacedDigit()).foregroundStyle(TrickoStyle.secondary)
-                                }.frame(maxWidth: .infinity, alignment: .leading)
-                                Glyph(symbol: item.isFolder == true ? .folder : .play, size: 20, tint: TrickoStyle.accent)
-                            }
-                        }.buttonStyle(PressStyle())
+        LazyVStack(alignment: .leading, spacing: 12) {
+            ForEach(items, id: \.stableID) { item in
+                if item.isFolder == true, let link = item.landingPage?.nilIfBlank {
+                    NavigationLink(value: ChannelRoute(link: link, title: item.name ?? L10n.text("Folder"))) {
+                        channelRow(item)
                     }
-                    if let error { ErrorNote(message: error) }
-                    if hasMore {
-                        ActionButton(title: error == nil ? "Load more" : "Try again", primary: false, busy: loading) {
-                            Task { await load() }
-                        }
-                    }
-                }.trickoPage()
+                } else {
+                    Button { open(item) } label: { channelRow(item) }
+                }
+                Divider().overlay(TrickoStyle.line)
             }
-        }.trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
+            if let error { ErrorNote(message: error) }
+            if hasMore {
+                ActionButton(title: error == nil ? "Load more" : "Try again", primary: false,
+                             busy: loading, busyTitle: "Loading…") { Task { await load() } }
+            }
+        }
+        .buttonStyle(PressStyle())
+    }
+
+    private func channelRow(_ item: RemoteLessonFile) -> some View {
+        let folder = item.isFolder == true
+        return HStack(spacing: 14) {
+            if !typeSize.isAccessibilitySize {
+                MediaCover(url: WebAddress.media(item.coverImage), folder: folder)
+                    .frame(width: 78, height: 54).clipShape(.rect(cornerRadius: 10))
+            }
+            VStack(alignment: .leading, spacing: 5) {
+                Text(verbatim: item.name ?? L10n.text("Untitled"))
+                    .font(.stage(.headline)).fixedSize(horizontal: false, vertical: true)
+                LocalizedText(folder ? "\(item.childrenFileNum ?? 0) videos" : durationLabel(item.length ?? 0))
+                    .font(.stage(.caption).monospacedDigit()).foregroundStyle(TrickoStyle.secondary)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            Glyph(symbol: folder ? .back : .play, size: folder ? 12 : 17, tint: TrickoStyle.coolAccent)
+                .rotationEffect(.degrees(folder ? 180 : 0))
+        }
+        .frame(minHeight: 52)
+        .contentShape(Rectangle())
     }
     private func load() async {
         guard !loading, hasMore else { return }
@@ -730,29 +802,22 @@ struct ChannelView: View {
         catch { self.error = error.localizedDescription }
     }
     private func open(_ item: RemoteLessonFile) {
-        if item.isFolder == true, let link = item.landingPage?.nilIfBlank {
-            child = ChannelRoute(link: link, title: item.name ?? "Folder")
-        } else if let clip = item.clip(channel: route.title) {
+        if let clip = item.clip(channel: route.title) {
             player = PlayerRoute(clips: items.compactMap { $0.clip(channel: route.title) }, startID: clip.id, continuesRecommendations: true)
         } else { error = "This item does not contain a playable video." }
     }
 }
 
-struct LinkGuideSheet: View {
+private struct LinkGuidePanel: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        VStack(spacing: 0) {
-            SheetHeading(title: "Open your next lesson") { dismiss() }
-            ScrollView {
-                VStack(alignment: .leading, spacing: 26) {
-                    FeatureRow(symbol: .link, title: "1. Copy the link or code", detail: "Use the lesson link or code you received.")
-                    FeatureRow(symbol: .search, title: "2. Paste or type", detail: "On Home, tap Paste or enter the code as received. Codes are case-sensitive.")
-                    FeatureRow(symbol: .play, title: "3. Open and watch", detail: "Tap Open lesson to find matching lessons, then swipe to watch.")
-                    LocalizedText("No results? Check your input, or ask the sender for a new link.")
-                        .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
-                    ActionButton(title: "Got it") { dismiss() }
-                }.trickoPage()
-            }
-        }.trickoScreenBackground().foregroundStyle(.white)
+        StageFloatingPanel(title: "Open your next lesson", close: { dismiss() }) {
+            FeatureRow(symbol: .link, title: "1. Copy the link or code", detail: "Use the lesson link or code you received.")
+            FeatureRow(symbol: .search, title: "2. Paste or type", detail: "On Home, tap Paste or enter the code as received. Codes are case-sensitive.")
+            FeatureRow(symbol: .play, title: "3. Open and watch", detail: "Tap Open lesson to find matching lessons, then swipe to watch.")
+            LocalizedText("No results? Check your input, or ask the sender for a new link.")
+                .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+            ActionButton(title: "Got it") { dismiss() }
+        }
     }
 }

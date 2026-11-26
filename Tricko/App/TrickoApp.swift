@@ -86,18 +86,28 @@ struct TrickoStartupView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
+    private var loadingMark: some View {
+        Image("TrickoLoadingMark")
+            .resizable().scaledToFill().frame(width: 40, height: 5).clipped()
+    }
+
     var body: some View {
         Image("TrickoLaunchMark")
             .resizable().scaledToFit().frame(width: 108, height: 108)
             .overlay(alignment: .bottom) {
-                Image("TrickoLoadingMark")
-                    .resizable().scaledToFill().frame(width: 40, height: 5).clipped()
-                    .phaseAnimator([false, true]) { content, dimmed in
-                        content.opacity(reduceMotion || scenePhase != .active ? 1 : (dimmed ? 0.35 : 1))
-                    } animation: { _ in
-                        reduceMotion || scenePhase != .active ? nil : .easeInOut(duration: 0.6)
+                Group {
+                    if reduceMotion || scenePhase != .active {
+                        loadingMark
+                    } else {
+                        loadingMark.phaseAnimator([false, true]) { content, dimmed in
+                            content.opacity(dimmed ? 0.5 : 1)
+                        } animation: { _ in .easeInOut(duration: 0.75) }
                     }
-                    .offset(y: 32)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .trickoGlass(in: Capsule(), tint: TrickoStyle.coolAccent.opacity(0.10),
+                             fallback: TrickoStyle.surface, interactive: false)
+                .offset(y: 40)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(.container, edges: .all)
@@ -167,12 +177,12 @@ struct TrickoRootView: View {
                     DownloadCompletionNotice().padding(.top, 8)
                 }
             }
-            .sheet(isPresented: $showingAccount) {
+            .fullScreenCover(isPresented: $showingAccount) {
                 AccountView()
                     .modifier(AccountBusyModifier())
             }
-            .sheet(item: $channel, onDismiss: finishLessonDismissal) { ChannelView(route: $0) }
-            .sheet(item: $libraryEditor) { EditorSheet(initialMovie: $0) }
+            .fullScreenCover(item: $channel, onDismiss: finishLessonDismissal) { ChannelView(route: $0) }
+            .fullScreenCover(item: $libraryEditor) { EditorSheet(initialMovie: $0) }
             .fullScreenCover(item: $searchRequest, onDismiss: finishLessonDismissal) { request in
                 DiscoverView(initialSearch: request.query, onExit: { searchRequest = nil }, onSearchResult: { query, clip in
                     guard query.nilIfBlank != nil else { return }
@@ -297,10 +307,14 @@ struct ConnectionPanel: View {
     var body: some View {
         VStack(spacing: 24) {
             if let error {
-                MessagePanel(title: "Let’s reconnect.", message: error)
-                ActionButton(title: "Try again", busy: connecting) { attempt += 1 }
+                EmptyStatePanel(symbol: .link) {
+                    EmptyStateCopy(title: "Let’s reconnect.", message: error)
+                    Button { attempt += 1 } label: { LocalizedText("Try again") }
+                        .buttonStyle(EmptyStateActionStyle(primary: false))
+                        .disabled(connecting)
+                }
             } else {
-                AccountLoadingIndicator(title: "Setting up your table…")
+                StageLoadingIndicator(title: "Setting up your table…")
             }
             if showsPolicyLinks { PolicyLinks() }
         }

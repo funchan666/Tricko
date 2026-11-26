@@ -77,7 +77,7 @@ struct ToolsView: View {
         }
         .foregroundStyle(TrickoStyle.paper)
         .trickoScreenBackground()
-        .sheet(item: $editorRequest) { request in
+        .fullScreenCover(item: $editorRequest) { request in
             EditorSheet(initialMovie: request.movie, initialTool: request.tool)
         }
         .fullScreenCover(isPresented: $showingMembership) { MembershipView() }
@@ -241,7 +241,7 @@ struct LocalVideoImportButtons: View {
             }
             .disabled(importTask != nil)
             if importTask != nil {
-                AccountLoadingIndicator(title: "Importing…")
+                StageLoadingIndicator(title: "Importing…", compact: true)
             }
             if let error { ErrorNote(message: error) }
         }
@@ -345,8 +345,8 @@ struct LocalVideoCover: View {
             .overlay {
                 if let image {
                     Image(uiImage: image).resizable().scaledToFill()
-                } else if let placeholderSymbol {
-                    Glyph(symbol: placeholderSymbol, size: 21, tint: TrickoStyle.coolAccent)
+                } else {
+                    StageCoverPlaceholder(symbol: placeholderSymbol)
                 }
             }
             .clipShape(.rect(cornerRadius: cornerRadius))
@@ -373,6 +373,11 @@ struct EditorSheet: View {
             .modifier(ExportDepartureProtection(departure: departure))
     }
 }
+
+func usesVideoWorkspaceColumns(in size: CGSize, typeSize: DynamicTypeSize) -> Bool {
+    size.width >= (typeSize.isAccessibilitySize ? 920 : 690) || (size.height < 460 && size.width >= 540)
+}
+
 private struct EditorWorkspace: View {
     @State private var showingPresets = false
     @EnvironmentObject private var departure: ExportDeparture
@@ -388,6 +393,7 @@ private struct EditorWorkspace: View {
     @State private var shareURL: SharedFile?
     @State private var tool = "Trim"
     @State private var exportTask: Task<Void, Never>?
+    @State private var sourceTask: Task<Void, Never>?
     private let tools = ["Trim", "Frame", "Speed", "Audio", "Export"]
     private var canChangeReviewSettings: Bool {
         !departure.running && !editor.isExporting && !editor.isPreparingPreview && !editor.isLoading && editor.duration > 0
@@ -399,38 +405,55 @@ private struct EditorWorkspace: View {
     }
 
     var body: some View {
-        let heading: String? = initialTool == .studio ? nil : initialTool.title
         VStack(spacing: 0) {
-            SheetHeading(title: heading, close: close)
-            ScrollView {
-                Group {
-                    if let selected {
-                        videoWorkspace(selected)
-                    } else {
-                        importWorkspace
-                    }
+            HStack(spacing: 12) {
+                if let selected {
+                    fileHeading(selected)
+                } else {
+                    LocalizedText(initialTool.title).font(.stage(.title2, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .trickoPage()
+                IconButton(symbol: .close, label: "Close", action: close)
+            }
+            .pageHorizontalMargins().padding(.vertical, 6)
+            Divider().overlay(TrickoStyle.line).accessibilityHidden(true)
+            if let selected {
+                videoWorkspace(selected)
+            } else {
+                ScrollView { importWorkspace.trickoPage() }
             }
         }
+            .frame(maxWidth: 1160).frame(maxWidth: .infinity)
             .trickoScreenBackground().foregroundStyle(TrickoStyle.paper)
             .onReceive(editor.preview.$error) { message in
                 if let message { editor.error = "Preview could not play. \(message)" }
             }
             .sheet(item: $shareURL) { ShareSheet(items: [$0.url]) }
-            .sheet(item: $reviewingVideo) { VideoReviewView(movie: $0.movie, startingAt: $0.startingAt) }
-            .task(id: selected?.id) {
-                guard let selected else { return }
-                let source = library.url(for: selected)
-                if editor.sourceURL != source || editor.duration <= 0 {
-                    await editor.open(source)
-                }
-            }
+            .fullScreenCover(item: $reviewingVideo) { VideoReviewView(movie: $0.movie, startingAt: $0.startingAt) }
+            .onChange(of: selected?.id, initial: true) { _, _ in openSelectedMovie() }
             .onChange(of: scenePhase) { _, phase in if phase != .active { editor.preview.pause() } }
             .onDisappear {
+                // A full-screen review temporarily covers the editor and shares its source video.
+                guard reviewingVideo == nil, shareURL == nil else {
+                    editor.preview.pause()
+                    return
+                }
+                sourceTask?.cancel()
                 editor.close()
                 exportTask?.cancel()
             }
+    }
+
+    private func openSelectedMovie() {
+        guard let selected else { sourceTask?.cancel(); return }
+        let url = library.url(for: selected)
+        guard editor.sourceURL != url || (!editor.isLoading && editor.duration <= 0) else { return }
+        sourceTask?.cancel()
+        sourceTask = Task {
+            guard !Task.isCancelled else { return }
+            await editor.open(url)
+        }
     }
 
     private func close() {
@@ -438,36 +461,73 @@ private struct EditorWorkspace: View {
     }
 
     private func videoWorkspace(_ selected: PracticeRecording) -> some View {
+        GeometryReader { viewport in
+            let size = viewport.size
+            let split = usesVideoWorkspaceColumns(in: size, typeSize: typeSize)
+            if !split && (size.height < 420 || typeSize.isAccessibilitySize) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        previewTray(maxVideoHeight: 260)
+                        inspector(selected)
+                    }.padding(.bottom, 16)
+                }
+            } else {
+                let layout = split
+                    ? AnyLayout(HStackLayout(alignment: .top, spacing: 20))
+                    : AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
+                layout {
+                    previewTray(maxVideoHeight: split ? max(80, size.height - 86) : size.height * 0.42,
+                               compactControls: split && (size.height < 370 || typeSize.isAccessibilitySize))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(width: split ? size.width * 0.51 : nil)
+                    ScrollView {
+                        inspector(selected).padding(.bottom, 16)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .scrollBounceBehavior(.basedOnSize)
+                }
+            }
+        }
+        .pageHorizontalMargins().padding(.top, 12)
+    }
+
+    private func inspector(_ selected: PracticeRecording) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            fileHeading(selected)
-            previewTray
             if let error = editor.error { ErrorNote(message: error) }
-            if editor.isPreparingPreview { AccountLoadingIndicator(title: "Preparing preview…").frame(maxWidth: .infinity) }
             if initialTool == .studio {
-                ActionButton(title: "Review video", primary: false) {
+                StageFilter(values: tools, selected: tool) { tool = $0 }
+                    .disabled(departure.running || editor.isPreparingPreview)
+            }
+            controls.disabled(departure.running || editor.isExporting || editor.isLoading || editor.isPreparingPreview || editor.duration <= 0)
+            if initialTool == .studio {
+                VideoReviewButton(movie: library.movies.first { $0.id == selected.id } ?? selected) {
                     editor.preview.pause()
                     let time = editor.preview.player.currentTime().seconds
                     let isAtSourceTime = editor.preview.loadedURL == library.url(for: selected) && !editor.preview.isSeeking
                     reviewingVideo = VideoReviewRoute(movie: selected, startingAt: isAtSourceTime && time.isFinite ? time : nil)
                 }
                 .disabled(!canChangeReviewSettings)
-
-                StageFilter(values: tools, selected: tool) { tool = $0 }
-                    .disabled(departure.running || editor.isPreparingPreview)
+                reviewPresets
             }
-            controls.disabled(departure.running || editor.isExporting || editor.isLoading || editor.isPreparingPreview || editor.duration <= 0)
-            if initialTool == .studio { reviewPresets }
             if let error { ErrorNote(message: error) }
             if departure.running {
-                VStack(spacing: 14) {
-                    LocalizedText(editor.isExporting ? "Exporting · \(Int(editor.progress * 100))%" : "Preparing export…")
-                        .font(.stage(.subheadline)).monospacedDigit()
-                    GeometryReader { geometry in
-                        Color.clear.background(TrickoStyle.raised)
-                            .overlay(alignment: .leading) { TrickoStyle.accent.frame(width: geometry.size.width * CGFloat(editor.progress)) }
-                    }.frame(height: 4)
+                VStack(alignment: .leading, spacing: 12) {
+                    if editor.isExporting {
+                        LocalizedText("Exporting · \(Int(editor.progress * 100))%")
+                            .font(.stage(.subheadline, weight: .semibold).monospacedDigit())
+                        StageProgressTrack(value: Double(editor.progress))
+                    } else {
+                        HStack(spacing: 8) {
+                            StageActivityMark()
+                            LocalizedText("Preparing export…")
+                                .font(.stage(.subheadline, weight: .semibold))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                     ActionButton(title: "Cancel export", primary: false) { departure.request() }
                 }
+                .padding(16)
+                .trickoGlass(in: .rect(cornerRadius: 18), fallback: TrickoStyle.surface, interactive: false)
             } else {
                 editingActions(selected)
             }
@@ -477,11 +537,10 @@ private struct EditorWorkspace: View {
     private func fileHeading(_ movie: PracticeRecording) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: movie.title).font(.stage(.title3, weight: .semibold)).lineLimit(2)
-                    .accessibilityAddTraits(initialTool == .studio ? .isHeader : [])
-                Text(verbatim: (movie.filename as NSString).pathExtension.uppercased())
-                    .font(.stage(.caption2, weight: .medium))
-                    .foregroundStyle(TrickoStyle.coolAccent)
+                LocalizedText(initialTool.title)
+                    .font(.stage(.caption, weight: .semibold)).foregroundStyle(TrickoStyle.coolAccent)
+                Text(verbatim: movie.title).font(.stage(.headline, weight: .semibold)).lineLimit(2)
+                    .accessibilityAddTraits(.isHeader)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if !departure.running, !editor.isExporting, !editor.isPreparingPreview {
@@ -503,8 +562,8 @@ private struct EditorWorkspace: View {
         }
     }
 
-    private var previewTray: some View {
-        let previewWidth = min(540, 360 * editor.previewAspectRatio)
+    private func previewTray(maxVideoHeight: CGFloat, compactControls: Bool = false) -> some View {
+        let previewWidth = maxVideoHeight * editor.previewAspectRatio
         return VStack(spacing: 0) {
             VideoSurface(player: editor.preview.player, fill: false)
                 .aspectRatio(editor.previewAspectRatio, contentMode: .fit)
@@ -512,12 +571,14 @@ private struct EditorWorkspace: View {
                 .frame(maxWidth: .infinity)
                 .background(.black)
                 .overlay {
-                    if editor.isLoading {
-                        AccountLoadingIndicator(title: "Preparing your video…")
+                    if editor.isLoading || editor.isPreparingPreview {
+                        StageLoadingIndicator(title: editor.isLoading ? "Preparing your video…" : "Preparing preview…",
+                                              compact: true)
                     }
                 }
             EditorPlaybackBar(playback: editor.preview, timeline: editor.preview.timeline,
-                              disabled: editor.isLoading || editor.isPreparingPreview || departure.running)
+                              disabled: editor.isLoading || editor.isPreparingPreview || departure.running,
+                              compact: compactControls)
                 .padding(.horizontal, 10).padding(.vertical, 7)
         }
         .background(TrickoStyle.surface)
@@ -563,10 +624,12 @@ private struct EditorWorkspace: View {
     private var importWorkspace: some View {
         let imports = library.movies.filter { !$0.isExport }
         return VStack(alignment: .leading, spacing: 18) {
-            EmptyStateCopy(title: "Start with a video.",
-                           message: "Choose a clip from your device. We’ll keep your original untouched.")
-            LocalVideoImportButtons { movie in
-                if selected == nil { choose(movie) }
+            EmptyStatePanel(symbol: .feed) {
+                EmptyStateCopy(title: "Start with a video.",
+                               message: "Choose a clip from your device. We’ll keep your original untouched.")
+                LocalVideoImportButtons { movie in
+                    if selected == nil { choose(movie) }
+                }
             }
             if !imports.isEmpty {
                 SectionLabel(title: "Recent imports").padding(.top, 8)
@@ -669,9 +732,13 @@ private struct ReviewPresetControls: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            LocalizedText(preparing ? "Preparing preview…" : "Presets keep your trim points. Play the preview to check the result.")
-                .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if preparing {
+                StageLoadingIndicator(title: "Preparing preview…", compact: true)
+            } else {
+                LocalizedText("Presets keep your trim points. Play the preview to check the result.")
+                    .font(.stage(.footnote)).foregroundStyle(TrickoStyle.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             VStack(spacing: 0) {
                 presetRow("Slow mirror", "Half speed with a horizontal flip.") { settings in
                     settings.speed = 0.5
@@ -746,7 +813,6 @@ struct EditorPlaybackBar: View {
         layout {
             IconButton(symbol: playback.isPlaying ? .pause : .play,
                        label: playback.isPlaying ? "Pause preview" : "Play preview") { playback.toggle() }
-                .trickoGlass(in: Circle())
             PlayerProgressControl(playback: playback, timeline: timeline, enabled: !disabled,
                                   canResume: !disabled, scrubbing: $scrubbing)
             if !compact {

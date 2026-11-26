@@ -212,6 +212,7 @@
 "Remove saved video" = "お気に入りから削除";
 "Restore cancelled. Your purchases have not changed." = "復元をキャンセルしました。購入内容は変更されていません。";
 "Restore purchases" = "購入を復元";
+"Restoring purchases…" = "購入を復元中…";
 "Retry purchase confirmation" = "購入確認を再試行";
 "Review a practice video" = "練習動画を振り返る";
 "Review practice" = "練習を振り返る";
