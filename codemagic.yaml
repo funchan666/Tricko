@@ -18,13 +18,23 @@ workflows:
         XCODE_SCHEME: "Tricko"
         APP_STORE_APPLE_ID: "6835779732"
 
-      xcode: latest
+      xcode: "27.1"
 
     scripts:
       - name: Verify native iOS project configuration
         script: |
           set -e
           cd "$CM_BUILD_DIR"
+          xcodebuild -version
+          sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
+          printf 'Selected iOS SDK: %s\n' "$sdk_version"
+          if ! awk -v sdk="$sdk_version" 'BEGIN {
+            split(sdk, version, "[.]")
+            exit !(version[1] > 27 || (version[1] == 27 && version[2] >= 1))
+          }'; then
+            printf 'Tricko requires iOS SDK 27.1 or newer. Set environment.xcode to "27.1".\n' >&2
+            exit 1
+          fi
           test -f "$XCODE_PROJECT/project.pbxproj"
           test -f "$XCODE_PROJECT/xcshareddata/xcschemes/$XCODE_SCHEME.xcscheme"
           test -f "$XCODE_PROJECT/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
